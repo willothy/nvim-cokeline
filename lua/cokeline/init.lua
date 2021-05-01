@@ -1,44 +1,42 @@
+local augroups = require('cokeline/augroups')
+local defaults = require('cokeline/defaults')
+local highlights = require('cokeline/highlights')
 local utils = require('cokeline/utils')
+local fn = vim.fn
 local M = {}
 
-local defaults = {
-  hide_when_one_buffer = false,
-}
-
-local function setup_augroups(settings)
-  augroups = {}
-  if settings.hide_when_one_buffer then
-    -- TODO
-    -- BufEnter is excessive. BufAdd and BufDelete should be enough, but
-    -- BufDelete is triggered before the buffer is actually unlisted, which
-    -- means toggle() will count two buffers, not one. See
-    -- https://neovim.io/doc/user/autocmd.html#%7Bevent%7D
-    table.insert(augroups,
-      {
-        name = 'toggle_cokeline',
-        autocmds = {{
-          event='BufEnter',
-          target='*',
-          command=[[lua require('cokeline').toggle()]],
-        }}
-      })
+local function get_state()
+  local state = {
+    buffers = {},
+  }
+  for i, buf in pairs(fn.getbufinfo({buflisted=1})) do
+    local is_focused = buf.bufnr == fn.bufnr('%')
+    local hl = (is_focused and 'CokeFocused') or 'CokeUnfocused'
+    local title = [[%#]]..hl..[[#]]..buf.name..[[%*]]
+    table.insert(state.buffers, title)
   end
-  utils.create_augroups(augroups)
+  return state
 end
 
-local function cokeline(settings)
-  return '%f'
+function cokeline()
+  state = get_state()
+  return table.concat(state.buffers, ' | ')
 end
+
+-- function M.redraw()
+--   vim.cmd('redrawtabline')
+-- end
 
 function M.toggle()
-  local buffers = vim.fn.getbufinfo({buflisted=1})
+  local buffers = fn.getbufinfo({buflisted=1})
   vim.o.showtabline = (#buffers > 1 and 2) or 0
 end
 
 function M.setup(preferences)
   local settings = utils.update(defaults, preferences)
-  setup_augroups(settings)
-  vim.o.tabline = cokeline(settings)
+  augroups.setup(settings)
+  highlights.setup(settings.colors)
+  vim.o.tabline = '%!v:lua.cokeline()'
 end
 
 return M
