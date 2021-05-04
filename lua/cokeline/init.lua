@@ -1,55 +1,82 @@
 local augroups = require('cokeline/augroups')
 local defaults = require('cokeline/defaults')
 local hilights = require('cokeline/hilights')
-
-local has_devicons, devicons = pcall(require, 'nvim-web-devicons')
-local fn = vim.fn
+local format = string.format
+local vimfn = vim.fn
 local M = {}
 
 local function cokeline(settings)
   local titles = {}
-  local listed_buffers = fn.getbufinfo({buflisted=1})
-  local tags = {
-    icon = '{icon}',
-    index = '{index}',
-    name = '{name}',
-    flags = '{flags}',
-  }
+  local listed_buffers = vimfn.getbufinfo({buflisted = 1})
+
   for index, buffer in ipairs(listed_buffers) do
-    local is_focused = buffer.bufnr == fn.bufnr('%')
+    local is_focused = buffer.bufnr == vimfn.bufnr('%')
     local is_modified = vim.bo[buffer.bufnr].modified
-    local has_icon = has_devicons and settings.use_devicons
     local has_flags = is_modified
     local highlight = is_focused and 'Focused' or 'Unfocused'
-    local icon = ''
-    if has_icon then
-      local extension = fn.fnamemodify(buffer.name, ':e')
+
+    local devicon = ''
+    if settings.show_devicons then
+      local get_devicon = require('nvim-web-devicons').get_icon
+      local extension = vimfn.fnamemodify(buffer.name, ':e')
       local raw_icon, raw_icon_highlight =
-        devicons.get_icon(buffer.name, extension, {default=true})
+        get_devicon(buffer.name, extension, {default=true})
       -- using double percent signs to escape them for gsub
       local icon_highlight = 'Coke' .. raw_icon_highlight .. highlight
-      icon = '%%#'..icon_highlight..'#'..raw_icon..' %%#Coke'..highlight..'#'
+      devicon =
+        '%%#'..icon_highlight..'#'..raw_icon..' %%#Coke'..highlight..'#'
     end
+
+    local filename = vimfn.fnamemodify(buffer.name, ':t')
+
+    local flags = ''
+    if has_flags then
+      flags = settings.formats.flags
+    end
+
+    local close_icon = ''
+    if settings.show_close_icons then
+      close_icon = format (
+        '%%%%' .. '%s@cokeline#handle_close_icon_click@%s',
+        buffer.bufnr,
+        settings.symbols.close
+      )
+    end
+
+    local modified = settings.symbols.modified
+
     local expands = {
-      icon = icon,
+      devicon = devicon,
       index = index,
-      name = fn.fnamemodify(buffer.name, ':t'),
-      flags = has_flags and ('['..(is_modified and '+' or '')..']') or ''
+      filename = filename,
+      flags = flags,
+      close_icon = close_icon,
+      modified = modified,
     }
-    local title = '%#Coke'..highlight..'# '..settings.title_format..' %*'
-    for k, v in pairs(tags) do
+    local title =
+      '%#Coke'..highlight..'#'
+      ..' '..settings.formats.title..' '..'%*'
+
+    for k, v in pairs(settings.placeholders) do
       title = title:gsub(v, expands[k])
     end
+
+    if settings.handle_clicks then
+      title = format (
+        '%%%s@cokeline#handle_click@%s',
+        buffer.bufnr,
+        title
+      )
+    end
+
     table.insert(titles, title)
   end
-  -- print(table.concat(titles, ''))
-  -- return '%#CokeFocused# %#DevIconNix#ab %#CokeFocused#1: default.nix %*'
-  --   .. '%#CokeUnfocused# %#DevIconNix#ab %#CokeUnfocused#2: default.nix %*'
-  return table.concat(titles, '')
+
+  return table.concat(titles, settings.symbols.separator)
 end
 
 function M.toggle()
-  local buffers = fn.getbufinfo({buflisted=1})
+  local buffers = vimfn.getbufinfo({buflisted=1})
   vim.o.showtabline = (#buffers > 1 and 2) or 0
 end
 

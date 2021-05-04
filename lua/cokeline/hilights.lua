@@ -1,6 +1,5 @@
-local has_devicons, devicons = pcall(require, 'nvim-web-devicons')
-local vimcmd = vim.cmd
 local format = string.format
+local vimcmd = vim.cmd
 local M = {}
 
 local function create_hlgroups(hlgroups)
@@ -8,6 +7,7 @@ local function create_hlgroups(hlgroups)
   for _, hlgroup in pairs(hlgroups) do
     cmd = 'highlight! ' .. hlgroup.name
     for k, v in pairs(hlgroup) do
+      -- TODO: this could be cleaner
       if k ~= 'name' then
         cmd = format('%s %s=%s', cmd, k, v)
       end
@@ -17,7 +17,7 @@ local function create_hlgroups(hlgroups)
 end
 
 function M.setup(settings)
-  local hilights = settings.highlights
+  local hilights = settings.hilights
   local hlgroups = {
     {
       name = 'TabLineFill',
@@ -34,8 +34,9 @@ function M.setup(settings)
       guifg = hilights.buffers.unfocused.fg,
     },
   }
-  if has_devicons and settings.use_devicons then
-    for _, icon in pairs(devicons.get_icons()) do
+  if settings.show_devicons then
+    local devicons = require('nvim-web-devicons').get_icons()
+    for _, icon in pairs(devicons) do
       table.insert (
         hlgroups,
         {

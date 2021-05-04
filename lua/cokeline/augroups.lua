@@ -1,10 +1,10 @@
-local vimcmd = vim.cmd
 local format = string.format
+local vimcmd = vim.cmd
 local M = {}
 
 local function create_augroups(augroups)
   for _, group in pairs(augroups) do
-    vimcmd(format('augroup %s', group.name))
+    vimcmd('augroup ' .. group.name)
     vimcmd('autocmd!')
     for _, cmd in pairs(group.autocmds) do
       vimcmd(format('autocmd %s %s %s', cmd.event, cmd.target, cmd.command))
