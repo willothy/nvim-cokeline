@@ -49,6 +49,7 @@ function M.setup(preferences)
   augroups.setup(settings)
   settings = hlgroups.setup(settings)
   _G.cokeline = function() return cokeline(settings) end
+  vim.o.showtabline = 2
   vim.o.tabline = '%!v:lua.cokeline()'
 end
 
