@@ -49,8 +49,7 @@ function M.Title:embed_in_hlgroup(titles_grp, is_focused)
 end
 
 function M.Title:embed_in_clickable_region(id)
-  local fmt = '%%%s@cokeline#handle_clicks@%s'
-  self.title = fmt:format(id, self.title)
+  self.title = format('%%%s@cokeline#handle_clicks@%s', id, self.title)
 end
 
 function M.Title:render_devicon(path, is_focused, devicons_grp)
@@ -93,9 +92,14 @@ function M.Title:render_flags(flags, symbols)
 end
 
 function M.Title:render_close_button(id, close_symbol)
-  local fmt = '%%%s@cokeline#close_button_handle_clicks@%s'
-  local close_button = fmt:format(id, close_symbol):gsub('%%', '%%%%')
-  self.title = self.title:gsub(placeholders.close_button, close_button)
+  local close_button = format(
+    '%%%s@cokeline#close_button_handle_clicks@%s%%%s@cokeline#handle_clicks@',
+    id, close_symbol, id
+  )
+  self.title = self.title:gsub(
+    placeholders.close_button,
+    close_button:gsub('%%', '%%%%')
+  )
 end
 
 function M.Title:new(str)
