@@ -2,6 +2,7 @@ local concat = table.concat
 local insert = table.insert
 local format = string.format
 local vimcmd = vim.cmd
+local vimfn = vim.fn
 
 local M = {}
 
@@ -61,17 +62,27 @@ function Augroup:new(name, autocmds)
   return augroup
 end
 
+-- We take in the 'event_type' parameter because BufDelete is triggered
+-- *before* a buffer is actually unlisted, so if there are two buffers and one
+-- gets deleted, 'getbufinfo' will still return two buffers when that event is
+-- triggered.
+function M.toggle(event_type)
+  local buffers = vimfn.getbufinfo({buflisted = 1})
+  local threshold =
+    (event_type == 'add' and 1)
+    or (event_type == 'delete' and 2)
+  vim.o.showtabline = (#buffers > threshold and 2) or 0
+end
+
 function M.setup(settings)
-  -- TODO
-  -- BufEnter is excessive. BufAdd and BufDelete should be enough, but
-  -- BufDelete is triggered before the buffer is actually unlisted, which means
-  -- toggle() will count two buffers, not one. See
-  -- https://neovim.io/doc/user/autocmd.html#%7Bevent%7D
   if settings.hide_when_one_buffer then
     Augroup:new(
       'cokeline_toggle',
       {
-        Autocmd:new('BufEnter', '*', 'lua require"cokeline".toggle()')
+        Autocmd:new('VimEnter,BufAdd', '*',
+                      'lua require"cokeline/augroups".toggle("add")'),
+        Autocmd:new('BufDelete', '*',
+                      'lua require"cokeline/augroups".toggle("delete")')
       }
     )
   end
