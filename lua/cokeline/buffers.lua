@@ -33,8 +33,6 @@ local function populate_from(list)
     buffer.flags = {
       modified = vimbo[b.bufnr].modified,
       readonly = vimbo[b.bufnr].readonly,
-      -- modified = vimfn.getbufvar(b.bufnr, '&modified'),
-      -- readonly = vimfn.getbufvar(b.bufnr, '&readonly'),
     }
     insert(buffers, buffer)
   end
