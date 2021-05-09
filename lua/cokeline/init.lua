@@ -30,9 +30,6 @@ local function cokeline(settings)
     if settings.show_indexes then
       line:render_index(i)
     end
-    if settings.show_filenames then
-      line:render_filename(b.name)
-    end
     if settings.show_flags then
       line:render_flags(
         vim.bo[b.bufnr].modified,
@@ -46,6 +43,9 @@ local function cokeline(settings)
     end
     if settings.show_close_buttons then
       line:render_close_button(b.bufnr, symbols.close_button)
+    end
+    if settings.show_filenames then
+      line:render_filename(b.name)
     end
     insert(lines, line.text)
   end

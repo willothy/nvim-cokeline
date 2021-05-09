@@ -34,8 +34,8 @@ M.Line = {
 local function fix_hl_syntax(text, component)
   local before, after = text:match(format(
     '(.*)%s(.*)', component:gsub('([^%w])', '%%%1')))
-  local active_hl = before:gsub('.*%%#([^#]*)#.*', '%1')
-  return format('%s%%*%s%%#%s#%s', before, component, active_hl, after)
+  local active_hlgroup = before:gsub('.*%%#([^#]*)#.*', '%1')
+  return format('%s%%*%s%%#%s#%s', before, component, active_hlgroup, after)
 end
 
 function M.Line:embed_in_clickable_region(bufnr)
@@ -57,6 +57,9 @@ end
 
 function M.Line:render_filename(path)
   local filename = vimfn.fnamemodify(path, ':t')
+  if filename:match('%%') then
+    filename = filename:gsub('%%', '%%%%%%%%')
+  end
   self.text = self.text:gsub(holders.filename, filename)
 end
 
