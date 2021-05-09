@@ -1,47 +1,56 @@
-local concat = table.concat
-local insert = table.insert
-
 local defaults = require('cokeline/defaults')
 local augroups = require('cokeline/augroups')
 local hlgroups = require('cokeline/hlgroups')
-local buffers = require('cokeline/buffers')
-local Title = require('cokeline/titles').Title
+local Line = require('cokeline/lines').Line
+
+local concat = table.concat
+local insert = table.insert
+local vimfn = vim.fn
 
 local M = {}
 
 local function cokeline(settings)
-  local groups = settings.hlgroups
   local symbols = settings.symbols
-  local buffers = buffers.get_listed()
-  local titles = {}
+  local lines = {}
 
-  for _, buffer in pairs(buffers) do
-    local title = Title:new(settings.title_format)
-    title:embed_in_hlgroup(groups.titles, buffer.is_focused)
+  for i, b in ipairs(vimfn.getbufinfo({buflisted = 1})) do
+    local hlgroups =
+      b.bufnr == vimfn.bufnr('%')
+      and settings.hlgroups.focused
+       or settings.hlgroups.unfocused
+
+    local line = Line:new(hlgroups.line:embed(settings.line_format))
+
     if settings.handle_clicks then
-      title:embed_in_clickable_region(buffer.id)
+      line:embed_in_clickable_region(b.bufnr)
     end
     if settings.show_devicons then
-      title:render_devicon(buffer.path, buffer.is_focused, groups.devicons)
+      line:render_devicon(b.name, hlgroups.devicons)
     end
     if settings.show_indexes then
-      title:render_index(buffer.index)
+      line:render_index(i)
     end
     if settings.show_filenames then
-      title:render_filename(buffer.path)
+      line:render_filename(b.name)
     end
     if settings.show_flags then
-      title:render_flags(buffer.flags, symbols.flags)
+      line:render_flags(
+        vim.bo[b.bufnr].modified,
+        vim.bo[b.bufnr].readonly,
+        hlgroups.line:embed(settings.flags_format),
+        hlgroups.line:embed(settings.flags_divider),
+        symbols.modified,
+        symbols.readonly,
+        hlgroups.modified,
+        hlgroups.readonly)
     end
     if settings.show_close_buttons then
-      title:render_close_button(buffer.id, symbols.close)
+      line:render_close_button(b.bufnr, symbols.close_button)
     end
-    insert(titles, title.title)
+    insert(lines, line.text)
   end
 
-  local separator = groups.symbols.separator:embed(symbols.separator)
-  local cokeline = concat(titles, separator)
-  return cokeline
+  return concat(lines)
 end
 
 function M.setup(preferences)

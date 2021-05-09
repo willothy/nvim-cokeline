@@ -1,12 +1,12 @@
+local has_devicons, _ = pcall(require, 'nvim-web-devicons')
+
 local format = string.format
 local vimcmd = vim.cmd
 local vimfn = vim.fn
 
-local has_devicons, _ = pcall(require, 'nvim-web-devicons')
-
 local M = {}
 
-local title_components = {
+local line_components = {
   'devicon',
   'index',
   'filename',
@@ -14,56 +14,41 @@ local title_components = {
   'close_button',
 }
 
-M.title_placeholders = {}
-for _, component in pairs(title_components) do
-  M.title_placeholders[component] = format('{%s}', component)
+M.line_placeholders = {}
+for _, component in pairs(line_components) do
+  M.line_placeholders[component] = format('{%s}', component)
 end
 
 local defaults = {
-  -- behaviour
   hide_when_one_buffer = false,
 
-  -- formatting
-  title_format = format(
-    '%s%s: %s%s %s',
-    M.title_placeholders.devicon,
-    M.title_placeholders.index,
-    M.title_placeholders.filename,
-    M.title_placeholders.flags,
-    M.title_placeholders.close_button
+  line_format = format(
+    ' %s%s: %s%s %s ',
+    M.line_placeholders.devicon,
+    M.line_placeholders.index,
+    M.line_placeholders.filename,
+    M.line_placeholders.flags,
+    M.line_placeholders.close_button
   ),
 
+  flags_format = format(' %s', M.line_placeholders.flags),
+  flags_divider = ',',
+
   symbols = {
-    separator = '',
-    close = '',
-    flags = {
-      modified = '+',
-      readonly = 'RO',
-    },
+    modified = '● ',
+    readonly = '',
+    close_button = '',
   },
 
-  -- colors & fonts
-  hilights = {
-    fill = {
-      bg = '#3e4452',
-    },
-    titles = {
-      focused = {
-        bg = '#abb2bf',
-        fg = '#282c34',
-      },
-      unfocused = {
-        bg = '#3e4452',
-        fg = '#abb2bf',
-      },
-    },
-    symbols = {
-      separator = {
-        bg = '#3e4452',
-        fg = '#abb2bf',
-      },
-    },
-  }
+  highlights = {
+    fill = '#3e4452',
+    focused_fg = '#282c34',
+    focused_bg = '#abb2bf',
+    unfocused_fg = '#abb2bf',
+    unfocused_bg = '#3e4452',
+    modified = '#98c379',
+    readonly = '#e06c75',
+  },
 }
 
 function M.merge(preferences)
@@ -85,28 +70,28 @@ function M.merge(preferences)
   settings['handle_clicks'] = vimfn.has('tablineat')
 
   settings['show_devicons'] =
-    settings.title_format:match(M.title_placeholders.devicon)
+    settings.line_format:match(M.line_placeholders.devicon)
     and has_devicons
     and true
      or false
 
   settings['show_indexes'] =
-    settings.title_format:match(M.title_placeholders.index)
+    settings.line_format:match(M.line_placeholders.index)
     and true
      or false
 
   settings['show_filenames'] =
-    settings.title_format:match(M.title_placeholders.filename)
+    settings.line_format:match(M.line_placeholders.filename)
     and true
      or false
 
   settings['show_flags'] =
-    settings.title_format:match(M.title_placeholders.flags)
+    settings.line_format:match(M.line_placeholders.flags)
     and true
      or false
 
   settings['show_close_buttons'] =
-    settings.title_format:match(M.title_placeholders.close_button)
+    settings.line_format:match(M.line_placeholders.close_button)
     and settings.handle_clicks
     and true
      or false

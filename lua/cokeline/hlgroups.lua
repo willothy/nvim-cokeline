@@ -1,5 +1,6 @@
 local concat = table.concat
 local insert = table.insert
+local format = string.format
 local vimcmd = vim.cmd
 
 local M = {}
@@ -9,9 +10,8 @@ local Hlgroup = {
   opts = {},
 }
 
-function Hlgroup:embed(str)
-  local fmt = '%%#%s#%s%%*'
-  return fmt:format(self.name, str)
+function Hlgroup:embed(text)
+  return format('%%#%s#%s%%*', self.name, text)
 end
 
 function Hlgroup:exec()
@@ -39,67 +39,53 @@ function Hlgroup:new(name, opts)
 end
 
 function M.setup(settings)
-  local hilights = settings.hilights
-  local hlgroups = {}
+  local highlights = settings.highlights
 
-  hlgroups['fill'] = Hlgroup:new(
-    'TabLineFill',
-    {
-      guibg = hilights.fill.bg,
-    }
-  )
+  local hlgroups = {
+    fill = Hlgroup:new('TabLineFill', {guibg = highlights.fill}),
 
-  hlgroups['titles'] = {
-    focused = Hlgroup:new(
-      'CokeTitleFocused',
-      {
-        guifg = hilights.titles.focused.fg,
-        guibg = hilights.titles.focused.bg,
-      }
-    ),
-    unfocused = Hlgroup:new(
-      'CokeTitleUnfocused',
-      {
-        guifg = hilights.titles.unfocused.fg,
-        guibg = hilights.titles.unfocused.bg,
-      }
-    ),
-  }
+    focused = {
+      line = Hlgroup:new(
+        'CokeFocused',
+        {guifg = highlights.focused_fg, guibg = highlights.focused_bg}),
 
-  hlgroups['symbols'] = {
-    separator = Hlgroup:new(
-      'CokeTitleSeparator',
-      {
-        guifg = hilights.symbols.separator.fg,
-        guibg = hilights.symbols.separator.bg,
-      }
-    ),
+      modified = Hlgroup:new(
+        'CokeModifiedFocused',
+        {guifg = highlights.modified, guibg = highlights.focused_bg}),
+
+      readonly = Hlgroup:new(
+        'CokeReadonlyFocused',
+        {guifg = highlights.readonly, guibg = highlights.focused_bg}),
+    },
+
+    unfocused = {
+      line = Hlgroup:new(
+        'CokeUnfocused',
+        {guifg = highlights.unfocused_fg, guibg = highlights.unfocused_bg}),
+
+      modified = Hlgroup:new(
+        'CokeModifiedUnfocused',
+        {guifg = highlights.modified, guibg = highlights.unfocused_bg}),
+
+      readonly = Hlgroup:new(
+        'CokeReadonlyUnfocused',
+        {guifg = highlights.readonly, guibg = highlights.unfocused_bg}),
+    },
   }
 
   if settings.show_devicons then
-    hlgroups['devicons'] = {}
+    hlgroups.focused['devicons'] = {}
+    hlgroups.unfocused['devicons'] = {}
     local devicons = require('nvim-web-devicons').get_icons()
-    local fmt = {
-      focused = 'CokeDevIcon%sFocused',
-      unfocused = 'CokeDevIcon%sUnfocused',
-    }
+
     for _, icon in pairs(devicons) do
-      hlgroups.devicons[icon.icon] = {
-        focused = Hlgroup:new(
-          fmt.focused:format(icon.name),
-          {
-            guifg = icon.color,
-            guibg = hilights.titles.focused.bg,
-          }
-        ),
-        unfocused = Hlgroup:new(
-          fmt.unfocused:format(icon.name),
-          {
-            guifg = icon.color,
-            guibg = hilights.titles.unfocused.bg,
-          }
-        ),
-      }
+      hlgroups.focused.devicons[icon.icon] = Hlgroup:new(
+        format('CokeDevIcon%sFocused', icon.name),
+        {guifg = icon.color, guibg = highlights.focused_bg})
+
+      hlgroups.unfocused.devicons[icon.icon] = Hlgroup:new(
+        format('CokeDevIcon%sUnfocused', icon.name),
+        {guifg = icon.color, guibg = highlights.unfocused_bg})
     end
   end
 
