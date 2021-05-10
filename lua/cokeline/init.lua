@@ -1,6 +1,7 @@
 local defaults = require('cokeline/defaults')
-local augroups = require('cokeline/augroups')
 local hlgroups = require('cokeline/hlgroups')
+local augroups = require('cokeline/augroups')
+local mappings = require('cokeline/mappings')
 local Line = require('cokeline/lines').Line
 
 local concat = table.concat
@@ -55,8 +56,9 @@ end
 
 function M.setup(preferences)
   local settings = defaults.merge(preferences)
-  augroups.setup(settings)
   settings = hlgroups.setup(settings)
+  augroups.setup(settings)
+  mappings.setup(settings)
   _G.cokeline = function() return cokeline(settings) end
   vim.o.showtabline = 2
   vim.o.tabline = '%!v:lua.cokeline()'

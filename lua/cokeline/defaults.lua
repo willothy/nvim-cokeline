@@ -21,6 +21,8 @@ end
 
 local defaults = {
   hide_when_one_buffer = false,
+  cycle_prev_next_mappings = false,
+  max_mapped_buffers = 20,
 
   line_format = format(
     ' %s%s: %s%s %s ',
