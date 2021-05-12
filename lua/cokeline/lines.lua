@@ -1,9 +1,15 @@
 local holders = require('cokeline/defaults').line_placeholders
 
+local has_devicons, devicons = pcall(require, 'nvim-web-devicons')
+if has_devicons then
+  devicons.setup({default = true})
+  get_icon = devicons.get_icon
+end
+
 local format = string.format
 local concat = table.concat
 local insert = table.insert
-local vimfn = vim.fn
+local fnamemodify = vim.fn.fnamemodify
 
 local M = {}
 
@@ -42,10 +48,13 @@ function M.Line:embed_in_clickable_region(bufnr)
   self.text = format('%%%s@cokeline#handle_clicks@%s', bufnr, self.text)
 end
 
-function M.Line:render_devicon(path, hlgroups)
-  local get_icon = require('nvim-web-devicons').get_icon
-  local extension = vimfn.fnamemodify(path, ':e')
-  local icon, _ = get_icon(path, extension, {default = true})
+function M.Line:render_devicon(path, buftype, hlgroups)
+  local filename =
+    buftype == 'terminal'
+     and 'terminal'
+      or fnamemodify(path, ':t')
+  local extension = fnamemodify(path, ':e')
+  local icon, _ = get_icon(filename, extension)
   local devicon = hlgroups[icon]:embed(format('%s ', icon))
   self.text = self.text:gsub(holders.devicon, devicon:gsub('%%', '%%%%'))
   self.text = fix_hl_syntax(self.text, devicon)
@@ -56,7 +65,7 @@ function M.Line:render_index(index)
 end
 
 function M.Line:render_filename(path)
-  local filename = vimfn.fnamemodify(path, ':t')
+  local filename = fnamemodify(path, ':t')
   if filename:match('%%') then
     filename = filename:gsub('%%', '%%%%%%%%')
   end

@@ -26,7 +26,7 @@ local function cokeline(settings)
       line:embed_in_clickable_region(b.bufnr)
     end
     if settings.show_devicons then
-      line:render_devicon(b.name, hlgroups.devicons)
+      line:render_devicon(b.name, vim.bo[b.bufnr].buftype, hlgroups.devicons)
     end
     if settings.show_indexes then
       line:render_index(i)
