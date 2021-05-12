@@ -1,7 +1,9 @@
 local concat = table.concat
 local insert = table.insert
 local format = string.format
+local tohex = bit.tohex
 local vimcmd = vim.cmd
+local nvim_get_hl_by_name = vim.api.nvim_get_hl_by_name
 
 local M = {}
 
@@ -36,6 +38,29 @@ function Hlgroup:new(name, opts)
   end
   hlgroup:exec()
   return hlgroup
+end
+
+-- Given a highlight group name and an attribute (either 'fg' for the
+-- foreground or 'bg' for the background), return the color set for that
+-- particular attribute by the current colorscheme in hexadecimal format.
+function M.get_hex(hlgroup, attribute)
+  assert(attribute == 'fg' or attribute == 'bg')
+  attribute =
+    attribute == 'fg'
+    and 'foreground'
+     or 'background'
+
+  -- TODO: not sure why this fails if I call the 'nvim_get_hl_by_name' directly
+  -- instead of through a pcall.
+  local _, hldef = pcall(nvim_get_hl_by_name, hlgroup, true)
+  if hldef and hldef[attribute] then
+    return format('#%s', tohex(hldef[attribute], 6))
+  end
+
+  -- TODO: nvim-bufferline handles a couple of fallbacks here in case
+  -- 'nvim_get_hl_by_name' doesn't find a color for that attribute.
+
+  return 'NONE'
 end
 
 function M.setup(settings)

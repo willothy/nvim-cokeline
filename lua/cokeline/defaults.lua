@@ -1,3 +1,5 @@
+local get_hex = require('cokeline/hlgroups').get_hex
+
 local has_devicons, _ = pcall(require, 'nvim-web-devicons')
 
 local format = string.format
@@ -43,13 +45,13 @@ local defaults = {
   },
 
   highlights = {
-    fill = '#3e4452',
-    focused_fg = '#282c34',
-    focused_bg = '#abb2bf',
-    unfocused_fg = '#abb2bf',
-    unfocused_bg = '#3e4452',
-    modified = '#98c379',
-    readonly = '#e06c75',
+    fill = get_hex('ColorColumn', 'bg'),
+    focused_fg = get_hex('ColorColumn', 'bg'),
+    focused_bg = get_hex('Normal', 'fg'),
+    unfocused_fg = get_hex('Normal', 'fg'),
+    unfocused_bg = get_hex('Comment', 'fg'),
+    modified = get_hex('String', 'fg'),
+    readonly = get_hex('Error', 'fg'),
   },
 }
 
