@@ -49,7 +49,7 @@ local defaults = {
     focused_fg = get_hex('ColorColumn', 'bg'),
     focused_bg = get_hex('Normal', 'fg'),
     unfocused_fg = get_hex('Normal', 'fg'),
-    unfocused_bg = get_hex('Comment', 'fg'),
+    unfocused_bg = get_hex('Visual', 'bg'),
     modified = get_hex('String', 'fg'),
     readonly = get_hex('Error', 'fg'),
   },

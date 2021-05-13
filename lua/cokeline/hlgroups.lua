@@ -50,15 +50,15 @@ function M.get_hex(hlgroup, attribute)
     and 'foreground'
      or 'background'
 
-  -- TODO: not sure why this fails if I call the 'nvim_get_hl_by_name' directly
-  -- instead of through a pcall.
+  -- TODO: not sure why this fails if I call the 'nvim_get_hl_by_name' function
+  -- directly instead of through a pcall.
   local _, hldef = pcall(nvim_get_hl_by_name, hlgroup, true)
   if hldef and hldef[attribute] then
     return format('#%s', tohex(hldef[attribute], 6))
   end
 
   -- TODO: nvim-bufferline handles a couple of fallbacks here in case
-  -- 'nvim_get_hl_by_name' doesn't find a color for that attribute.
+  -- 'nvim_get_hl_by_name' doesn't find a color for the given attribute.
 
   return 'NONE'
 end

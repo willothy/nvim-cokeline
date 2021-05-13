@@ -1,7 +1,6 @@
-function! cokeline#toggle(filename, threshold)
-  if !buflisted(a:filename) | return | endif
+function! cokeline#toggle()
   let l:buffers = getbufinfo({'buflisted': 1})
-  execute 'set showtabline=' . (len(l:buffers) > a:threshold ? '2' : '0')
+  execute 'set showtabline=' . (len(l:buffers) > 1 ? '2' : '0')
 endfunction
 
 function! cokeline#focus(index)

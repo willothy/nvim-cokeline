@@ -66,16 +66,7 @@ function M.setup(settings)
     Augroup:new(
       'cokeline_toggle',
       {
-        Autocmd:new(
-          'VimEnter,BufAdd',
-          '*',
-          'call cokeline#toggle(expand("<afile>"), 1)'
-        ),
-        Autocmd:new(
-          'BufUnload',
-          '*',
-          'call cokeline#toggle(expand("<afile>"), 2)'
-        ),
+        Autocmd:new('BufEnter', '*', 'call cokeline#toggle()'),
       }
     )
   end
