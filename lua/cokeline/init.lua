@@ -21,20 +21,21 @@ local function cokeline(settings)
        or settings.hlgroups.unfocused
 
     local line = Line:new(hlgroups.line:embed(settings.line_format))
+    local bopts = vim.bo[b.bufnr]
 
     if settings.handle_clicks then
       line:embed_in_clickable_region(b.bufnr)
     end
     if settings.show_devicons then
-      line:render_devicon(b.name, vim.bo[b.bufnr].buftype, hlgroups.devicons)
+      line:render_devicon(b.name, bopts.buftype, hlgroups.devicons)
     end
     if settings.show_indexes then
       line:render_index(i)
     end
     if settings.show_flags then
       line:render_flags(
-        vim.bo[b.bufnr].modified,
-        vim.bo[b.bufnr].readonly,
+        bopts.modified,
+        bopts.readonly,
         hlgroups.line:embed(settings.flags_format),
         hlgroups.line:embed(settings.flags_divider),
         symbols.modified,
@@ -46,7 +47,7 @@ local function cokeline(settings)
       line:render_close_button(b.bufnr, symbols.close_button)
     end
     if settings.show_filenames then
-      line:render_filename(b.name)
+      line:render_filename(b.name, bopts.buftype)
     end
     insert(lines, line.text)
   end

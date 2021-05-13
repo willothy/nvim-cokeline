@@ -9,6 +9,7 @@ end
 local format = string.format
 local concat = table.concat
 local insert = table.insert
+local vimfn = vim.fn
 local fnamemodify = vim.fn.fnamemodify
 
 local M = {}
@@ -64,8 +65,11 @@ function M.Line:render_index(index)
   self.text = self.text:gsub(holders.index, index)
 end
 
-function M.Line:render_filename(path)
-  local filename = fnamemodify(path, ':t')
+function M.Line:render_filename(path, buftype)
+  local filename =
+    (buftype == 'quickfix' and '[Quickfix List]')
+    or (#path > 0 and fnamemodify(path, ':t'))
+    or '[No Name]'
   if filename:match('%%') then
     filename = filename:gsub('%%', '%%%%%%%%')
   end
