@@ -1,6 +1,5 @@
 function! cokeline#toggle()
-  let l:buffers = getbufinfo({'buflisted': 1})
-  execute 'set showtabline=' . (len(l:buffers) > 1 ? '2' : '0')
+  let &showtabline = len(getbufinfo({'buflisted': 1})) > 1 ? 2 : 0
 endfunction
 
 function! cokeline#focus(index)
@@ -19,12 +18,12 @@ function! cokeline#focus_cycle(bufnr, step, strict_cycling)
   execute 'buffer ' . l:bufnrs[l:index]
 endfunction
 
-function! cokeline#handle_clicks(minwid, clicks, button, modifiers)
-  let l:command = (a:button =~ 'l') ? 'buffer ' : 'bdelete '
-  execute l:command . a:minwid
+function! cokeline#handle_click(minwid, clicks, button, modifiers)
+  let l:command = (a:button =~ 'l') ? 'buffer' : g:cokeline_mouse_close_command
+  execute printf('%s %s', l:command, a:minwid)
 endfunction
 
-function! cokeline#close_button_handle_clicks(minwid, clicks, button, modifiers)
+function! cokeline#close_button_handle_click(minwid, clicks, button, modifiers)
   if a:button != 'l' | return | endif
-  execute 'bdelete ' . a:minwid
+  execute printf('%s %s', g:cokeline_mouse_close_command, a:minwid)
 endfunction

@@ -46,7 +46,7 @@ local function fix_hl_syntax(text, component)
 end
 
 function M.Line:embed_in_clickable_region(bufnr)
-  self.text = format('%%%s@cokeline#handle_clicks@%s', bufnr, self.text)
+  self.text = format('%%%s@cokeline#handle_click@%s', bufnr, self.text)
 end
 
 function M.Line:render_devicon(path, buftype, hlgroups)
@@ -81,10 +81,10 @@ function M.Line:render_flags(
     is_readonly,
     flags_format,
     divider,
-    modified_symbol,
-    readonly_symbol,
-    modified_hlgroup,
-    readonly_hlgroup)
+    symbol_modified,
+    symbol_readonly,
+    hlgroup_modified,
+    hlgroup_readonly)
 
   if not (is_modified or is_readonly) then
     self.text = self.text:gsub(holders.flags, '')
@@ -93,10 +93,10 @@ function M.Line:render_flags(
 
   local symbols = {}
   if is_modified then
-    insert(symbols, modified_hlgroup:embed(modified_symbol))
+    insert(symbols, hlgroup_modified:embed(symbol_modified))
   end
   if is_readonly then
-    insert(symbols, readonly_hlgroup:embed(readonly_symbol))
+    insert(symbols, hlgroup_readonly:embed(symbol_readonly))
   end
 
   local flags = flags_format:gsub(
@@ -107,7 +107,7 @@ end
 
 function M.Line:render_close_button(bufnr, close_button_symbol)
   local close_button = format(
-    '%%%s@cokeline#close_button_handle_clicks@%s%%%s@cokeline#handle_clicks@',
+    '%%%s@cokeline#close_button_handle_click@%s%%%s@cokeline#handle_click@',
     bufnr,
     close_button_symbol,
     bufnr)

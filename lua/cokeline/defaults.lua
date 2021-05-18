@@ -5,6 +5,7 @@ local has_devicons, _ = pcall(require, 'nvim-web-devicons')
 local format = string.format
 local vimcmd = vim.cmd
 local vimfn = vim.fn
+local vimg = vim.g
 
 local M = {}
 
@@ -24,6 +25,7 @@ end
 local defaults = {
   hide_when_one_buffer = false,
   cycle_prev_next_mappings = false,
+  mouse_close_command = 'bdelete',
   max_mapped_buffers = 20,
 
   line_format = format(
@@ -99,6 +101,10 @@ function M.merge(preferences)
     and settings.handle_clicks
     and true
      or false
+
+  if settings.handle_clicks then
+    vimg.cokeline_mouse_close_command = settings.mouse_close_command
+  end
 
   return settings
 end
