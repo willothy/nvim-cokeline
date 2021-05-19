@@ -36,12 +36,12 @@ local function cokeline(settings)
       line:render_flags(
         bopts.modified,
         bopts.readonly,
-        hlgroups.line:embed(settings.flags_format),
-        hlgroups.line:embed(settings.flags_divider),
         symbols.modified,
         symbols.readonly,
         hlgroups.modified,
-        hlgroups.readonly)
+        hlgroups.readonly,
+        settings.flags_format,
+        hlgroups.line:embed(settings.flags_divider))
     end
     if settings.show_close_buttons then
       line:render_close_button(b.bufnr, symbols.close_button)

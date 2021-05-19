@@ -79,12 +79,12 @@ end
 function M.Line:render_flags(
     is_modified,
     is_readonly,
-    flags_format,
-    divider,
     symbol_modified,
     symbol_readonly,
     hlgroup_modified,
-    hlgroup_readonly)
+    hlgroup_readonly,
+    flags_fmt,
+    divider)
 
   if not (is_modified or is_readonly) then
     self.text = self.text:gsub(holders.flags, '')
@@ -99,9 +99,9 @@ function M.Line:render_flags(
     insert(symbols, hlgroup_readonly:embed(symbol_readonly))
   end
 
-  local flags = flags_format:gsub(
-    holders.flags, concat(symbols, divider):gsub('%%', '%%%%'))
-  self.text = self.text:gsub(holders.flags, flags:gsub('%%', '%%%%'))
+  local flags = concat(symbols, divider)
+  local flags_fmtd = flags_fmt:gsub(holders.flags, flags:gsub('%%', '%%%%'))
+  self.text = self.text:gsub(holders.flags, flags_fmtd:gsub('%%', '%%%%'))
   self.text = fix_hl_syntax(self.text, flags)
 end
 
