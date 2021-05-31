@@ -1,3 +1,4 @@
+" FIXME
 function! cokeline#toggle()
   let &showtabline = len(getbufinfo({'buflisted': 1})) > 1 ? 2 : 0
 endfunction
@@ -17,6 +18,7 @@ function! cokeline#focus_cycle(bufnr, step, strict_cycling)
   endif
   execute 'buffer ' . l:bufnrs[l:index]
 endfunction
+" --
 
 function! cokeline#handle_click(minwid, clicks, button, modifiers)
   let l:command = (a:button =~ 'l') ? 'buffer' : g:cokeline_mouse_close_command

@@ -27,10 +27,8 @@ function Mapping:new(lhs, rhs)
 end
 
 function M.setup(settings)
-  local strict_cycling =
-    settings.cycle_prev_next_mappings
-    and 0
-     or 1
+  -- FIXME
+  local strict_cycling = settings.cycle_prev_next_mappings
 
   Mapping:new(
     '<Plug>(cokeline-focus-prev)',
@@ -47,12 +45,37 @@ function M.setup(settings)
     )
   )
 
+  Mapping:new(
+    '<Plug>(cokeline-switch-prev)',
+    format(
+      ':lua require"cokeline".switch({bufnr = vim.fn.bufnr("%%"), step = -1, strict_cycling = %s})<CR>',
+      strict_cycling
+    )
+  )
+  Mapping:new(
+    '<Plug>(cokeline-switch-next)',
+    format(
+      ':lua require"cokeline".switch({bufnr = vim.fn.bufnr("%%"), step = 1, strict_cycling = %s})<CR>',
+      strict_cycling
+    )
+  )
+
   for index = 1,settings.max_mapped_buffers do
     Mapping:new(
       format('<Plug>(cokeline-focus-%s)', index),
       format(':call cokeline#focus(%s)<CR>', index)
     )
+
+    Mapping:new(
+      format('<Plug>(cokeline-switch-%s)', index),
+      format(
+        ':lua require"cokeline".switch({bufnr = vim.fn.bufnr("%%"), target = %s, strict_cycling = %s})<CR>',
+        index,
+        strict_cycling
+      )
+    )
   end
+  --
 end
 
 return M

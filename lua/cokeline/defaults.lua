@@ -24,7 +24,7 @@ end
 
 local defaults = {
   hide_when_one_buffer = false,
-  cycle_prev_next_mappings = false,
+  cycle_prev_next_mappings = true,
   mouse_close_command = 'bdelete',
   max_mapped_buffers = 20,
 

@@ -70,7 +70,7 @@ function M.setup(settings)
     fill = Hlgroup:new('TabLineFill', {guibg = highlights.fill}),
 
     focused = {
-      line = Hlgroup:new(
+      title = Hlgroup:new(
         'CokeFocused',
         {guifg = highlights.focused_fg, guibg = highlights.focused_bg}),
 
@@ -84,7 +84,7 @@ function M.setup(settings)
     },
 
     unfocused = {
-      line = Hlgroup:new(
+      title = Hlgroup:new(
         'CokeUnfocused',
         {guifg = highlights.unfocused_fg, guibg = highlights.unfocused_bg}),
 

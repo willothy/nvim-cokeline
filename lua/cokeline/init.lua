@@ -2,58 +2,107 @@ local defaults = require('cokeline/defaults')
 local hlgroups = require('cokeline/hlgroups')
 local augroups = require('cokeline/augroups')
 local mappings = require('cokeline/mappings')
-local Line = require('cokeline/lines').Line
+local buffers = require('cokeline/buffers')
 
 local concat = table.concat
 local insert = table.insert
-local vimfn = vim.fn
 
 local M = {}
 
-local function cokeline(settings)
-  local symbols = settings.symbols
-  local lines = {}
+local state = {
+  buffers = {},
+  order = {},
+}
 
-  for i, b in ipairs(vimfn.getbufinfo({buflisted = 1})) do
+local function redraw()
+  vim.cmd('redrawtabline')
+  vim.cmd('redraw')
+end
+
+local function cokeline(settings)
+  state.buffers = buffers.get_listed(state.order)
+
+  if settings.hide_when_one_buffer and #state.buffers == 1 then
+    vim.o.showtabline = 0
+    return
+  end
+
+  local symbols = settings.symbols
+  local titles = {}
+
+  for _, buffer in pairs(state.buffers) do
     local hlgroups =
-      b.bufnr == vimfn.bufnr('%')
+      buffer.is_focused
       and settings.hlgroups.focused
        or settings.hlgroups.unfocused
 
-    local line = Line:new(hlgroups.line:embed(settings.line_format))
-    local bopts = vim.bo[b.bufnr]
+    buffer.title = hlgroups.title:embed(settings.line_format)
 
     if settings.handle_clicks then
-      line:embed_in_clickable_region(b.bufnr)
+      buffer:embed_in_clickable_region()
     end
     if settings.show_devicons then
-      line:render_devicon(b.name, bopts.buftype, hlgroups.devicons)
+      buffer:render_devicon(hlgroups.devicons)
     end
     if settings.show_indexes then
-      line:render_index(i)
+      buffer:render_index()
     end
     if settings.show_flags then
-      line:render_flags(
-        bopts.modified,
-        bopts.readonly,
+      buffer:render_flags(
         symbols.modified,
         symbols.readonly,
         hlgroups.modified,
         hlgroups.readonly,
         settings.flags_format,
-        hlgroups.line:embed(settings.flags_divider))
+        hlgroups.title:embed(settings.flags_divider))
     end
     if settings.show_close_buttons then
-      line:render_close_button(b.bufnr, symbols.close_button)
+      buffer:render_close_button(symbols.close_button)
     end
     if settings.show_filenames then
-      line:render_filename(b.name, bopts.buftype)
+      buffer:render_filename()
     end
-    insert(lines, line.text)
+    insert(titles, buffer.title)
   end
 
-  return concat(lines)
+  return concat(titles)
 end
+
+-- FIXME
+function M.toggle()
+end
+
+function M.focus()
+end
+
+function M.switch(args)
+  local index_current
+  for i, buffer in ipairs(state.buffers) do
+    if args.bufnr == buffer.number then
+      index_current = i
+      break
+    end
+  end
+
+  local index_target =
+    args.target or index_current + args.step
+
+  if index_target < 1 or index_target > #state.buffers then
+    if args.strict_cycling then
+      return
+    else
+      index_target = index_target % #state.buffers
+    end
+  end
+
+  local buffer_current = state.buffers[index_current]
+  local buffer_target = state.buffers[index_target]
+  state.buffers[index_current] = buffer_target
+  state.buffers[index_target] = buffer_current
+  state.order = buffers.get_numbers(state.buffers)
+  redraw()
+end
+--
 
 function M.setup(preferences)
   local settings = defaults.merge(preferences)
