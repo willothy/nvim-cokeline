@@ -9,8 +9,8 @@ end
 local format = string.format
 local concat = table.concat
 local insert = table.insert
-local vimfn = vim.fn
-local fnamemodify = vim.fn.fnamemodify
+
+local fn = vim.fn
 
 local Buffer = {
   number = 0,
@@ -60,8 +60,8 @@ function Buffer:render_devicon(hlgroups)
   local filename =
     self.type == 'terminal'
      and 'terminal'
-      or fnamemodify(self.path, ':t')
-  local extension = fnamemodify(self.path, ':e')
+      or fn.fnamemodify(self.path, ':t')
+  local extension = fn.fnamemodify(self.path, ':e')
   local icon, _ = get_icon(filename, extension)
   local devicon = hlgroups[icon]:embed(format('%s ', icon))
   self.title = self.title:gsub(holders.devicon, devicon:gsub('%%', '%%%%'))
@@ -75,7 +75,7 @@ end
 function Buffer:render_filename()
   local filename =
     (self.type == 'quickfix' and '[Quickfix List]')
-    or (#self.path > 0 and fnamemodify(self.path, ':t'))
+    or (#self.path > 0 and fn.fnamemodify(self.path, ':t'))
     or '[No Name]'
   if filename:match('%%') then
     filename = filename:gsub('%%', '%%%%%%%%')
@@ -120,57 +120,38 @@ function Buffer:render_close_button(close_button_symbol)
     holders.close_button, close_button:gsub('%%', '%%%%'))
 end
 
-function Buffer:new()
+function Buffer:new(buf, index)
   buffer = {}
   setmetatable(buffer, self)
   self.__index = self
+  buffer.number = buf.bufnr
+  buffer.index = index
+  buffer.path = buf.name
+  buffer.type = vim.bo[buf.bufnr].buftype
+  buffer.is_focused = buf.bufnr == fn.bufnr('%')
+  buffer.is_modified = vim.bo[buf.bufnr].modified
+  buffer.is_readonly = vim.bo[buf.bufnr].readonly
   return buffer
 end
 
--- FIXME
-local function get_bufnrs(buffers)
-  return vim.tbl_map(function(b) return b.bufnr end, buffers)
-end
-
-function M.get_numbers(buffers)
-  return vim.tbl_map(function(b) return b.number end, buffers)
-end
-
 function M.get_listed(order)
-  local listed_buffers = vimfn.getbufinfo({buflisted = 1})
+  local listed_buffers = fn.getbufinfo({buflisted = 1})
   local buffers = {}
 
   if not next(order) then
-    for i, b in ipairs(listed_buffers) do
-      local buffer = Buffer:new()
-      buffer.number = b.bufnr
-      buffer.index = i
-      buffer.path = b.name
-      buffer.type = vim.bo[b.bufnr].buftype
-      buffer.is_focused = b.bufnr == vimfn.bufnr('%')
-      buffer.is_modified = vim.bo[b.bufnr].modified
-      buffer.is_readonly = vim.bo[b.bufnr].readonly
-      table.insert(buffers, buffer)
+    for index, buffer in ipairs(listed_buffers) do
+      insert(buffers, Buffer:new(buffer, index))
     end
     return buffers
   end
 
-  local bufnrs = get_bufnrs(listed_buffers)
-  local i = 1
+  local index = 1
 
-  for _, bufnr in ipairs(order) do
-    for _, b in pairs(listed_buffers) do
-      if b.bufnr == bufnr then
-        local buffer = Buffer:new()
-        buffer.number = b.bufnr
-        buffer.index = i
-        buffer.path = b.name
-        buffer.type = vim.bo[b.bufnr].buftype
-        buffer.is_focused = b.bufnr == vimfn.bufnr('%')
-        buffer.is_modified = vim.bo[b.bufnr].modified
-        buffer.is_readonly = vim.bo[b.bufnr].readonly
-        table.insert(buffers, buffer)
-        i = i + 1
+  for _, number in ipairs(order) do
+    for _, buffer in pairs(listed_buffers) do
+      if buffer.bufnr == number then
+        insert(buffers, Buffer:new(buffer, index))
+        index = index + 1
         break
       end
     end
@@ -178,6 +159,5 @@ function M.get_listed(order)
 
   return buffers
 end
---
 
 return M

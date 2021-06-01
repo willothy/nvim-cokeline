@@ -4,22 +4,58 @@ local augroups = require('cokeline/augroups')
 local mappings = require('cokeline/mappings')
 local buffers = require('cokeline/buffers')
 
+local format = string.format
 local concat = table.concat
 local insert = table.insert
 
+local map = vim.tbl_map
+local cmd = vim.cmd
+local fn = vim.fn
+
 local M = {}
+
+local settings = {}
 
 local state = {
   buffers = {},
   order = {},
 }
 
-local function redraw()
-  vim.cmd('redrawtabline')
-  vim.cmd('redraw')
+local function get_current_index()
+  current_buffer_number = fn.bufnr('%')
+  for index, buffer in ipairs(state.buffers) do
+    if current_buffer_number == buffer.number then
+      return index
+    end
+  end
 end
 
-local function cokeline(settings)
+local function get_target_index(current_index, args)
+  local target_index
+  if args.target then
+    if args.target < 1 or args.target > #state.buffers then
+      return
+    end
+    target_index = args.target
+  else
+    target_index = current_index + args.step
+    if target_index < 1 or target_index > #state.buffers then
+      if settings.cycle_prev_next_mappings then
+        target_index = (target_index - 1) % #state.buffers + 1
+      else
+        return
+      end
+    end
+  end
+  return target_index
+end
+
+local function redraw()
+  cmd('redrawtabline')
+  cmd('redraw')
+end
+
+function _G.cokeline()
   state.buffers = buffers.get_listed(state.order)
 
   if settings.hide_when_one_buffer and #state.buffers == 1 then
@@ -68,48 +104,38 @@ local function cokeline(settings)
   return concat(titles)
 end
 
--- FIXME
 function M.toggle()
+  vim.o.showtabline = #state.buffers > 1 and 2 or 0
 end
 
-function M.focus()
+function M.focus(args)
+  local current_index = get_current_index()
+  local target_index = get_target_index(current_index, args)
+  if target_index == nil then
+    return
+  end
+  cmd(format('buffer %s', state.buffers[target_index].number))
 end
 
 function M.switch(args)
-  local index_current
-  for i, buffer in ipairs(state.buffers) do
-    if args.bufnr == buffer.number then
-      index_current = i
-      break
-    end
+  local current_index = get_current_index()
+  local target_index = get_target_index(current_index, args)
+  if target_index == nil then
+    return
   end
-
-  local index_target =
-    args.target or index_current + args.step
-
-  if index_target < 1 or index_target > #state.buffers then
-    if args.strict_cycling then
-      return
-    else
-      index_target = index_target % #state.buffers
-    end
-  end
-
-  local buffer_current = state.buffers[index_current]
-  local buffer_target = state.buffers[index_target]
-  state.buffers[index_current] = buffer_target
-  state.buffers[index_target] = buffer_current
-  state.order = buffers.get_numbers(state.buffers)
+  local current_buffer = state.buffers[current_index]
+  local target_buffer = state.buffers[target_index]
+  state.buffers[current_index] = target_buffer
+  state.buffers[target_index] = current_buffer
+  state.order = map(function(buffer) return buffer.number end, state.buffers)
   redraw()
 end
---
 
 function M.setup(preferences)
-  local settings = defaults.merge(preferences)
+  settings = defaults.merge(preferences)
   settings = hlgroups.setup(settings)
   augroups.setup(settings)
-  mappings.setup(settings)
-  _G.cokeline = function() return cokeline(settings) end
+  mappings.setup()
   vim.o.showtabline = 2
   vim.o.tabline = '%!v:lua.cokeline()'
 end

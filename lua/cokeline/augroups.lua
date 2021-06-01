@@ -66,7 +66,7 @@ function M.setup(settings)
     Augroup:new(
       'cokeline_toggle',
       {
-        Autocmd:new('BufAdd', '*', 'call cokeline#toggle()'),
+        Autocmd:new('BufAdd', '*', 'lua require"cokeline".toggle()'),
       }
     )
   end
