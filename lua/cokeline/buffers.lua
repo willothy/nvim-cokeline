@@ -10,6 +10,8 @@ local format = string.format
 local concat = table.concat
 local insert = table.insert
 
+local contains = vim.tbl_contains
+local map = vim.tbl_map
 local fn = vim.fn
 
 local Buffer = {
@@ -68,8 +70,8 @@ function Buffer:render_devicon(hlgroups)
   self.title = fix_hl_syntax(self.title, devicon)
 end
 
-function Buffer:render_index()
-  self.title = self.title:gsub(holders.index, self.index)
+function Buffer:render_index(index)
+  self.title = self.title:gsub(holders.index, index)
 end
 
 function Buffer:render_filename()
@@ -120,40 +122,46 @@ function Buffer:render_close_button(close_button_symbol)
     holders.close_button, close_button:gsub('%%', '%%%%'))
 end
 
-function Buffer:new(buf, index)
+function Buffer:new(args)
   buffer = {}
   setmetatable(buffer, self)
   self.__index = self
-  buffer.number = buf.bufnr
-  buffer.index = index
-  buffer.path = buf.name
-  buffer.type = vim.bo[buf.bufnr].buftype
-  buffer.is_focused = buf.bufnr == fn.bufnr('%')
-  buffer.is_modified = vim.bo[buf.bufnr].modified
-  buffer.is_readonly = vim.bo[buf.bufnr].readonly
+  if args.bufnr then
+    buffer.number = args.bufnr
+    buffer.type = vim.bo[args.bufnr].buftype
+    buffer.is_focused = args.bufnr == fn.bufnr('%')
+    buffer.is_modified = vim.bo[args.bufnr].modified
+    buffer.is_readonly = vim.bo[args.bufnr].readonly
+  end
+  if args.name then
+    buffer.path = args.name
+  end
   return buffer
 end
 
 function M.get_listed(order)
   local listed_buffers = fn.getbufinfo({buflisted = 1})
-  local buffers = {}
 
   if not next(order) then
-    for index, buffer in ipairs(listed_buffers) do
-      insert(buffers, Buffer:new(buffer, index))
-    end
-    return buffers
+    return map(function(b) return Buffer:new(b) end, listed_buffers)
   end
 
-  local index = 1
+  local buffers = {}
+  local buffer_numbers = {}
 
   for _, number in ipairs(order) do
-    for _, buffer in pairs(listed_buffers) do
-      if buffer.bufnr == number then
-        insert(buffers, Buffer:new(buffer, index))
-        index = index + 1
+    for _, b in pairs(listed_buffers) do
+      if b.bufnr == number then
+        insert(buffers, Buffer:new(b))
+        insert(buffer_numbers, number)
         break
       end
+    end
+  end
+
+  for _, b in pairs(listed_buffers) do
+    if not contains(buffer_numbers, b.bufnr) then
+      insert(buffers, Buffer:new(b))
     end
   end
 

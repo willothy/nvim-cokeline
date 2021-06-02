@@ -1,4 +1,5 @@
 local format = string.format
+
 local map = vim.api.nvim_set_keymap
 
 local M = {}

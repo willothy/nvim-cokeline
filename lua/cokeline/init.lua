@@ -10,6 +10,7 @@ local insert = table.insert
 
 local map = vim.tbl_map
 local cmd = vim.cmd
+local opt = vim.opt
 local fn = vim.fn
 
 local M = {}
@@ -30,7 +31,7 @@ local function get_current_index()
   end
 end
 
-local function get_target_index(current_index, args)
+local function get_target_index(args)
   local target_index
   if args.target then
     if args.target < 1 or args.target > #state.buffers then
@@ -38,6 +39,7 @@ local function get_target_index(current_index, args)
     end
     target_index = args.target
   else
+    local current_index = get_current_index()
     target_index = current_index + args.step
     if target_index < 1 or target_index > #state.buffers then
       if settings.cycle_prev_next_mappings then
@@ -59,14 +61,14 @@ function _G.cokeline()
   state.buffers = buffers.get_listed(state.order)
 
   if settings.hide_when_one_buffer and #state.buffers == 1 then
-    vim.o.showtabline = 0
+    opt.showtabline = 0
     return
   end
 
   local symbols = settings.symbols
   local titles = {}
 
-  for _, buffer in pairs(state.buffers) do
+  for index, buffer in ipairs(state.buffers) do
     local hlgroups =
       buffer.is_focused
       and settings.hlgroups.focused
@@ -81,7 +83,7 @@ function _G.cokeline()
       buffer:render_devicon(hlgroups.devicons)
     end
     if settings.show_indexes then
-      buffer:render_index()
+      buffer:render_index(index)
     end
     if settings.show_flags then
       buffer:render_flags(
@@ -105,12 +107,11 @@ function _G.cokeline()
 end
 
 function M.toggle()
-  vim.o.showtabline = #state.buffers > 1 and 2 or 0
+  opt.showtabline = #fn.getbufinfo({buflisted = 1}) > 1 and 2 or 0
 end
 
 function M.focus(args)
-  local current_index = get_current_index()
-  local target_index = get_target_index(current_index, args)
+  local target_index = get_target_index(args)
   if target_index == nil then
     return
   end
@@ -119,7 +120,7 @@ end
 
 function M.switch(args)
   local current_index = get_current_index()
-  local target_index = get_target_index(current_index, args)
+  local target_index = get_target_index(args)
   if target_index == nil then
     return
   end
@@ -136,8 +137,8 @@ function M.setup(preferences)
   settings = hlgroups.setup(settings)
   augroups.setup(settings)
   mappings.setup()
-  vim.o.showtabline = 2
-  vim.o.tabline = '%!v:lua.cokeline()'
+  opt.showtabline = 2
+  opt.tabline = '%!v:lua.cokeline()'
 end
 
 return M

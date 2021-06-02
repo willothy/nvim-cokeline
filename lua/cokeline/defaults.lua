@@ -3,9 +3,10 @@ local get_hex = require('cokeline/hlgroups').get_hex
 local has_devicons, _ = pcall(require, 'nvim-web-devicons')
 
 local format = string.format
-local vimcmd = vim.cmd
-local vimfn = vim.fn
-local vimg = vim.g
+
+local cmd = vim.cmd
+local fn = vim.fn
+local g = vim.g
 
 local M = {}
 
@@ -24,9 +25,8 @@ end
 
 local defaults = {
   hide_when_one_buffer = false,
-  cycle_prev_next_mappings = true,
+  cycle_prev_next_mappings = false,
   mouse_close_command = 'bdelete',
-  max_mapped_buffers = 20,
 
   line_format = format(
     ' %s%s: %s%s %s ',
@@ -61,7 +61,7 @@ function M.merge(preferences)
   local settings = defaults
   local echoerr = function (msg)
     local fmt = 'echoerr "[cokeline.nvim]: %s"'
-    vimcmd(fmt:format(msg))
+    cmd(fmt:format(msg))
   end
 
   for k, v in pairs(preferences) do
@@ -73,7 +73,7 @@ function M.merge(preferences)
     end
   end
 
-  settings['handle_clicks'] = vimfn.has('tablineat')
+  settings['handle_clicks'] = fn.has('tablineat')
 
   settings['show_devicons'] =
     settings.line_format:match(M.line_placeholders.devicon)
@@ -103,7 +103,7 @@ function M.merge(preferences)
      or false
 
   if settings.handle_clicks then
-    vimg.cokeline_mouse_close_command = settings.mouse_close_command
+    g.cokeline_mouse_close_command = settings.mouse_close_command
   end
 
   return settings
