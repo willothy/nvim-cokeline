@@ -1,4 +1,3 @@
-local format = string.format
 local concat = table.concat
 local insert = table.insert
 
@@ -68,7 +67,7 @@ function M.setup(settings)
       name = 'cokeline_toggle',
       autocmds = {
         Autocmd:new({
-          events = 'BufAdd',
+          events = 'VimEnter,BufAdd',
           target = '*',
           command = 'lua require"cokeline".toggle()',
         }),

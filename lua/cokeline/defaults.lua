@@ -4,7 +4,6 @@ local has_devicons, _ = pcall(require, 'nvim-web-devicons')
 
 local format = string.format
 
-local cmd = vim.cmd
 local fn = vim.fn
 local g = vim.g
 
@@ -59,9 +58,9 @@ local defaults = {
 
 function M.merge(preferences)
   local settings = defaults
-  local echoerr = function (msg)
-    local fmt = 'echoerr "[cokeline.nvim]: %s"'
-    cmd(fmt:format(msg))
+  local echoerr = function(msg)
+    local fmt = '[cokeline.nvim]: %s'
+    vim.api.nvim_echo({{fmt:format(msg), 'ErrorMsg'}}, true, {})
   end
 
   for k, v in pairs(preferences) do

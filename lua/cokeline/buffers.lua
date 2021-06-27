@@ -149,6 +149,8 @@ function M.get_listed(order)
   local buffers = {}
   local buffer_numbers = {}
 
+  -- First add the buffers whose numbers are in the global 'order' table that
+  -- are still listed.
   for _, number in ipairs(order) do
     for _, b in pairs(listed_buffers) do
       if b.bufnr == number then
@@ -159,6 +161,8 @@ function M.get_listed(order)
     end
   end
 
+  -- Then add all the listed buffers whose numbers are not yet in the global
+  -- 'order' table.
   for _, b in pairs(listed_buffers) do
     if not contains(buffer_numbers, b.bufnr) then
       insert(buffers, Buffer:new(b))
