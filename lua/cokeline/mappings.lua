@@ -14,7 +14,7 @@ function Mapping:exec()
 end
 
 function Mapping:new(args)
-  mapping = {}
+  local mapping = {}
   setmetatable(mapping, self)
   self.__index = self
   if args.lhs then

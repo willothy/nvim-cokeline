@@ -5,7 +5,6 @@ local has_devicons, _ = pcall(require, 'nvim-web-devicons')
 local format = string.format
 
 local fn = vim.fn
-local g = vim.g
 
 local M = {}
 
@@ -25,7 +24,6 @@ end
 local defaults = {
   hide_when_one_buffer = false,
   cycle_prev_next_mappings = false,
-  mouse_close_command = 'bdelete',
 
   line_format = format(
     ' %s%s: %s%s %s ',
@@ -51,6 +49,7 @@ local defaults = {
     focused_bg = get_hex('Normal', 'fg'),
     unfocused_fg = get_hex('Normal', 'fg'),
     unfocused_bg = get_hex('Visual', 'bg'),
+    unique_fg = get_hex('Comment', 'fg'),
     modified = get_hex('String', 'fg'),
     readonly = get_hex('Error', 'fg'),
   },
@@ -100,10 +99,6 @@ function M.merge(preferences)
     and settings.handle_clicks
     and true
      or false
-
-  if settings.handle_clicks then
-    g.cokeline_mouse_close_command = settings.mouse_close_command
-  end
 
   return settings
 end

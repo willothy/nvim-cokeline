@@ -92,13 +92,14 @@ function _G.cokeline()
         hlgroups.modified,
         hlgroups.readonly,
         settings.flags_format,
-        hlgroups.title:embed(settings.flags_divider))
+        hlgroups.title:embed(settings.flags_divider)
+      )
     end
     if settings.show_close_buttons then
       buffer:render_close_button(symbols.close_button)
     end
     if settings.show_filenames then
-      buffer:render_filename()
+      buffer:render_filename(hlgroups.unique)
     end
     insert(titles, buffer.title)
   end

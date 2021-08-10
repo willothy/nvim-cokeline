@@ -28,7 +28,7 @@ function Hlgroup:exec()
 end
 
 function Hlgroup:new(args)
-  hlgroup = {}
+  local hlgroup = {}
   setmetatable(hlgroup, self)
   self.__index = self
   if args.name then
@@ -76,17 +76,35 @@ function M.setup(settings)
     focused = {
       title = Hlgroup:new({
         name = 'CokeFocused',
-        opts = {guifg = highlights.focused_fg, guibg = highlights.focused_bg},
+        opts = {
+          guifg = highlights.focused_fg,
+          guibg = highlights.focused_bg,
+        },
+      }),
+
+      unique = Hlgroup:new({
+        name = 'CokeUniqueFocused',
+        opts = {
+          gui = 'italic',
+          guifg = highlights.unique_fg,
+          guibg = highlights.focused_bg,
+        },
       }),
 
       modified = Hlgroup:new({
         name = 'CokeModifiedFocused',
-        opts = {guifg = highlights.modified, guibg = highlights.focused_bg},
+        opts = {
+          guifg = highlights.modified,
+          guibg = highlights.focused_bg,
+        },
       }),
 
       readonly = Hlgroup:new({
         name = 'CokeReadonlyFocused',
-        opts = {guifg = highlights.readonly, guibg = highlights.focused_bg},
+        opts = {
+          guifg = highlights.readonly,
+          guibg = highlights.focused_bg,
+        },
       }),
     },
 
@@ -99,14 +117,29 @@ function M.setup(settings)
         },
       }),
 
+      unique = Hlgroup:new({
+        name = 'CokeUniqueUnfocused',
+        opts = {
+          gui = 'italic',
+          guifg = highlights.unique_fg,
+          guibg = highlights.unfocused_bg,
+        },
+      }),
+
       modified = Hlgroup:new({
         name = 'CokeModifiedUnfocused',
-        opts = {guifg = highlights.modified, guibg = highlights.unfocused_bg},
+        opts = {
+          guifg = highlights.modified,
+          guibg = highlights.unfocused_bg,
+        },
       }),
 
       readonly = Hlgroup:new({
         name = 'CokeReadonlyUnfocused',
-        opts = {guifg = highlights.readonly, guibg = highlights.unfocused_bg},
+        opts = {
+          guifg = highlights.readonly,
+          guibg = highlights.unfocused_bg,
+        },
       }),
     },
   }
