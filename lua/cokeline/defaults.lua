@@ -26,8 +26,7 @@ local defaults = {
   cycle_prev_next_mappings = false,
 
   line_format = format(
-    ' %s%s: %s%s %s ',
-    M.line_placeholders.devicon,
+    ' %s: %s%s %s ',
     M.line_placeholders.index,
     M.line_placeholders.filename,
     M.line_placeholders.flags,

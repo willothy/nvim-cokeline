@@ -42,8 +42,8 @@ function Hlgroup:new(args)
 end
 
 -- Given a highlight group name and an attribute (either 'fg' for the
--- foreground or 'bg' for the background), return the color set for that
--- particular attribute by the current colorscheme in hexadecimal format.
+-- foreground or 'bg' for the background), return the color set by the current
+-- colorscheme for that particular attribute in hexadecimal format.
 function M.get_hex(hlgroup, attribute)
   assert(attribute == 'fg' or attribute == 'bg')
   attribute =
