@@ -1,56 +1,61 @@
 local get_hex = require('cokeline/hlgroups').get_hex
 
-local has_devicons, _ = pcall(require, 'nvim-web-devicons')
-
 local format = string.format
 
-local fn = vim.fn
-
 local M = {}
-
-local line_components = {
-  'devicon',
-  'index',
-  'filename',
-  'flags',
-  'close_button',
-}
-
-M.line_placeholders = {}
-for _, component in pairs(line_components) do
-  M.line_placeholders[component] = format('{%s}', component)
-end
 
 local defaults = {
   hide_when_one_buffer = false,
   cycle_prev_next_mappings = false,
+  same_size_tabs = true,
 
-  line_format = format(
-    ' %s: %s%s %s ',
-    M.line_placeholders.index,
-    M.line_placeholders.filename,
-    M.line_placeholders.flags,
-    M.line_placeholders.close_button
-  ),
+  focused_fg = get_hex('ColorColumn', 'fg'),
+  focused_bg = get_hex('Normal', 'fg'),
+  unfocused_fg = get_hex('Normal', 'fg'),
+  unfocused_bg = get_hex('ColorColumn', 'fg'),
 
-  flags_format = format(' %s', M.line_placeholders.flags),
-  flags_divider = ',',
-
-  symbols = {
-    modified = '● ',
-    readonly = '',
-    close_button = '',
-  },
-
-  highlights = {
-    fill = get_hex('ColorColumn', 'bg'),
-    focused_fg = get_hex('ColorColumn', 'bg'),
-    focused_bg = get_hex('Normal', 'fg'),
-    unfocused_fg = get_hex('Normal', 'fg'),
-    unfocused_bg = get_hex('Visual', 'bg'),
-    unique_fg = get_hex('Comment', 'fg'),
-    modified = get_hex('String', 'fg'),
-    readonly = get_hex('Error', 'fg'),
+  components = {
+    {
+      text = '｜',
+      hl = {
+        fg = get_hex('String', 'fg'),
+        -- fg = function(buffer)
+        --   return
+        --     buffer.is_modified
+        --     and get_hex('String', 'fg')
+        --     or get_hex('Error', 'fg')
+        -- end
+      },
+    },
+    {
+      text = function(buffer) return buffer.devicon end,
+      hl = {
+        fg = function(buffer) return buffer.devicon_color end,
+      },
+    },
+    {
+      text = function(buffer) return format('%s: ', buffer.index) end,
+    },
+    {
+      text = function(buffer) return buffer.unique_prefix end,
+      hl = {
+        fg = get_hex('Comment', 'fg'),
+        style = 'italic',
+      },
+    },
+    {
+      text = function(buffer) return buffer.filename end,
+    },
+    {
+      text = ' ',
+    },
+    {
+      text = '',
+      delete_buffer_on_left_click = true,
+    },
+    {
+      text = ' ',
+    }
   },
 }
 
@@ -69,35 +74,6 @@ function M.merge(preferences)
       echoerr(msg:format(k))
     end
   end
-
-  settings['handle_clicks'] = fn.has('tablineat')
-
-  settings['show_devicons'] =
-    settings.line_format:match(M.line_placeholders.devicon)
-    and has_devicons
-    and true
-     or false
-
-  settings['show_indexes'] =
-    settings.line_format:match(M.line_placeholders.index)
-    and true
-     or false
-
-  settings['show_filenames'] =
-    settings.line_format:match(M.line_placeholders.filename)
-    and true
-     or false
-
-  settings['show_flags'] =
-    settings.line_format:match(M.line_placeholders.flags)
-    and true
-     or false
-
-  settings['show_close_buttons'] =
-    settings.line_format:match(M.line_placeholders.close_button)
-    and settings.handle_clicks
-    and true
-     or false
 
   return settings
 end

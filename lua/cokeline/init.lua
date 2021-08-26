@@ -1,5 +1,5 @@
+local Component = require('cokeline/components').Component
 local defaults = require('cokeline/defaults')
-local hlgroups = require('cokeline/hlgroups')
 local augroups = require('cokeline/augroups')
 local mappings = require('cokeline/mappings')
 local buffers = require('cokeline/buffers')
@@ -23,7 +23,7 @@ local state = {
 }
 
 local function get_current_index()
-  current_buffer_number = fn.bufnr('%')
+  local current_buffer_number = fn.bufnr('%')
   for index, buffer in ipairs(state.buffers) do
     if current_buffer_number == buffer.number then
       return index
@@ -57,56 +57,6 @@ local function redraw()
   cmd('redraw')
 end
 
-function _G.cokeline()
-  state.buffers = buffers.get_listed(state.order)
-
-  if settings.hide_when_one_buffer and #state.buffers == 1 then
-    opt.showtabline = 0
-    return
-  end
-
-  local symbols = settings.symbols
-  local titles = {}
-
-  for index, buffer in ipairs(state.buffers) do
-    local hlgroups =
-      buffer.is_focused
-      and settings.hlgroups.focused
-       or settings.hlgroups.unfocused
-
-    buffer.title = hlgroups.title:embed(settings.line_format)
-
-    if settings.handle_clicks then
-      buffer:embed_in_clickable_region()
-    end
-    if settings.show_devicons then
-      buffer:render_devicon(hlgroups.devicons)
-    end
-    if settings.show_indexes then
-      buffer:render_index(index)
-    end
-    if settings.show_flags then
-      buffer:render_flags(
-        symbols.modified,
-        symbols.readonly,
-        hlgroups.modified,
-        hlgroups.readonly,
-        settings.flags_format,
-        hlgroups.title:embed(settings.flags_divider)
-      )
-    end
-    if settings.show_close_buttons then
-      buffer:render_close_button(symbols.close_button)
-    end
-    if settings.show_filenames then
-      buffer:render_filename(hlgroups.unique)
-    end
-    insert(titles, buffer.title)
-  end
-
-  return concat(titles)
-end
-
 function M.toggle()
   opt.showtabline = #fn.getbufinfo({buflisted = 1}) > 1 and 2 or 0
 end
@@ -135,11 +85,36 @@ end
 
 function M.setup(preferences)
   settings = defaults.merge(preferences)
-  settings = hlgroups.setup(settings)
   augroups.setup(settings)
   mappings.setup()
   opt.showtabline = 2
   opt.tabline = '%!v:lua.cokeline()'
+end
+
+function _G.cokeline()
+  -- TODO
+  state.buffers = buffers.get_listed(state.order)
+
+  if settings.hide_when_one_buffer and #state.buffers == 1 then
+    opt.showtabline = 0
+    return
+  end
+  --
+
+  local lines = {}
+
+  for _, buffer in pairs(state.buffers) do
+    local line = {}
+    for index, raw_component in ipairs(settings.components) do
+      local component = Component:new(raw_component, buffer, index)
+      if component.text then
+        insert(line, component.hlgroup:embed(component.text))
+      end
+    end
+    insert(lines, format('%%%s@cokeline#handle_click@%s', buffer.number, concat(line)))
+  end
+
+  return concat(lines)
 end
 
 return M

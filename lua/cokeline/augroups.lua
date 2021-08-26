@@ -17,7 +17,7 @@ local Augroup = {
 }
 
 function Autocmd:new(args)
-  autocmd = {}
+  local autocmd = {}
   setmetatable(autocmd, self)
   self.__index = self
   if args.events then
@@ -41,14 +41,14 @@ function Augroup:exec()
   ]]
   local autocmd_fmt = 'autocmd %s %s %s'
   local autocmds = {}
-  for _, cmd in pairs(self.autocmds) do
-    insert(autocmds, autocmd_fmt:format(cmd.events, cmd.target, cmd.command))
+  for _, aucmd in pairs(self.autocmds) do
+    insert(autocmds, autocmd_fmt:format(aucmd.events, aucmd.target, aucmd.command))
   end
   cmd(augroup_fmt:format(self.name, concat(autocmds, '\n')))
 end
 
 function Augroup:new(args)
-  augroup = {}
+  local augroup = {}
   setmetatable(augroup, self)
   self.__index = self
   if args.name then

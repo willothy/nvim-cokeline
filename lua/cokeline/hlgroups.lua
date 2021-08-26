@@ -8,35 +8,40 @@ local cmd = vim.cmd
 
 local M = {}
 
-local Hlgroup = {
+M.Hlgroup = {
   name = '',
-  opts = {},
+  opts = {
+    gui = nil,
+    guifg = nil,
+    guibg = nil,
+  },
 }
 
-function Hlgroup:embed(text)
+function M.Hlgroup:embed(text)
   return format('%%#%s#%s%%*', self.name, text)
 end
 
-function Hlgroup:exec()
-  local hilight_fmt = 'highlight! %s %s'
+function M.Hlgroup:exec()
+  local highlight_fmt = 'highlight! %s %s'
   local opt_fmt = '%s=%s'
   local opts = {}
   for k, v in pairs(self.opts) do
     insert(opts, opt_fmt:format(k, v))
   end
-  cmd(hilight_fmt:format(self.name, concat(opts, ' ')))
+  cmd(highlight_fmt:format(self.name, concat(opts, ' ')))
 end
 
-function Hlgroup:new(args)
+function M.Hlgroup:new(args)
   local hlgroup = {}
   setmetatable(hlgroup, self)
   self.__index = self
-  if args.name then
-    hlgroup.name = args.name
-  end
+
+  hlgroup.name = args.name
+
   if args.opts then
     hlgroup.opts = args.opts
   end
+
   hlgroup:exec()
   return hlgroup
 end
@@ -62,108 +67,6 @@ function M.get_hex(hlgroup, attribute)
   -- 'get_hl_by_name' doesn't find a color for the given attribute.
 
   return 'NONE'
-end
-
-function M.setup(settings)
-  local highlights = settings.highlights
-
-  local hlgroups = {
-    fill = Hlgroup:new({
-      name = 'TabLineFill',
-      opts = {guibg = highlights.fill},
-    }),
-
-    focused = {
-      title = Hlgroup:new({
-        name = 'CokeFocused',
-        opts = {
-          guifg = highlights.focused_fg,
-          guibg = highlights.focused_bg,
-        },
-      }),
-
-      unique = Hlgroup:new({
-        name = 'CokeUniqueFocused',
-        opts = {
-          gui = 'italic',
-          guifg = highlights.unique_fg,
-          guibg = highlights.focused_bg,
-        },
-      }),
-
-      modified = Hlgroup:new({
-        name = 'CokeModifiedFocused',
-        opts = {
-          guifg = highlights.modified,
-          guibg = highlights.focused_bg,
-        },
-      }),
-
-      readonly = Hlgroup:new({
-        name = 'CokeReadonlyFocused',
-        opts = {
-          guifg = highlights.readonly,
-          guibg = highlights.focused_bg,
-        },
-      }),
-    },
-
-    unfocused = {
-      title = Hlgroup:new({
-        name = 'CokeUnfocused',
-        opts = {
-          guifg = highlights.unfocused_fg,
-          guibg = highlights.unfocused_bg,
-        },
-      }),
-
-      unique = Hlgroup:new({
-        name = 'CokeUniqueUnfocused',
-        opts = {
-          gui = 'italic',
-          guifg = highlights.unique_fg,
-          guibg = highlights.unfocused_bg,
-        },
-      }),
-
-      modified = Hlgroup:new({
-        name = 'CokeModifiedUnfocused',
-        opts = {
-          guifg = highlights.modified,
-          guibg = highlights.unfocused_bg,
-        },
-      }),
-
-      readonly = Hlgroup:new({
-        name = 'CokeReadonlyUnfocused',
-        opts = {
-          guifg = highlights.readonly,
-          guibg = highlights.unfocused_bg,
-        },
-      }),
-    },
-  }
-
-  if settings.show_devicons then
-    hlgroups.focused['devicons'] = {}
-    hlgroups.unfocused['devicons'] = {}
-    local devicons = require('nvim-web-devicons').get_icons()
-
-    for _, icon in pairs(devicons) do
-      hlgroups.focused.devicons[icon.icon] = Hlgroup:new({
-        name = format('CokeDevIcon%sFocused', icon.name),
-        opts = {guifg = icon.color, guibg = highlights.focused_bg},
-      })
-
-      hlgroups.unfocused.devicons[icon.icon] = Hlgroup:new({
-        name = format('CokeDevIcon%sUnfocused', icon.name),
-        opts = {guifg = icon.color, guibg = highlights.unfocused_bg},
-      })
-    end
-  end
-
-  settings['hlgroups'] = hlgroups
-  return settings
 end
 
 return M
