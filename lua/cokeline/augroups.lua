@@ -1,78 +1,12 @@
-local concat = table.concat
-local insert = table.insert
-
-local cmd = vim.cmd
-
 local M = {}
-
-local Autocmd = {
-  events = '',
-  target = '',
-  command = '',
-}
-
-local Augroup = {
-  name = '',
-  autocmds = {},
-}
-
-function Autocmd:new(args)
-  local autocmd = {}
-  setmetatable(autocmd, self)
-  self.__index = self
-  if args.events then
-    autocmd.events = args.events
-  end
-  if args.target then
-    autocmd.target = args.target
-  end
-  if args.command then
-    autocmd.command = args.command
-  end
-  return autocmd
-end
-
-function Augroup:exec()
-  local augroup_fmt = [[
-    augroup %s
-    autocmd!
-    %s
-    augroup END
-  ]]
-  local autocmd_fmt = 'autocmd %s %s %s'
-  local autocmds = {}
-  for _, aucmd in pairs(self.autocmds) do
-    insert(autocmds, autocmd_fmt:format(aucmd.events, aucmd.target, aucmd.command))
-  end
-  cmd(augroup_fmt:format(self.name, concat(autocmds, '\n')))
-end
-
-function Augroup:new(args)
-  local augroup = {}
-  setmetatable(augroup, self)
-  self.__index = self
-  if args.name then
-    augroup.name = args.name
-  end
-  if args.autocmds then
-    augroup.autocmds = args.autocmds
-  end
-  augroup:exec()
-  return augroup
-end
 
 function M.setup(settings)
   if settings.hide_when_one_buffer then
-    Augroup:new({
-      name = 'cokeline_toggle',
-      autocmds = {
-        Autocmd:new({
-          events = 'VimEnter,BufAdd',
-          target = '*',
-          command = 'lua require"cokeline".toggle()',
-        }),
-      },
-    })
+    vim.cmd([[
+    augroup cokeline_toggle
+      autocmd VimEnter,BufAdd * lua require'cokeline'.toggle()
+    augroup END
+    ]])
   end
 end
 

@@ -35,13 +35,8 @@ function M.Hlgroup:new(args)
   local hlgroup = {}
   setmetatable(hlgroup, self)
   self.__index = self
-
   hlgroup.name = args.name
-
-  if args.opts then
-    hlgroup.opts = args.opts
-  end
-
+  hlgroup.opts = args.opts
   hlgroup:exec()
   return hlgroup
 end

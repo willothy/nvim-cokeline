@@ -1,63 +1,29 @@
-local format = string.format
-
 local keymap = vim.api.nvim_set_keymap
 
 local M = {}
 
-local Mapping = {
-  lhs = '',
-  rhs = '',
-}
-
-function Mapping:exec()
-  keymap('n', self.lhs, self.rhs, {noremap = true, silent = true})
-end
-
-function Mapping:new(args)
-  local mapping = {}
-  setmetatable(mapping, self)
-  self.__index = self
-  if args.lhs then
-    mapping.lhs = args.lhs
-  end
-  if args.rhs then
-    mapping.rhs = args.rhs
-  end
-  mapping:exec()
-  return mapping
+local plugmap = function(args)
+  keymap('n', args.lhs, args.rhs, {noremap = true, silent = true})
 end
 
 function M.setup()
-  Mapping:new({
-    lhs = '<Plug>(cokeline-focus-prev)',
-    rhs = '<Cmd>lua require"cokeline".focus({step = -1})<CR>',
-  })
+  local lhs_fmt = '<Plug>(cokeline-%s-%s)'
+  local rhs_fmt = '<Cmd>lua require"cokeline".%s({%s = %s})<CR>'
 
-  Mapping:new({
-    lhs = '<Plug>(cokeline-focus-next)',
-    rhs = '<Cmd>lua require"cokeline".focus({step = 1})<CR>',
-  })
+  for _, action in pairs({'focus', 'switch'}) do
+    for _, step in pairs({'1', '-1'}) do
+      plugmap({
+        lhs = lhs_fmt:format(action, step == '1' and 'next' or 'prev'),
+        rhs = rhs_fmt:format(action, 'step', step),
+      })
+    end
 
-  Mapping:new({
-    lhs = '<Plug>(cokeline-switch-prev)',
-    rhs = '<Cmd>lua require"cokeline".switch({step = -1})<CR>',
-  })
-
-  Mapping:new({
-    lhs = '<Plug>(cokeline-switch-next)',
-    rhs = '<Cmd>lua require"cokeline".switch({step = 1})<CR>',
-  })
-
-  for target = 1,20 do
-    Mapping:new({
-      lhs = format('<Plug>(cokeline-focus-%s)', target),
-      rhs = format('<Cmd>lua require"cokeline".focus({target = %s})<CR>', target),
-    })
-
-    Mapping:new({
-      lhs = format('<Plug>(cokeline-switch-%s)', target),
-      rhs = format('<Cmd>lua require"cokeline".switch({target = %s})<CR>', target),
-    })
+    for target = 1,20 do
+      plugmap({
+        lhs = lhs_fmt:format(action, target),
+        rhs = rhs_fmt:format(action, 'target', target),
+      })
+    end
   end
 end
 
