@@ -1,10 +1,8 @@
 local get_hex = require('cokeline/hlgroups').get_hex
 
 local has_devicons, devicons = pcall(require, 'nvim-web-devicons')
-local get_icon
 if has_devicons then
   devicons.setup({default = true})
-  get_icon = devicons.get_icon
 end
 
 local reverse = string.reverse
@@ -74,10 +72,12 @@ local function get_unique_prefix(filename)
   return reverse(aux:sub(#fn.fnamemodify(reverse(filename), ':t') + 1, #aux))
 end
 
-function Buffer:new(args)
+function Buffer:new(args, index)
   local buffer = {}
   setmetatable(buffer, self)
   self.__index = self
+
+  buffer.index = index
 
   if args.bufnr then
     buffer.number = args.bufnr
@@ -99,14 +99,19 @@ function Buffer:new(args)
     buffer.filename = '[No Name]'
   end
 
-  local name =
-    buffer.type == 'terminal'
-    and 'terminal'
-     or fn.fnamemodify(buffer.path, ':t')
-  local extension = fn.fnamemodify(buffer.path, ':e')
-  local devicon, devicon_hlgroup = get_icon(name, extension)
-  buffer.devicon = devicon .. ' '
-  buffer.devicon_color = get_hex(devicon_hlgroup, 'fg')
+  if has_devicons then
+    local name =
+      buffer.type == 'terminal'
+      and 'terminal'
+       or fn.fnamemodify(buffer.path, ':t')
+    local extension = fn.fnamemodify(buffer.path, ':e')
+    local devicon, devicon_hlgroup = devicons.get_icon(name, extension)
+    buffer.devicon = devicon .. ' '
+    buffer.devicon_color = get_hex(devicon_hlgroup, 'fg')
+  else
+    buffer.devicon = ''
+    buffer.devicon_color = ''
+  end
 
   buffer.unique_prefix = get_unique_prefix(buffer.path)
 
@@ -115,16 +120,15 @@ end
 
 function M.get_listed(order)
   local listed_buffers = fn.getbufinfo({buflisted = 1})
+  local buffers = {}
 
   if not next(order) then
-    local buffers = map(function(b) return Buffer:new(b) end, listed_buffers)
-    for index, buffer in ipairs(buffers) do
-      buffer.index = index
+    for index, b in ipairs(listed_buffers) do
+      insert(buffers, Buffer:new(b, index))
     end
     return buffers
   end
 
-  local buffers = {}
   local buffer_numbers = {}
 
   -- First add the buffers whose numbers are in the global 'order' table that
@@ -132,7 +136,7 @@ function M.get_listed(order)
   for _, number in ipairs(order) do
     for _, b in pairs(listed_buffers) do
       if b.bufnr == number then
-        insert(buffers, Buffer:new(b))
+        insert(buffers, Buffer:new(b, #buffers + 1))
         insert(buffer_numbers, number)
         break
       end
@@ -143,12 +147,8 @@ function M.get_listed(order)
   -- 'order' table.
   for _, b in pairs(listed_buffers) do
     if not contains(buffer_numbers, b.bufnr) then
-      insert(buffers, Buffer:new(b))
+      insert(buffers, Buffer:new(b, #buffers + 1))
     end
-  end
-
-  for index, buffer in ipairs(buffers) do
-    buffer.index = index
   end
 
   return buffers

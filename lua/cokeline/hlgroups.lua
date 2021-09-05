@@ -44,16 +44,13 @@ end
 -- Given a highlight group name and an attribute (either 'fg' for the
 -- foreground or 'bg' for the background), return the color set by the current
 -- colorscheme for that particular attribute in hexadecimal format.
-function M.get_hex(hlgroup, attribute)
+function M.get_hex(hlname, attribute)
   assert(attribute == 'fg' or attribute == 'bg')
-  attribute =
-    attribute == 'fg'
-    and 'foreground'
-     or 'background'
+  attribute = (attribute == 'fg') and 'foreground' or 'background'
 
-  -- TODO: not sure why this fails if I call the 'get_hl_by_name' function
-  -- directly instead of through a pcall.
-  local _, hldef = pcall(get_hl_by_name, hlgroup, true)
+  -- TODO: not sure why this fails if I call 'get_hl_by_name' directly instead
+  -- of through a pcall.
+  local _, hldef = pcall(get_hl_by_name, hlname, true)
   if hldef and hldef[attribute] then
     return format('#%s', tohex(hldef[attribute], 6))
   end

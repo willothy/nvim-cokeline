@@ -64,6 +64,8 @@ function M.Component:render(buffer)
   self.__index = self
 
   c.text = evaluate_field(self.text, buffer)
+  c.width = fn.strwidth(c.text)
+
   if self.delete_buffer_on_left_click and fn.has('tablineat') then
     c.text = format(
       '%%%s@cokeline#close_button_handle_click@%s%%%s@cokeline#handle_click@',
@@ -72,8 +74,6 @@ function M.Component:render(buffer)
       buffer.number
     )
   end
-
-  c.width = fn.strwidth(c.text)
 
   c.hlgroup =
     buffer.is_focused
