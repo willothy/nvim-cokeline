@@ -1,7 +1,6 @@
 local utils = require('cokeline/utils')
 
 local map = vim.tbl_map
--- local fn = vim.fn
 
 local concat = table.concat
 local insert = table.insert
@@ -13,10 +12,6 @@ M.Cokeline = {
   main = '',
   width = 0,
   lines = {},
-  -- cutoffs = {
-  --   right = '',
-  --   left = '',
-  -- },
   before = '',
   after = '',
 }
@@ -35,10 +30,6 @@ function M.Cokeline:new()
   cokeline.main = ''
   cokeline.width = 0
   cokeline.lines = {}
-  -- cokeline.cutoffs = {
-  --   right = '',
-  --   left = '',
-  -- }
   cokeline.before = ''
   cokeline.after = ''
   return cokeline
@@ -51,46 +42,16 @@ end
 
 function M.Cokeline:subline(args)
   local direction, lines
-  -- local cutoff_fmt
 
   if args.upto then
     direction = 'left'
     lines = utils.reverse({unpack(self.lines, 1, args.upto)})
-    -- cutoff_fmt = ' %s  '
   elseif args.startfrom then
     direction = 'right'
     lines = {unpack(self.lines, args.startfrom)}
-    -- cutoff_fmt = '  %s '
   end
 
-  -- local c = 0
-  -- for i, line in ipairs(lines) do
-  --   c = c + line.width
-  --   if (c > args.available_space - fn.strwidth(cutoff_fmt:format(1))) and (i ~= #lines) then
-  --     self.cutoffs[direction] = cutoff_fmt:format(#lines - i)
-  --     args.available_space =
-  --       args.available_space
-  --         - fn.strwidth(self.cutoffs[direction])
-  --     break
-  --   end
-  -- end
-
   local subline = M.Cokeline:new()
-
-  -- -- Change this into a single while loop. If there are cutoffs update the
-  -- -- available space, remove the last added line and diminish i by 1.
-  -- for _, line in ipairs(lines) do
-  --   if subline.width + line.width < args.available_space then
-  --     subline:add_line(line)
-  --   else
-  --     line:shorten({
-  --       direction = direction,
-  --       available_space = args.available_space - subline.width
-  --     })
-  --     subline:add_line(line)
-  --     break
-  --   end
-  -- end
 
   for _, line in ipairs(lines) do
     if subline.width + line.width < args.available_space then
@@ -158,9 +119,7 @@ function M.Cokeline:render(focused_line)
 
   return
     self.before
-    -- .. self.cutoffs.left
     .. self.main
-    -- .. self.cutoffs.right
     .. self.after
 end
 
