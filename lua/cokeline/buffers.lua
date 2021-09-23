@@ -1,4 +1,4 @@
-local get_hex = require('cokeline/hlgroups').get_hex
+local utils = require('cokeline/utils')
 
 local has_devicons, devicons = pcall(require, 'nvim-web-devicons')
 if has_devicons then
@@ -107,7 +107,7 @@ function Buffer:new(args, index)
     local extension = fn.fnamemodify(buffer.path, ':e')
     local devicon, devicon_hlgroup = devicons.get_icon(name, extension)
     buffer.devicon = devicon .. ' '
-    buffer.devicon_color = get_hex(devicon_hlgroup, 'fg')
+    buffer.devicon_color = utils.get_hex(devicon_hlgroup, 'fg')
   else
     buffer.devicon = ''
     buffer.devicon_color = ''

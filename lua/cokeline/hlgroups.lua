@@ -1,9 +1,4 @@
 local format = string.format
-local concat = table.concat
-local insert = table.insert
-local tohex = bit.tohex
-
-local get_hl_by_name = vim.api.nvim_get_hl_by_name
 local cmd = vim.cmd
 
 local M = {}
@@ -22,13 +17,11 @@ function M.Hlgroup:embed(text)
 end
 
 function M.Hlgroup:exec()
-  local highlight_fmt = 'highlight! %s %s'
-  local opt_fmt = '%s=%s'
-  local opts = {}
+  local opts = ''
   for k, v in pairs(self.opts) do
-    insert(opts, opt_fmt:format(k, v))
+    opts = opts .. format('%s=%s', k, v) .. ' '
   end
-  cmd(highlight_fmt:format(self.name, concat(opts, ' ')))
+  cmd(format('highlight! %s %s', self.name, opts))
 end
 
 function M.Hlgroup:new(args)
@@ -39,26 +32,6 @@ function M.Hlgroup:new(args)
   hlgroup.opts = args.opts
   hlgroup:exec()
   return hlgroup
-end
-
--- Given a highlight group name and an attribute (either 'fg' for the
--- foreground or 'bg' for the background), return the color set by the current
--- colorscheme for that particular attribute in hexadecimal format.
-function M.get_hex(hlname, attribute)
-  assert(attribute == 'fg' or attribute == 'bg')
-  attribute = (attribute == 'fg') and 'foreground' or 'background'
-
-  -- TODO: not sure why this fails if I call 'get_hl_by_name' directly instead
-  -- of through a pcall.
-  local _, hldef = pcall(get_hl_by_name, hlname, true)
-  if hldef and hldef[attribute] then
-    return format('#%s', tohex(hldef[attribute], 6))
-  end
-
-  -- TODO: nvim-bufferline handles a couple of fallbacks here in case
-  -- 'get_hl_by_name' doesn't find a color for the given attribute.
-
-  return 'NONE'
 end
 
 return M

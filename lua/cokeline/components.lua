@@ -29,17 +29,17 @@ local evaluate_field = function(field, buffer)
 end
 
 function M.Component:new(raw_component, index, settings)
-  local component = {}
-  setmetatable(component, self)
+  local c = {}
+  setmetatable(c, self)
   self.__index = self
 
-  component.text = raw_component.text
-  component.hl = raw_component.hl
-  component.delete_buffer_on_left_click = raw_component.delete_buffer_on_left_click
+  c.text = raw_component.text
+  c.hl = raw_component.hl
+  c.delete_buffer_on_left_click = raw_component.delete_buffer_on_left_click
 
-  component.index = index
+  c.index = index
 
-  component.default_hlgroup.focused = Hlgroup:new({
+  c.default_hlgroup.focused = Hlgroup:new({
     name = 'CokeFocused',
     opts = {
       guifg = settings.focused_fg,
@@ -47,7 +47,7 @@ function M.Component:new(raw_component, index, settings)
     }
   })
 
-  component.default_hlgroup.unfocused = Hlgroup:new({
+  c.default_hlgroup.unfocused = Hlgroup:new({
     name = 'CokeUnfocused',
     opts = {
       guifg = settings.unfocused_fg,
@@ -55,27 +55,27 @@ function M.Component:new(raw_component, index, settings)
     }
   })
 
-  return component
+  return c
 end
 
 function M.Component:render(buffer)
-  local c = {}
-  setmetatable(c, self)
+  local component = {}
+  setmetatable(component, self)
   self.__index = self
 
-  c.text = evaluate_field(self.text, buffer)
-  c.width = fn.strwidth(c.text)
+  component.text = evaluate_field(self.text, buffer)
+  component.width = fn.strwidth(component.text)
 
   if self.delete_buffer_on_left_click and fn.has('tablineat') then
-    c.text = format(
+    component.text = format(
       '%%%s@cokeline#close_button_handle_click@%s%%%s@cokeline#handle_click@',
       buffer.number,
-      c.text,
+      component.text,
       buffer.number
     )
   end
 
-  c.hlgroup =
+  component.hlgroup =
     buffer.is_focused
     and self.default_hlgroup.focused
      or self.default_hlgroup.unfocused
@@ -84,20 +84,20 @@ function M.Component:render(buffer)
     local gui =
       self.hl.style
       and evaluate_field(self.hl.style, buffer)
-       or c.hlgroup.opts.gui
+       or component.hlgroup.opts.gui
 
     local guifg =
       self.hl.fg
       and evaluate_field(self.hl.fg, buffer)
-       or c.hlgroup.opts.guifg
+       or component.hlgroup.opts.guifg
 
     local guibg =
       self.hl.bg
       and evaluate_field(self.hl.bg, buffer)
-       or c.hlgroup.opts.guibg
+       or component.hlgroup.opts.guibg
 
-    c.hlgroup = Hlgroup:new({
-      name = format('%s%s_%s', c.hlgroup.name, buffer.number, self.index),
+    component.hlgroup = Hlgroup:new({
+      name = format('%s%s_%s', component.hlgroup.name, buffer.number, self.index),
       opts = {
         gui = gui,
         guifg = guifg,
@@ -106,17 +106,27 @@ function M.Component:render(buffer)
     })
   end
 
-  return c
+  return component
+end
+
+function M.Component:shorten(args)
+  local ellipses = '…'
+  local width = args.available_space - fn.strwidth(ellipses)
+  if args.direction == 'right' then
+    local start = 0
+    self.text = fn.strcharpart(self.text, start, width) .. ellipses
+  elseif args.direction == 'left' then
+    local start = fn.strwidth(self.text) - width
+    self.text = ellipses .. fn.strcharpart(self.text, start, width)
+  end
 end
 
 function M.setup(settings)
   local raw_components = settings.components
   local components = {}
-
   for index, raw_component in ipairs(raw_components) do
     insert(components, M.Component:new(raw_component, index, settings))
   end
-
   return components
 end
 

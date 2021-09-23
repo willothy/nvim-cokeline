@@ -1,4 +1,4 @@
-local get_hex = require('cokeline/hlgroups').get_hex
+local utils = require('cokeline/utils')
 
 local M = {}
 
@@ -7,10 +7,10 @@ local defaults = {
   cycle_prev_next_mappings = false,
   same_size_tabs = true,
 
-  focused_fg = get_hex('ColorColumn', 'bg'),
-  focused_bg = get_hex('Normal', 'fg'),
-  unfocused_fg = get_hex('Normal', 'fg'),
-  unfocused_bg = get_hex('ColorColumn', 'bg'),
+  focused_fg = utils.get_hex('ColorColumn', 'bg'),
+  focused_bg = utils.get_hex('Normal', 'fg'),
+  unfocused_fg = utils.get_hex('Normal', 'fg'),
+  unfocused_bg = utils.get_hex('ColorColumn', 'bg'),
 
   components = {
     {
@@ -25,7 +25,7 @@ local defaults = {
     {
       text = function(buffer) return buffer.unique_prefix end,
       hl = {
-        fg = get_hex('Comment', 'fg'),
+        fg = utils.get_hex('Comment', 'fg'),
         style = 'italic',
       },
     },
