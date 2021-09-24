@@ -7,10 +7,16 @@ local defaults = {
   cycle_prev_next_mappings = false,
   same_size_tabs = true,
 
-  focused_fg = utils.get_hex('ColorColumn', 'bg'),
-  focused_bg = utils.get_hex('Normal', 'fg'),
-  unfocused_fg = utils.get_hex('Normal', 'fg'),
-  unfocused_bg = utils.get_hex('ColorColumn', 'bg'),
+  default_hl = {
+    focused = {
+      fg = utils.get_hex('ColorColumn', 'bg'),
+      bg = utils.get_hex('Normal', 'fg'),
+    },
+    unfocused = {
+      fg = utils.get_hex('Normal', 'fg'),
+      bg = utils.get_hex('ColorColumn', 'bg'),
+    },
+  },
 
   components = {
     {

@@ -48,6 +48,12 @@ function M.Line:cutoff(args)
 
   local remaining_space = args.available_space
 
+  -- TODO: lines 66-90 and 96-120 are identical. The code can't be put inside a
+  -- function because it includes 'break's for the outer for loop. We could
+  -- still put it into a function, return a boolean at that points and check
+  -- for the value of the boolean but that's not elegant. There has to be a
+  -- more expressive way.
+
   for i, component in ipairs(components) do
     if component.width < remaining_space then
       self:add_component(component, args.direction)
@@ -57,6 +63,27 @@ function M.Line:cutoff(args)
       -- If the component exactly fills the remaining space we check if is the
       -- last one. If it isn't we shorten it to its width.
       if next(components, i) then
+        -- If the remaining space is less than the width of the cutoff format
+        -- we cutoff the previous component.
+        if remaining_space
+            < fn.strwidth(component.cutoff_fmt[args.direction]:format('')) then
+          -- If this is the first component in the line, we set its text to
+          -- blank spaces, add it to the line and break early.
+          if i == 1 then
+            component.text = string.rep(' ', remaining_space)
+            component.width = fn.strwidth(component.text)
+            self.add_component(component, args.direction)
+            break
+          end
+
+          local j = (args.direction == 'right') and (i - 1) or 1
+          self.components[j]:cutoff({
+            direction = args.direction,
+            available_space = remaining_space + self.components[j].width,
+          })
+          break
+        end
+
         component:cutoff({
           direction = args.direction,
           available_space = component.width,
@@ -70,6 +97,15 @@ function M.Line:cutoff(args)
       -- cutoff the previous component.
       if remaining_space
           < fn.strwidth(component.cutoff_fmt[args.direction]:format('')) then
+        -- If this is the first component in the line, we set its text to blank
+        -- spaces, add it to the line and break early.
+        if i == 1 then
+          component.text = string.rep(' ', remaining_space)
+          component.width = fn.strwidth(component.text)
+          self.add_component(component, args.direction)
+          break
+        end
+
         local j = (args.direction == 'right') and (i - 1) or 1
         self.components[j]:cutoff({
           direction = args.direction,
@@ -77,6 +113,7 @@ function M.Line:cutoff(args)
         })
         break
       end
+
       component:cutoff({
         direction = args.direction,
         available_space = remaining_space,

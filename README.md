@@ -177,16 +177,10 @@ nmap <silent> <Space>2 <Plug>(cokeline-switch-2)
 
 Some of the features yet to be implemented include:
 
-  - the ability to render the bufferline so as to keep the focused buffer
-  always visible, even with a lot of buffers opened at the same time;
-
   - support for tabs;
 
   - support for sidebar offsets to provide a nice integration with
   NERDTree-like file explorer plugins;
-
-  - customizable buffer separators (no separator characters are currently
-  displayed);
 
   - equal sized buffer titles: if there are *n* buffers opened, every buffer
   title should take up *1/n* of the available space. This might be tricky to

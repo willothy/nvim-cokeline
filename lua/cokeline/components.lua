@@ -7,11 +7,14 @@ local fn = vim.fn
 
 local M = {}
 
+local default_hl = {}
+
 M.Component = {
   text = '',
   hl = nil,
   delete_buffer_on_left_click = false,
 
+  index = 0,
   width = 0,
 
   hlgroup = nil,
@@ -34,34 +37,34 @@ local evaluate_field = function(field, buffer)
   end
 end
 
-function M.Component:new(raw_component, index, settings)
-  local c = {}
-  setmetatable(c, self)
+function M.Component:new(c, index)
+  local component = {}
+  setmetatable(component, self)
   self.__index = self
 
-  c.text = raw_component.text
-  c.hl = raw_component.hl
-  c.delete_buffer_on_left_click = raw_component.delete_buffer_on_left_click
+  component.text = c.text
+  component.hl = c.hl
+  component.delete_buffer_on_left_click = c.delete_buffer_on_left_click
 
-  c.index = index
+  component.index = index
 
-  c.default_hlgroup.focused = Hlgroup:new({
+  component.default_hlgroup.focused = Hlgroup:new({
     name = 'CokeFocused',
     opts = {
-      guifg = settings.focused_fg,
-      guibg = settings.focused_bg,
+      guifg = default_hl.focused.fg,
+      guibg = default_hl.focused.bg,
     }
   })
 
-  c.default_hlgroup.unfocused = Hlgroup:new({
+  component.default_hlgroup.unfocused = Hlgroup:new({
     name = 'CokeUnfocused',
     opts = {
-      guifg = settings.unfocused_fg,
-      guibg = settings.unfocused_bg,
+      guifg = default_hl.unfocused.fg,
+      guibg = default_hl.unfocused.bg,
     }
   })
 
-  return c
+  return component
 end
 
 function M.Component:render(buffer)
@@ -135,10 +138,10 @@ function M.Component:cutoff(args)
 end
 
 function M.setup(settings)
-  local raw_components = settings.components
+  default_hl = settings.default_hl
   local components = {}
-  for index, raw_component in ipairs(raw_components) do
-    insert(components, M.Component:new(raw_component, index, settings))
+  for index, c in ipairs(settings.components) do
+    insert(components, M.Component:new(c, index))
   end
   return components
 end

@@ -1,10 +1,10 @@
 local utils = require('cokeline/utils')
 
-local map = vim.tbl_map
-
+local unpack = unpack or table.unpack
 local concat = table.concat
 local insert = table.insert
-local unpack = unpack or table.unpack
+
+local map = vim.tbl_map
 
 local M = {}
 

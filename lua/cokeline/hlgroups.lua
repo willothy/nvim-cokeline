@@ -1,4 +1,5 @@
 local format = string.format
+
 local cmd = vim.cmd
 
 local M = {}
