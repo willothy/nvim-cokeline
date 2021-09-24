@@ -18,7 +18,7 @@ M.Cokeline = {
 
 local conclines = function(lines)
   return concat(map(
-      function(line) return line:clickable() end,
+      function(line) return line:text() end,
       lines
   ))
 end
@@ -57,7 +57,7 @@ function M.Cokeline:subline(args)
     if subline.width + line.width < args.available_space then
       subline:add_line(line)
     else
-      line:shorten({
+      line:cutoff({
         direction = direction,
         available_space = args.available_space - subline.width
       })
@@ -78,6 +78,15 @@ function M.Cokeline:render(focused_line)
 
   local available_space_minus_flwidth =
     available_space_tot - focused_line.width
+
+  if available_space_minus_flwidth <= 0 then
+    self.lines[focused_line.index]:cutoff({
+      direction = 'right',
+      available_space = available_space_tot,
+    })
+    self.main = self.lines[focused_line.index]:text()
+    return
+  end
 
   local available_space_left_right =
     math.floor((available_space_minus_flwidth)/2)
@@ -115,12 +124,7 @@ function M.Cokeline:render(focused_line)
     })
   end
 
-  self.main = left .. self.lines[focused_line.index]:clickable() .. right
-
-  return
-    self.before
-    .. self.main
-    .. self.after
+  self.main = left .. self.lines[focused_line.index]:text() .. right
 end
 
 return M

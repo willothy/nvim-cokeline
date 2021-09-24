@@ -121,7 +121,12 @@ function _G.cokeline()
     cokeline:add_line(line)
   end
 
-  return cokeline:render(focused_line)
+  cokeline:render(focused_line)
+
+  return
+    cokeline.before
+    .. cokeline.main
+    .. cokeline.after
 end
 
 return M

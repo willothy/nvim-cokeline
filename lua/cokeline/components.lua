@@ -12,12 +12,18 @@ M.Component = {
   hl = nil,
   delete_buffer_on_left_click = false,
 
-  hlgroup = nil,
   width = 0,
+
+  hlgroup = nil,
   default_hlgroup = {
     focused = nil,
     unfocused = nil,
   },
+
+  cutoff_fmt = {
+    left = ' …%s',
+    right = '%s… ',
+  }
 }
 
 local evaluate_field = function(field, buffer)
@@ -97,7 +103,8 @@ function M.Component:render(buffer)
        or component.hlgroup.opts.guibg
 
     component.hlgroup = Hlgroup:new({
-      name = format('%s%s_%s', component.hlgroup.name, buffer.number, self.index),
+      name =
+        format('%s%s_%s', component.hlgroup.name, buffer.number, self.index),
       opts = {
         gui = gui,
         guifg = guifg,
@@ -109,16 +116,22 @@ function M.Component:render(buffer)
   return component
 end
 
-function M.Component:shorten(args)
-  local ellipses = '…'
-  local width = args.available_space - fn.strwidth(ellipses)
-  if args.direction == 'right' then
-    local start = 0
-    self.text = fn.strcharpart(self.text, start, width) .. ellipses
-  elseif args.direction == 'left' then
-    local start = fn.strwidth(self.text) - width
-    self.text = ellipses .. fn.strcharpart(self.text, start, width)
-  end
+function M.Component:cutoff(args)
+  self.width = args.available_space
+
+  local available_space =
+    args.available_space
+    - fn.strwidth(self.cutoff_fmt[args.direction]:format(''))
+
+  local start =
+    args.direction == 'left'
+    and fn.strwidth(self.text) - available_space
+     or 0
+
+  self.text =
+    self.cutoff_fmt[args.direction]:format(
+      fn.strcharpart(self.text, start, available_space)
+    )
 end
 
 function M.setup(settings)
