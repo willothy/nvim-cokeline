@@ -151,14 +151,14 @@ in my dotfiles):
   ```
   </details>
 
-#### Comparison with `nvim-bufferline.lua`
+#### Comparison with `bufferline.nvim`
 
 Finally, I wanted to test how versatile `cokeline.nvim` really was by trying to
 replicate the default look of
-[`nvim-bufferline.lua`](https://github.com/akinsho/nvim-bufferline.lua),
+[`bufferline.nvim`](https://github.com/akinsho/bufferline.nvim),
 another bufferline plugin.
 
-Here's the default `nvim-bufferline.lua`:
+Here's the default `bufferline.nvim`:
 
 ![bufferline-lua-default](.github/images/bufferline-lua-default.png)
 
@@ -167,7 +167,7 @@ and here's what I got by trying to replicate it
 ![cokeline-bufferline](.github/images/cokeline-bufferline-lua.png)
 
 Notice in particular how differently the two plugins render bufferlines with
-many files opened:  `nvim-bufferline.lua` simply omits a buffer if it doesn't
+many files opened:  `bufferline.nvim` simply omits a buffer if it doesn't
 fit entirely, while `cokeline.nvim` tries to squeeze in as much as possible and
 cuts off the rest.
 
@@ -520,13 +520,10 @@ Some of the features yet to be implemented are:
 
 ## :pray: Credits
 
-This being my first ever neovim plugin, I looked at how
-,
-another great neovim bufferline, solved a couple of issues that I stumbled into
-along the way.
+This being my first ever neovim plugin, I looked at how `bufferline.nvim`
+solved a couple of issues that I stumbled into along the way.
 
-With that being said, `nvim-bufferline.lua` is a much
-bigger project with a codebase almost 5x bigger than the one of
-`cokeline.nvim`, and while there are some features yet to be added (see
-[TODOs](#todos)), the plan is to always keep this plugin fairly small and
-minimal compared to other similar projects.
+With that being said, `bufferline.nvim` is a much bigger project with a
+codebase almost 5x bigger than the one of `cokeline.nvim`, and while there are
+some features yet to be added (see [TODOs](#todos)), the plan is to always keep
+this plugin fairly small and minimal compared to other similar projects.
