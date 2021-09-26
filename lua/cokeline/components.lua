@@ -120,21 +120,35 @@ function M.Component:render(buffer)
 end
 
 function M.Component:cutoff(args)
-  self.width = args.available_space
-
-  local available_space =
-    args.available_space
-    - fn.strwidth(self.cutoff_fmt[args.direction]:format(''))
+  local empty_cutoff = self.cutoff_fmt[args.direction]:format('')
+  local available_space = args.available_space - fn.strwidth(empty_cutoff)
 
   local start =
     args.direction == 'left'
     and fn.strwidth(self.text) - available_space
      or 0
 
+  -- fn.strcharpart can fail with wide characters. For example,
+  -- fn.strcharpart('｜', 0, 1) will still return '｜' since that character
+  -- takes up two columns. The last if is for cases like that.
   self.text =
     self.cutoff_fmt[args.direction]:format(
       fn.strcharpart(self.text, start, available_space)
     )
+
+  self.width = fn.strwidth(self.text)
+
+  -- If it wasn't possible to cutoff the component's width down to the
+  -- available space, we just set the text equal to the empty cutoff format
+  -- plus however many spaces we need to fill the remaining space.
+  if self.width ~= args.available_space then
+    local spaces =
+      string.rep(' ', args.available_space - fn.strwidth(empty_cutoff))
+    self.text =
+      args.direction == 'left'
+       and spaces .. empty_cutoff
+        or empty_cutoff .. spaces
+  end
 end
 
 function M.setup(settings)

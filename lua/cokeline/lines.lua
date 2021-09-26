@@ -43,7 +43,6 @@ function M.Line:cutoff(args)
     and self.components
      or utils.reverse(self.components)
 
-  self.width = args.available_space
   self.components = {}
 
   local remaining_space = args.available_space

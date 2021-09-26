@@ -53,13 +53,16 @@ function M.Cokeline:subline(args)
 
   local subline = M.Cokeline:new()
 
+  local remaining_space = args.available_space
+
   for _, line in ipairs(lines) do
-    if subline.width + line.width < args.available_space then
+    if line.width < remaining_space then
       subline:add_line(line)
+      remaining_space = remaining_space - line.width
     else
       line:cutoff({
         direction = direction,
-        available_space = args.available_space - subline.width
+        available_space = remaining_space,
       })
       subline:add_line(line)
       break

@@ -1,53 +1,280 @@
-# :nose: cokeline.nvim
+<h1 align="center">
+  &#128067; cokeline.nvim
+</h1>
 
-This plugin is still under early development!
+<p align="center">
+<i>A neovim bufferline for people with addictive personalities</i>
+</p>
 
-## Table of Contents
+![demo-gif](./.github/images/rendering.gif)
+
+## :book: Table of Contents
 
 - [Features](#features)
-  - [Customizable title formats](#customizable-title-formats)
-  - [Separate styling for focused and unfocused buffers](#separate-styling-for-focused-and-unfocused-buffers)
-  - [Clickable buffers](#clickable-buffers)
-  - [Unique buffer names](#unique-buffer-names)
-  - [Close icons](#close-icons)
-  - [Buffer re-ordering](#buffer-re-ordering)
 - [Requirements](#requirements)
 - [Installation](#installation)
-- [Usage](#usage)
+- [Functioning](#functioning)
 - [Configuration](#configuration)
 - [Mappings](#mappings)
-- [TODO](#todo)
+- [TODOs](#todos)
 - [Credits](#credits)
 
-## Features
+## :sparkles: Features
 
-TODO!
+### Endlessly customizable
 
-### Customizable title formats
+`cokeline.nvim` aims to be the most customizable bufferline plugin around. If
+you have an idea in mind of what your bufferline should look like, you should
+be able to make it look that way. If you can't, open an issue and we'll try to
+make it happen!
 
-### Separate styling for focused and unfocused buffers
+Here's a quick showcase of what `cokeline.nvim` can be configured to look like.
 
-### Clickable buffers
+#### `cokeline.nvim`'s default look
+
+First, the default configuration:
+
+![cokeline-default](.github/images/cokeline-default.png)
+
+  <details>
+  <summary>Click to see configuration</summary>
+
+  ```lua
+  local get_hex = require('cokeline/utils').get_hex
+
+  require('cokeline').setup({
+    default_hl = {
+      focused = {
+        fg = get_hex('ColorColumn', 'bg'),
+        bg = get_hex('Normal', 'fg'),
+      },
+      unfocused = {
+        fg = get_hex('Normal', 'fg'),
+        bg = get_hex('ColorColumn', 'bg'),
+      },
+    },
+
+    components = {
+      {
+        text = function(buffer) return ' ' .. buffer.devicon.icon end,
+        hl = {
+          fg = function(buffer) return buffer.devicon.color end,
+        },
+      },
+      {
+        text = function(buffer) return buffer.unique_prefix end,
+        hl = {
+          fg = get_hex('Comment', 'fg'),
+          style = 'italic',
+        },
+      },
+      {
+        text = function(buffer) return buffer.filename .. ' ' end,
+      },
+      {
+        text = '',
+        delete_buffer_on_left_click = true,
+      },
+      {
+        text = ' ',
+      }
+    },
+  })
+  ```
+  </details>
+
+#### My configuration
+
+Next, my personal configuration (which you can also find
+[here](https://github.com/noib3/dotfiles/blob/master/configs/neovim/lua/plugins/config/cokeline.lua)
+in my dotfiles):
+
+![cokeline-noib3](.github/images/cokeline-noib3.png)
+
+  <details>
+  <summary>Click to see configuration</summary>
+
+  ```lua
+  local get_hex = require('cokeline/utils').get_hex
+
+  require('cokeline').setup({
+    default_hl = {
+      focused = {
+        fg = get_hex('Normal', 'fg'),
+        bg = get_hex('ColorColumn', 'bg'),
+      },
+      unfocused = {
+        fg = get_hex('Comment', 'fg'),
+        bg = get_hex('ColorColumn', 'bg'),
+      },
+    },
+
+    components = {
+      {
+        text = '｜',
+        hl = {
+          fg = function(buffer)
+            return
+              buffer.is_modified
+              and vim.g.terminal_color_3 -- yellow
+               or vim.g.terminal_color_2 -- green
+          end
+        },
+      },
+      {
+        text = function(buffer) return buffer.devicon.icon .. ' ' end,
+        hl = {
+          fg = function(buffer) return buffer.devicon.color end,
+        },
+      },
+      {
+        text = function(buffer) return buffer.index .. ': ' end,
+      },
+      {
+        text = function(buffer) return buffer.unique_prefix end,
+        hl = {
+          fg = get_hex('Comment', 'fg'),
+          style = 'italic',
+        },
+      }
+      {
+        text = function(buffer) return buffer.filename .. ' ' end,
+        hl = {
+          style = function(buffer) return buffer.is_focused and 'bold' or nil end,
+        },
+      },
+      {
+        text = ' ',
+      },
+    },
+  })
+  ```
+  </details>
+
+#### Comparison with `nvim-bufferline.lua`
+
+Finally, I wanted to test how versatile `cokeline.nvim` really was by trying to
+replicate the default look of
+[`nvim-bufferline.lua`](https://github.com/akinsho/nvim-bufferline.lua),
+another bufferline plugin.
+
+Here's the default `nvim-bufferline.lua`:
+
+![bufferline-lua-default](.github/images/bufferline-lua-default.png)
+
+and here's what I got by trying to replicate it
+
+![cokeline-bufferline](.github/images/cokeline-bufferline-lua.png)
+
+Notice in particular how differently the two plugins render bufferlines with
+many files opened:  `nvim-bufferline.lua` simply omits a buffer if it doesn't
+fit entirely, while `cokeline.nvim` tries to squeeze in as much as possible and
+cuts off the rest.
+
+  <details>
+  <summary>Click to see configuration</summary>
+
+  ```lua
+  local get_hex = require('cokeline/utils').get_hex
+
+  require('cokeline').setup({
+    default_hl = {
+      focused = {
+        fg = get_hex('Normal', 'fg'),
+        bg = 'NONE',
+      },
+      unfocused = {
+        fg = get_hex('Comment', 'fg'),
+        bg = 'NONE',
+      },
+    },
+
+    components = {
+      {
+        text = function(buffer) return (buffer.index ~= 1) and '▏' or '' end,
+        hl = {
+          fg = get_hex('Normal', 'fg')
+        },
+      },
+      {
+        text = function(buffer) return '    ' .. buffer.devicon.icon end,
+        hl = {
+          fg = function(buffer) return buffer.devicon.color end,
+        },
+      },
+      {
+        text = function(buffer) return buffer.filename .. '    ' end,
+        hl = {
+          style = function(buffer) return buffer.is_focused and 'bold' or nil end,
+        }
+      },
+      {
+        text = '',
+        delete_buffer_on_left_click = true,
+      },
+      {
+        text = '  ',
+      },
+    },
+  })
+  ```
+  </details>
+
+#### How?
+
+The way `cokeline.nvim` achieves this is by modularizing everything into
+distinct *components*. Go to [Functioning](#functioning) if you want to learn
+more about how `cokeline.nvim` works internally.
+
+### Dynamic rendering
+
+Even when you have a lot of buffers open, `cokeline.nvim` is rendered to always
+keep the focused buffer visible and in the middle of the bufferline:
+
+![rendering](./.github/images/rendering.gif)
+
+### Clickable lines
+
+You can switch focus between buffers with a left click and you can delete
+them with a right click:
+
+![clickable-lines](.github/images/clickable-lines.gif)
 
 ### Unique buffer names
 
+When files with the same filename belonging to different directories are opened
+simultaneously, you can configure your `cokeline` to include a unique filetree
+prefix to distinguish between them:
+
+![unique-prefix](.github/images/unique-prefix.gif)
+
 ### Close icons
 
-### Buffer re-ordering
+Of course, you can add close icons to your `cokeline`:
 
-## Requirements
+![close-icons](.github/images/close-icons.gif)
 
-This plugin requires:
+### Line re-ordering
+
+Don't like the order your buffers ended up in? Switch them around:
+
+![reordering](.github/images/reordering.gif)
+
+## :electric_plug: Requirements
+
+`cokeline.nvim` requires:
 
 - neovim 0.5+;
-- a patched font (see [Nerd Fonts](https://www.nerdfonts.com/)).
+- a patched font (see [Nerd Fonts](https://www.nerdfonts.com/));
+- `termguicolors` to be set.
 
-## Installation
+## :package: Installation
+
+### Lua
 
 If you ported your neovim config to Lua and use
 [packer.nvim](https://github.com/wbthomason/packer.nvim) as your plugin
 manager you can install this plugin with:
-
 ```lua
 require('packer').startup(function()
   use {
@@ -56,90 +283,194 @@ require('packer').startup(function()
   }
 end)
 ```
+After installing it, activate it with
+``` lua
+vim.opt.termguicolors = true
+require('cokeline').setup({
+  -- ...
+})
+```
 
-Whereas if your config is still written in vimscript and use
-[vim-plug](https://github.com/junegunn/vim-plug):
+### Vimscript
 
+If your config is still written in Vimscript and you use
+[vim-plug](https://github.com/junegunn/vim-plug) you can install this plugin
+with:
 ```vim
 call plug#begin('~/.config/nvim/plugged')
   Plug 'kyazdani42/nvim-web-devicons' " If you want devicons
   Plug 'noib3/cokeline.nvim'
 call plug#end()
 ```
-
-## Usage
-
-#### Lua
-
-``` lua
-vim.opt.termguicolors = true
-require('cokeline').setup({})
-```
-
-#### Vimscript
-
+After installing it, activate it with
 ``` vim
 set termguicolors
 lua << EOF
-require('cokeline').setup({})
+require('cokeline').setup({
+  -- ...
+})
 EOF
 ```
 
-## Configuration
+## :bulb: Functioning
 
-The following configuration options can be passed to the `setup` function to
-customize both the behaviour and the look of the bufferline:
+Internally, `cokeline.nvim` defines two objects: *lines* and *components*.
+
+The bufferline that is rendered and displayed to the user is a collection of
+lines, and every line is itself a collection of components.
+
+A line is linked to one (and only one) listed buffer. For example, if we open
+two files -- lets call them `foo.md` and `bar.md` -- then `:ls` will list two
+buffers, and cokeline will display two lines, one for `foo.md` and another for
+`bar.md`.
+
+The components that every line is made up of are configured in the
+`require('cokeline').setup` function by passing a list of components to the
+`components` key.
+
+Each component has to be a table of the form:
+```lua
+  {
+    text = function(buffer) | '{string}',
+    hl = {
+      fg = function(buffer) | '#rrbbgg',
+      bg = function(buffer) | '#rrbbgg',
+      style = function(buffer) | '{style}',
+    },
+    delete_buffer_on_left_click = true | false,
+  },
+```
+A component's `text` can be either be a function or a string. If it's a
+function, it has to take the `buffer` linked to the line that component belongs
+to as a parameter.
+
+That `buffer` parameter is itself a key-value table with the following keys:
+```lua
+  buffer = {
+    -- The buffer's internal number as reported by `:ls`.
+    -- type: int
+    number = ..,
+
+    -- The buffer's index in the bufferline (1 for the first buffer, 2 for the
+    -- second one, etc.).
+    -- type: int
+    index = ..,
+
+    -- Set to true if the buffer is focused.
+    -- type: bool
+    is_focused = true | false,
+
+    -- Set to true if the buffer has been modified.
+    -- type: bool
+    is_modified = true | false,
+
+    -- Set to true if the buffer is 'readonly'.
+    -- type: bool
+    is_readonly = true | false,
+
+    -- The buffer's type as reported by 'buftype'.
+    -- type: string
+    type = '..',
+
+    -- The buffer's full path.
+    -- type: string
+    path = '..',
+
+    -- The buffer's filename.
+    -- type: string
+    filename = '..',
+
+    -- A unique filetree prefix used to distinguish buffers with the same
+    -- filename. For example, if we edit two files each named `foo.md`, one
+    -- inside the `bar` directory and the other inside the `baz` directory,
+    -- then one will have `bar/` as its unique prefix and the other one will
+    -- have `baz/`.
+    -- type: string
+    unique_prefix = '..',
+
+    -- Needs `kyazdani42/nvim-web-devicons`
+    devicon = {
+      -- An icon representing the buffer's filetype.
+      -- type: string
+      icon = '..',
+
+      -- The color of the devicon in hexadecimal format
+      -- type: string
+      color = '..',
+    }
+  }
+```
+
+`hl` is a table defining the foreground color, background color and style of
+that component (if different from the default ones, see
+[Configuration](#configuration)). Like `text`, they too can either be functions
+or strings, however:
+
+  - `hl.fg` and `hl.bg` have to be strings representing a 24-bit color in
+    hexadecimal format, or functions returning a color in hexadecimal format.
+  - `hl.style` has to be a style among the ones listed in `:h attr-list` or a
+    function returning one.
+
+`delete_buffer_on_left_click` expects a boolean value. If true, the buffer is
+deleted when the user left clicks that component. This is usually used to
+implement close buttons.
+
+## :wrench: Configuration
+
+`cokeline.nvim` is configured by passing a key-value table to the
+`require('cokeline').setup` function. The default configuration is:
 
 ```lua
+local get_hex = require('cokeline/utils').get_hex
+
 require('cokeline').setup({
-  -- Whether the bufferline should be hidden when only one buffer is opened
+  -- If true the bufferline is hidden when only one buffer is listed
   hide_when_one_buffer = false,
 
-  -- The format of buffer titles. Available placeholders are:
-  --    {devicon}: a colored icon of the filetype of the buffer (needs 'kyazdani42/nvim-web-devicons');
-  --    {index}: ordinal index of the current buffer;
-  --    {filename}: filename of the current buffer;
-  --    {flags}: flags indicating if the buffer has been modified and if it is readonly;
-  --    {close_button}: a clickable button to close the current buffer;
-  line_format =  ' {index}: {filename}{flags} {close_button} ',
+  -- Controls what happens when the first (last) buffer is focused and the user
+  -- tries to focus/switch to the previous (next) buffer. If true the last
+  -- (first) buffer gets focused/switched to, if false nothing happens.
+  cycle_prev_next_mappings = false,
 
-  -- The format of buffer flags
-  flags_format = ' {flags}',
-
-  -- A divider character displayed between the modified and readonly symbols
-  -- (shown when both those flags are active).
-  flags_divider = ',',
-
-  -- Symbols used for the modified and readonly flags and for the buffer close
-  -- button.
-  symbols = {
-    modified = '● ',
-    readonly = '',
-    close_button = '',
+  -- Default colors for the foregound/background of focused/unfocused
+  -- lines. Their default values are derived from the foreground/background of
+  -- other highlight groups.
+  default_hl = {
+    focused = {
+      fg = get_hex('ColorColumn', 'bg'),
+      bg = get_hex('Normal', 'fg'),
+    },
+    unfocused = {
+      fg = get_hex('Normal', 'fg'),
+      bg = get_hex('ColorColumn', 'bg'),
+    },
   },
 
-  -- The default values for the following highlight groups are taken from the
-  -- currently active colorscheme. Their values should be specified in
-  -- hexadecimal format.
-  highlights = {
-    -- Used to fill the rest of the bufferline
-    fill = '#rrggbb',
-
-    -- Foreground and background colors of focused buffers
-    focused_fg = '#rrggbb',
-    focused_bg = '#rrggbb',
-
-    -- Foreground and background colors of unfocused buffers
-    unfocused_fg = '#rrggbb',
-    unfocused_bg = '#rrggbb',
-
-    -- Foreground colors of the unique part of a buffer name (shown when there
-    -- are multiple buffers open with the same filename)
-    unique_fg = '#rrggbb',
-
-    -- Foreground colors of the modified and readonly symbols
-    modified = '#rrggbb',
-    readonly = '#rrggbb',
+  -- A list of components used to build every line of the cokeline.
+  components = {
+    {
+      text = function(buffer) return ' ' .. buffer.devicon.icon end,
+      hl = {
+        fg = function(buffer) return buffer.devicon.color end,
+      },
+    },
+    {
+      text = function(buffer) return buffer.unique_prefix end,
+      hl = {
+        fg = get_hex('Comment', 'fg'),
+        style = 'italic',
+      },
+    },
+    {
+      text = function(buffer) return buffer.filename .. ' ' end,
+    },
+    {
+      text = '',
+      delete_buffer_on_left_click = true,
+    },
+    {
+      text = ' ',
+    }
   },
 })
 ```
@@ -148,34 +479,34 @@ More configuration options are likely to be added as the plugin matures and I
 get feedback from other users.
 
 
-## Mappings
+## :musical_keyboard: Mappings
 
 The following `<Plug>` mappings are exposed to be able to focus buffers and to
 switch their position. An example configuration could be:
 
 ``` vim
-" Focus the previous/next buffer
-nmap <silent> <Leader>k <Plug>(cokeline-focus-prev)
-nmap <silent> <Leader>j <Plug>(cokeline-focus-next)
-
-" Focus the n-th buffer
+" Focus the i-th buffer
 nmap <silent> <Leader>1 <Plug>(cokeline-focus-1)
 nmap <silent> <Leader>2 <Plug>(cokeline-focus-2)
 " …and so on
 
-" Switch the position of the current buffer with the previous/next buffer
-nmap <silent> <Leader>p <Plug>(cokeline-switch-prev)
-nmap <silent> <Leader>n <Plug>(cokeline-switch-next)
-
-" Switch the position of the current buffer with the n-th buffer
+" Switch the position of the current buffer with the i-th buffer
 nmap <silent> <Space>1 <Plug>(cokeline-switch-1)
 nmap <silent> <Space>2 <Plug>(cokeline-switch-2)
 " …and so on
+
+" Focus the previous/next buffer
+nmap <silent> <S-Tab> <Plug>(cokeline-focus-prev)
+nmap <silent> <Tab> <Plug>(cokeline-focus-next)
+
+" Switch the position of the current buffer with the previous/next buffer
+nmap <silent> <Leader>p <Plug>(cokeline-switch-prev)
+nmap <silent> <Leader>n <Plug>(cokeline-switch-next)
 ```
 
-## TODO
+## :chart_with_upwards_trend: TODOs
 
-Some of the features yet to be implemented include:
+Some of the features yet to be implemented are:
 
   - support for tabs;
 
@@ -183,27 +514,19 @@ Some of the features yet to be implemented include:
   NERDTree-like file explorer plugins;
 
   - equal sized buffer titles: if there are *n* buffers opened, every buffer
-  title should take up *1/n* of the available space. This might be tricky to
+  title should take up *1/n*-th of the available space. This might be tricky to
   implement due to neovim being a terminal program and not a GUI one (i.e.,
-  having to deal with discretely sized characters instead of pixels);
+  having to deal with discretely sized columns instead of pixels);
 
-## Credits
+## :pray: Credits
 
-The main inspiration for the aesthetics this plugin tries to replicate is the
-way tabs are displayed in the
-[qutebrowser](https://github.com/qutebrowser/qutebrowser) browser (have a look
-at my [qutebrowser
-config](https://github.com/noib3/dotfiles/blob/master/machines/blade/screenshots/qutebrowser.png)
-for an example).
+This being my first ever neovim plugin, I looked at how
+,
+another great neovim bufferline, solved a couple of issues that I stumbled into
+along the way.
 
-This being my first ever neovim plugin I also looked at how
-[nvim-bufferline.lua](https://github.com/akinsho/nvim-bufferline.lua),
-another great neovim bufferline, solved some issues that I stumbled into along
-the way.
-
-With that being said,
-[nvim-bufferline.lua](https://github.com/akinsho/nvim-bufferline.lua) is a much
-bigger project with a codebase roughly 5x bigger than the one of
-[cokeline.nvim](https://github.com/noib3/cokeline.nvim), and while there are
-some core features yet to be added (see [TODO](#todo)), the plan is to always
-keep this plugin fairly small and minimal compared to other similar projects.
+With that being said, `nvim-bufferline.lua` is a much
+bigger project with a codebase almost 5x bigger than the one of
+`cokeline.nvim`, and while there are some features yet to be added (see
+[TODOs](#todos)), the plan is to always keep this plugin fairly small and
+minimal compared to other similar projects.

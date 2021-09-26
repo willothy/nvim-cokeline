@@ -1,37 +1,33 @@
-local utils = require('cokeline/utils')
+local get_hex = require('cokeline/utils').get_hex
 
 local M = {}
 
 local defaults = {
   hide_when_one_buffer = false,
   cycle_prev_next_mappings = false,
-  same_size_tabs = true,
 
   default_hl = {
     focused = {
-      fg = utils.get_hex('ColorColumn', 'bg'),
-      bg = utils.get_hex('Normal', 'fg'),
+      fg = get_hex('ColorColumn', 'bg'),
+      bg = get_hex('Normal', 'fg'),
     },
     unfocused = {
-      fg = utils.get_hex('Normal', 'fg'),
-      bg = utils.get_hex('ColorColumn', 'bg'),
+      fg = get_hex('Normal', 'fg'),
+      bg = get_hex('ColorColumn', 'bg'),
     },
   },
 
   components = {
     {
-      text = function(buffer) return buffer.devicon .. ' ' end,
+      text = function(buffer) return ' ' .. buffer.devicon.icon end,
       hl = {
-        fg = function(buffer) return buffer.devicon_color end,
+        fg = function(buffer) return buffer.devicon.color end,
       },
-    },
-    {
-      text = function(buffer) return buffer.index .. ': ' end,
     },
     {
       text = function(buffer) return buffer.unique_prefix end,
       hl = {
-        fg = utils.get_hex('Comment', 'fg'),
+        fg = get_hex('Comment', 'fg'),
         style = 'italic',
       },
     },
