@@ -60,7 +60,7 @@ local function get_unique_prefix(filename)
     other_filenames
   )))
 
-  local path_separator = '/'
+  local path_separator = fn.has("win32") and '\\' or '/'
 
   while index <= #filename do
     if filename:sub(index, index) == path_separator then
