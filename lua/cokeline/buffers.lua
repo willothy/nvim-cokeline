@@ -60,7 +60,7 @@ local function get_unique_prefix(filename)
     other_filenames
   )))
 
-  local path_separator = fn.has("win32") and '\\' or '/'
+  local path_separator = fn.has('win32') and '\\' or '/'
 
   while index <= #filename do
     if filename:sub(index, index) == path_separator then
@@ -120,7 +120,10 @@ function Buffer:new(args, index)
     }
   end
 
-  buffer.unique_prefix = get_unique_prefix(buffer.path)
+  buffer.unique_prefix =
+    #fn.getbufinfo({buflisted = 1}) ~= 1
+    and get_unique_prefix(buffer.path)
+     or ''
 
   return buffer
 end
