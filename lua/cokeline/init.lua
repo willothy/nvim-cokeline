@@ -63,6 +63,9 @@ function M.toggle()
 end
 
 function M.focus(args)
+  if opt.showtabline._value == 0 then
+    return
+  end
   local target_index = get_target_index(args)
   if not target_index then
     return
@@ -71,6 +74,9 @@ function M.focus(args)
 end
 
 function M.switch(args)
+  if opt.showtabline._value == 0 then
+    return
+  end
   local current_index = get_current_index()
   local target_index = get_target_index(args)
   if not target_index then
