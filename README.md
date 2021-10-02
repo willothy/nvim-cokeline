@@ -10,14 +10,14 @@
 
 ## :book: Table of Contents
 
-- [Features](#features)
-- [Requirements](#requirements)
-- [Installation](#installation)
-- [Functioning](#functioning)
-- [Configuration](#configuration)
-- [Mappings](#mappings)
-- [TODOs](#todos)
-- [Credits](#credits)
+- [Features](#sparkles-features)
+- [Requirements](#electric_plug-requirements)
+- [Installation](#package-installation)
+- [Functioning](#bulb-functioning)
+- [Configuration](#wrench-configuration)
+- [Mappings](#musical_keyboard-mappings)
+- [TODOs](#chart_with_upwards_trend-todos)
+- [Credits](#pray-credits)
 
 ## :sparkles: Features
 
@@ -223,8 +223,8 @@ cuts off the rest.
 #### How?
 
 The way `cokeline.nvim` achieves this is by modularizing everything into
-distinct *components*. Go to [Functioning](#functioning) if you want to learn
-more about how `cokeline.nvim` works internally.
+distinct *components*. Go to [Functioning](#bulb-functioning) if you want to
+learn more about how `cokeline.nvim` works internally.
 
 ### Dynamic rendering
 
@@ -247,6 +247,82 @@ simultaneously, you can configure your `cokeline` to include a unique filetree
 prefix to distinguish between them:
 
 ![unique-prefix](.github/images/unique-prefix.gif)
+
+### LSP Support
+
+If a buffer has an LSP client attached to it, you can configure the style of a
+component to change based on how many errors, warnings, infos and hints are
+reported by the LSP.
+
+![lsp-styling](.github/images/lsp-styling.gif)
+
+  <details>
+  <summary>Click to see configuration</summary>
+
+  ```lua
+  local get_hex = require('cokeline/utils').get_hex
+
+  require('cokeline').setup({
+    default_hl = {
+      focused = {
+        fg = get_hex('Normal', 'fg'),
+        bg = get_hex('ColorColumn', 'bg'),
+      },
+      unfocused = {
+        fg = get_hex('Comment', 'fg'),
+        bg = get_hex('ColorColumn', 'bg'),
+      },
+    },
+
+    components = {
+      {
+        text = function(buffer) return ' ' .. buffer.devicon.icon end,
+        hl = {
+          fg = function(buffer) return buffer.devicon.color end,
+        },
+      },
+      {
+        text = function(buffer) return buffer.filename end,
+        hl = {
+          fg = function(buffer)
+            if buffer.lsp.errors ~= 0 then
+              return vim.g.terminal_color_1 -- red
+            end
+            if buffer.lsp.warnings ~= 0 then
+              return vim.g.terminal_color_3 -- yellow
+            end
+          end,
+
+          style = function(buffer)
+            local style
+            if buffer.is_focused then
+              style = 'bold'
+            end
+            if buffer.lsp.errors ~= 0 then
+              if style then
+                style = style .. ',underline'
+              else
+                style = 'underline'
+              end
+            end
+            return style
+          end,
+        },
+      },
+      {
+        text = ' ',
+      },
+      {
+        text = '',
+        delete_buffer_on_left_click = true,
+      },
+      {
+        text = ' ',
+      }
+    },
+  })
+  ```
+  </details>
 
 ### Close icons
 
@@ -397,14 +473,31 @@ That `buffer` parameter is itself a key-value table with the following keys:
       -- The color of the devicon in hexadecimal format
       -- type: string
       color = '..',
+    },
+
+    -- If the buffer has an LSP client attached to it (you can check that with
+    -- ':LspInfo'), this table lists the number of errors, warnings, infos and
+    -- hints reported by the LSP.
+    lsp = {
+      -- type: int
+      errors = ..,
+
+      -- type: int
+      warnings = ..,
+
+      -- type: int
+      infos = ..,
+
+      -- type: int
+      hints = ..,
     }
   }
 ```
 
 `hl` is a table defining the foreground color, background color and style of
 that component (if different from the default ones, see
-[Configuration](#configuration)). Like `text`, they too can either be functions
-or strings, however:
+[Configuration](#wrench-configuration)). Like `text`, they too can either be
+functions or strings, however:
 
   - `hl.fg` and `hl.bg` have to be strings representing a 24-bit color in
     hexadecimal format, or functions returning a color in hexadecimal format.
@@ -525,5 +618,6 @@ solved a couple of issues that I stumbled into along the way.
 
 With that being said, `bufferline.nvim` is a much bigger project with a
 codebase almost 5x bigger than the one of `cokeline.nvim`, and while there are
-some features yet to be added (see [TODOs](#todos)), the plan is to always keep
-this plugin fairly small and minimal compared to other similar projects.
+some features yet to be added (see
+[TODOs](#chart_with_upwards_trend-todostodos)), the plan is to always keep this
+plugin fairly small and minimal compared to other similar projects.

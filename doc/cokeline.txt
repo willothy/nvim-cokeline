@@ -104,6 +104,22 @@ That `buffer` parameter is itself a key-value table with the following keys
     hexadecimal format.
     type: `string`
 
+  lsp.errors~
+    The number of errors reported by the LSP.
+    type: `int`
+
+  lsp.warnings~
+    The number of warnings reported by the LSP.
+    type: `int`
+
+  lsp.infos~
+    The number of infos reported by the LSP.
+    type: `int`
+
+  lsp.hints~
+    The number of hints reported by the LSP.
+    type: `int`
+
 `hl` is a table defining the foreground color, background color and style of
 that component (if different from the default ones, see
 |cokeline-configuration|). Like `text`, they too can either be functions or

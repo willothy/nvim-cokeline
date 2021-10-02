@@ -1,4 +1,5 @@
 local get_hex = require('cokeline/utils').get_hex
+local diagnostics = require('cokeline/diagnostics')
 
 local has_devicons, devicons = pcall(require, 'nvim-web-devicons')
 if has_devicons then
@@ -26,7 +27,7 @@ local Buffer = {
   devicon = {
     icon = '',
     color = '',
-  }
+  },
 }
 
 local M = {}
@@ -75,23 +76,20 @@ local function get_unique_prefix(filename)
   return reverse(aux:sub(#fn.fnamemodify(reverse(filename), ':t') + 1, #aux))
 end
 
-function Buffer:new(args, index)
+function Buffer:new(b, index)
   local buffer = {}
   setmetatable(buffer, self)
   self.__index = self
 
   buffer.index = index
+  buffer.number = b.bufnr
+  buffer.type = vim.bo[b.bufnr].buftype
+  buffer.is_focused = (b.bufnr == fn.bufnr('%'))
+  buffer.is_modified = vim.bo[b.bufnr].modified
+  buffer.is_readonly = vim.bo[b.bufnr].readonly
 
-  if args.bufnr then
-    buffer.number = args.bufnr
-    buffer.type = vim.bo[args.bufnr].buftype
-    buffer.is_focused = args.bufnr == fn.bufnr('%')
-    buffer.is_modified = vim.bo[args.bufnr].modified
-    buffer.is_readonly = vim.bo[args.bufnr].readonly
-  end
-
-  if args.name then
-    buffer.path = args.name
+  if b.name then
+    buffer.path = b.name
   end
 
   if buffer.type == 'quickfix' then
@@ -101,6 +99,11 @@ function Buffer:new(args, index)
   else
     buffer.filename = '[No Name]'
   end
+
+  buffer.unique_prefix =
+    #fn.getbufinfo({buflisted = 1}) ~= 1
+    and get_unique_prefix(buffer.path)
+     or ''
 
   if has_devicons then
     local name =
@@ -120,10 +123,16 @@ function Buffer:new(args, index)
     }
   end
 
-  buffer.unique_prefix =
-    #fn.getbufinfo({buflisted = 1}) ~= 1
-    and get_unique_prefix(buffer.path)
-     or ''
+  if vim.diagnostic.get then
+    buffer.lsp = diagnostics.get_status(buffer.number)
+  else
+    buffer.lsp = {
+      errors = 0,
+      warnings = 0,
+      infos = 0,
+      hints = 0,
+    }
+  end
 
   return buffer
 end
@@ -133,8 +142,8 @@ function M.get_listed(order)
   local buffers = {}
 
   if not next(order) then
-    for index, b in ipairs(listed_buffers) do
-      insert(buffers, Buffer:new(b, index))
+    for i, b in ipairs(listed_buffers) do
+      insert(buffers, Buffer:new(b, i))
     end
     return buffers
   end

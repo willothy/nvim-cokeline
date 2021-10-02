@@ -22,7 +22,9 @@ function M.Hlgroup:exec()
   for k, v in pairs(self.opts) do
     opts = opts .. format('%s=%s', k, v) .. ' '
   end
-  cmd(format('highlight! %s %s', self.name, opts))
+  -- Clear the highlight group before (re)defining it
+  cmd(format('highlight clear %s', self.name))
+  cmd(format('highlight %s %s', self.name, opts))
 end
 
 function M.Hlgroup:new(args)
