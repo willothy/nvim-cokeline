@@ -123,7 +123,7 @@ function Buffer:new(b, index)
     }
   end
 
-  if vim.diagnostic.get then
+  if vim.diagnostic or vim.lsp then
     buffer.lsp = diagnostics.get_status(buffer.number)
   else
     buffer.lsp = {

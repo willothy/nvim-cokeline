@@ -1,6 +1,6 @@
 local M = {}
 
-local diagnostics = vim.diagnostic
+local diagnostics = vim.diagnostic or vim.lsp.diagnostic
 
 function M.get_status(bufnr)
   local status = {
