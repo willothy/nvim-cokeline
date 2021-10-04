@@ -136,7 +136,7 @@ in my dotfiles):
           fg = get_hex('Comment', 'fg'),
           style = 'italic',
         },
-      }
+      },
       {
         text = function(buffer) return buffer.filename .. ' ' end,
         hl = {
