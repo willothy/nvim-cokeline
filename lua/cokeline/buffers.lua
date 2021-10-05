@@ -35,8 +35,14 @@ local M = {}
 local function get_unique_prefix(filename)
   -- Taken from github.com/famiu/feline.nvim
 
+  if fn.has('win32') == 1 then
+    filename = filename:gsub('/', '\\')
+  end
+
   local listed_buffers = fn.getbufinfo({buflisted = 1})
-  local filenames = map(function(b) return b.name end, listed_buffers)
+  local filenames = map(function(b)
+    return (fn.has('win32') == 0) and b.name or b.name:gsub('/', '\\')
+  end, listed_buffers)
   local other_filenames = filter(
     function(f) return filename ~= f end,
     filenames
