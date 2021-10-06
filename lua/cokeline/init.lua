@@ -59,7 +59,7 @@ local get_target_index = function(args)
 end
 
 function M.toggle()
-  opt.showtabline = #fn.getbufinfo({buflisted = 1}) > 1 and 2 or 0
+  opt.showtabline = #fn.getbufinfo({buflisted = 1}) == 0 and 0 or 2
 end
 
 function M.focus(args)
@@ -93,7 +93,7 @@ end
 function M.setup(preferences)
   settings = defaults.merge(preferences)
   components = componentz.setup(settings)
-  augroups.setup(settings)
+  augroups.setup()
   mappings.setup()
   opt.showtabline = 2
   opt.tabline = '%!v:lua.cokeline()'
@@ -102,7 +102,8 @@ end
 function _G.cokeline()
   state.buffers = buffers.get_listed(state.order)
 
-  if settings.hide_when_one_buffer and #state.buffers == 1 then
+  if (settings.hide_when_one_buffer and #state.buffers == 1)
+      or #state.buffers == 0 then
     opt.showtabline = 0
     return
   end
