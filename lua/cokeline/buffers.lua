@@ -1,4 +1,5 @@
 local get_hex = require('cokeline/utils').get_hex
+local is_string_empty = require('cokeline/utils').is_string_empty
 local diagnostics = require('cokeline/diagnostics')
 
 local has_devicons, devicons = pcall(require, 'nvim-web-devicons')
@@ -84,6 +85,10 @@ end
 
 function Buffer:new(b, index)
   local buffer = {}
+  local empty_devicon = {
+    icon = '',
+    color = '',
+  }
   setmetatable(buffer, self)
   self.__index = self
 
@@ -118,15 +123,16 @@ function Buffer:new(b, index)
        or fn.fnamemodify(buffer.path, ':t')
     local extension = fn.fnamemodify(buffer.path, ':e')
     local devicon, devicon_hlgroup = devicons.get_icon(name, extension)
-    buffer.devicon = {
-      icon = devicon .. ' ',
-      color = get_hex(devicon_hlgroup, 'fg'),
-    }
+    if is_string_empty(devicon) or is_string_empty(devicon_hlgroup) then
+      buffer.devicon = empty_devicon
+    else
+      buffer.devicon = {
+        icon = devicon .. ' ',
+        color = get_hex(devicon_hlgroup, 'fg'),
+      }
+    end
   else
-    buffer.devicon = {
-      icon = '',
-      color = '',
-    }
+    buffer.devicon = empty_devicon
   end
 
   if vim.diagnostic or vim.lsp then

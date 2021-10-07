@@ -36,4 +36,8 @@ function M.get_hex(hlname, attr)
   return 'NONE'
 end
 
+function M.is_string_empty(str)
+  return str == nil or str == ''
+end
+
 return M
