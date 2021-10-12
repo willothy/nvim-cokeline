@@ -13,10 +13,11 @@ local fn = vim.fn
 local Buffer = {
   number = 0,
   index = 0,
+  type = '',
+  filetype = '',
   is_focused = false,
   is_modified = false,
   is_readonly = false,
-  type = '',
   path = '',
   filename = '',
   unique_prefix = '',
@@ -27,6 +28,8 @@ local Buffer = {
 }
 
 local M = {}
+
+local user_filter
 
 local function get_unique_prefix(filename)
   -- Taken from github.com/famiu/feline.nvim
@@ -86,9 +89,18 @@ function Buffer:new(b, index)
   buffer.index = index
   buffer.number = b.bufnr
   buffer.type = vim.bo[b.bufnr].buftype
+  buffer.filetype = vim.bo[b.bufnr].filetype
   buffer.is_focused = (b.bufnr == fn.bufnr('%'))
   buffer.is_modified = vim.bo[b.bufnr].modified
   buffer.is_readonly = vim.bo[b.bufnr].readonly
+
+  -- `vim.bo[b.bufnr].filetype` doesn't work for netrw buffers.
+  -- Try `nvim .` -> `:ls`. The bufnr should be 1 but `:lua
+  -- print(vim.bo[1].filetype)` returns an empty string (however `:lua
+  -- print(vim.bo[0].filetype)` works for some reason??).
+  if b.variables and b.variables.netrw_browser_active then
+    buffer.filetype = 'netrw'
+  end
 
   if b.name then
     buffer.path = b.name
@@ -140,13 +152,24 @@ function Buffer:new(b, index)
   return buffer
 end
 
-function M.get_listed(order)
+function Buffer:is_valid()
+  local is_valid = self.filetype ~= 'netrw'
+  if user_filter then
+    is_valid = is_valid and user_filter(self)
+  end
+  return is_valid
+end
+
+function M.get_buffers(order)
   local listed_buffers = fn.getbufinfo({buflisted = 1})
   local buffers = {}
 
   if not next(order) then
-    for i, b in ipairs(listed_buffers) do
-      insert(buffers, Buffer:new(b, i))
+    for _, b in ipairs(listed_buffers) do
+      local buffer = Buffer:new(b, #buffers + 1)
+      if buffer:is_valid() then
+        insert(buffers, buffer)
+      end
     end
     return buffers
   end
@@ -158,9 +181,12 @@ function M.get_listed(order)
   for _, number in ipairs(order) do
     for _, b in pairs(listed_buffers) do
       if b.bufnr == number then
-        insert(buffers, Buffer:new(b, #buffers + 1))
-        insert(buffer_numbers, number)
-        break
+        local buffer = Buffer:new(b, #buffers + 1)
+        if buffer:is_valid() then
+          insert(buffers, buffer)
+          insert(buffer_numbers, number)
+          break
+        end
       end
     end
   end
@@ -168,12 +194,19 @@ function M.get_listed(order)
   -- Then add all the listed buffers whose numbers are not yet in the global
   -- 'order' table.
   for _, b in pairs(listed_buffers) do
-    if not contains(buffer_numbers, b.bufnr) then
-      insert(buffers, Buffer:new(b, #buffers + 1))
+    if not contains(buffer_numbers, b.bufnr)then
+      local buffer = Buffer:new(b, #buffers + 1)
+      if buffer:is_valid() then
+        insert(buffers, buffer)
+      end
     end
   end
 
   return buffers
+end
+
+function M.setup(settings)
+  user_filter = settings.filter
 end
 
 return M

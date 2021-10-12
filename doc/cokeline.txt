@@ -78,6 +78,10 @@ That `buffer` parameter is itself a key-value table with the following keys
     The buffer's type as reported by 'buftype'.
     type: `string`
 
+  filetype~
+    The buffer's filetype as reported by 'filetype'.
+    type: `string`
+
   path~
     The buffer's full path.
     type: `string`
@@ -178,6 +182,11 @@ CONFIGURATION                                           *cokeline-configuration*
     tries to focus/switch to the previous (next) buffer. If true the last
     (first) buffer gets focused/switched to, if false nothing happens.
     default: `false`
+
+  *buffers.filter*
+    A function to filter out unwanted buffers. It takes a `buffer` table
+    as a parameter.
+    default: `nil`
 
   *default_hl.focused.fg*
     Default color for the foreground of focused lines.

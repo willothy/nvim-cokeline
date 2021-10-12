@@ -93,6 +93,7 @@ end
 function M.setup(preferences)
   settings = defaults.merge(preferences)
   components = componentz.setup(settings)
+  buffers.setup(settings.buffers)
   augroups.setup()
   mappings.setup()
   opt.showtabline = 2
@@ -100,7 +101,7 @@ function M.setup(preferences)
 end
 
 function _G.cokeline()
-  state.buffers = buffers.get_listed(state.order)
+  state.buffers = buffers.get_buffers(state.order)
 
   if (settings.hide_when_one_buffer and #state.buffers == 1)
       or #state.buffers == 0 then

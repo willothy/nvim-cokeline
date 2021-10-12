@@ -448,6 +448,10 @@ That `buffer` parameter is itself a key-value table with the following keys:
     -- type: string
     type = '..',
 
+    -- The buffer's filetype as reported by 'filetype'.
+    -- type: string
+    filetype = '..',
+
     -- The buffer's full path.
     -- type: string
     path = '..',
@@ -524,6 +528,14 @@ require('cokeline').setup({
   -- tries to focus/switch to the previous (next) buffer. If true the last
   -- (first) buffer gets focused/switched to, if false nothing happens.
   cycle_prev_next_mappings = false,
+
+  buffers = {
+    -- A function to filter out unwanted buffers. It takes a `buffer` table
+    -- (described above) as a parameter.
+    -- For example, if you want to keep terminals out of your cokeline:
+    --   filter = function(buffer) return buffer.type ~= 'terminal' end,
+    filter = nil,
+  },
 
   -- Default colors for the foregound/background of focused/unfocused
   -- lines. Their default values are derived from the foreground/background of

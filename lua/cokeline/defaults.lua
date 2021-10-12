@@ -6,6 +6,10 @@ local defaults = {
   hide_when_one_buffer = false,
   cycle_prev_next_mappings = false,
 
+  buffers = {
+    filter = nil,
+  },
+
   default_hl = {
     focused = {
       fg = get_hex('ColorColumn', 'bg'),
