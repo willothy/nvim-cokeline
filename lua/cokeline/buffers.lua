@@ -1,10 +1,6 @@
-local get_hex = require('cokeline/utils').get_hex
 local diagnostics = require('cokeline/diagnostics')
 
 local has_devicons, devicons = pcall(require, 'nvim-web-devicons')
-if has_devicons then
-  devicons.setup({default = true})
-end
 
 local reverse = string.reverse
 local insert = table.insert
@@ -112,15 +108,16 @@ function Buffer:new(b, index)
      or ''
 
   if has_devicons then
-    local name =
-      buffer.type == 'terminal'
-      and 'terminal'
-       or fn.fnamemodify(buffer.path, ':t')
+    local name = fn.fnamemodify(buffer.path, ':t')
     local extension = fn.fnamemodify(buffer.path, ':e')
-    local devicon, devicon_hlgroup = devicons.get_icon(name, extension)
+    if buffer.type == 'terminal' then
+      name = 'terminal'
+    end
+    local icon, color =
+      devicons.get_icon_color(name, extension, {default = true})
     buffer.devicon = {
-      icon = devicon .. ' ',
-      color = get_hex(devicon_hlgroup, 'fg'),
+      icon = icon .. ' ',
+      color = color,
     }
   else
     buffer.devicon = {
