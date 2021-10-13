@@ -150,9 +150,7 @@ function Buffer:new(b, index)
     }
   end
 
-  if buffer:is_valid() then
-    buffer.is_visible = true
-  else
+  if not buffer:is_valid() then
     buffer.is_visible = false
   end
 
