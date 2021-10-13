@@ -114,7 +114,9 @@ function _G.cokeline()
   for _, buffer in pairs(state.buffers) do
     local line = Line:new(buffer)
     for _, component in pairs(components) do
-      line:add_component(component:render(buffer))
+      if buffer.is_visible then
+        line:add_component(component:render(buffer))
+      end
     end
 
     if buffer.is_focused then

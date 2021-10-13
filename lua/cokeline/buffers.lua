@@ -18,6 +18,7 @@ local Buffer = {
   is_focused = false,
   is_modified = false,
   is_readonly = false,
+  is_visible = true,
   path = '',
   filename = '',
   unique_prefix = '',
@@ -149,6 +150,12 @@ function Buffer:new(b, index)
     }
   end
 
+  if buffer:is_valid() then
+    buffer.is_visible = true
+  else
+    buffer.is_visible = false
+  end
+
   return buffer
 end
 
@@ -167,9 +174,7 @@ function M.get_buffers(order)
   if not next(order) then
     for _, b in ipairs(listed_buffers) do
       local buffer = Buffer:new(b, #buffers + 1)
-      if buffer:is_valid() then
         insert(buffers, buffer)
-      end
     end
     return buffers
   end
