@@ -25,6 +25,8 @@ local Buffer = {
     icon = '',
     color = '',
   },
+  __is_valid = true,
+  __is_shown = true,
 }
 
 local M = {}
@@ -94,10 +96,10 @@ function Buffer:new(b, index)
   buffer.is_modified = vim.bo[b.bufnr].modified
   buffer.is_readonly = vim.bo[b.bufnr].readonly
 
-  -- `vim.bo[b.bufnr].filetype` doesn't work for netrw buffers.
-  -- Try `nvim .` -> `:ls`. The bufnr should be 1 but `:lua
-  -- print(vim.bo[1].filetype)` returns an empty string (however `:lua
-  -- print(vim.bo[0].filetype)` works for some reason??).
+  -- vim.bo[b.bufnr].filetype doesn't work for netrw buffers.
+  -- Try nvim . -> :ls. The bufnr should be 1 but :lua
+  -- print(vim.bo[1].filetype) returns an empty string (however :lua
+  -- print(vim.bo[0].filetype) works for some reason??).
   if b.variables and b.variables.netrw_browser_active then
     buffer.filetype = 'netrw'
   end
@@ -149,26 +151,25 @@ function Buffer:new(b, index)
     }
   end
 
-  return buffer
-end
+  buffer.__is_valid = buffer.filetype ~= 'netrw'
+  buffer.__is_shown = user_filter(buffer)
 
-function Buffer:is_valid()
-  local is_valid = self.filetype ~= 'netrw'
-  if user_filter then
-    is_valid = is_valid and user_filter(self)
-  end
-  return is_valid
+  return buffer
 end
 
 function M.get_buffers(order)
   local listed_buffers = fn.getbufinfo({buflisted = 1})
   local buffers = {}
+  local index = 1
 
   if not next(order) then
     for _, b in ipairs(listed_buffers) do
-      local buffer = Buffer:new(b, #buffers + 1)
-      if buffer:is_valid() then
+      local buffer = Buffer:new(b, index)
+      if buffer.__is_valid then
         insert(buffers, buffer)
+        if buffer.__is_shown then
+          index = index + 1
+        end
       end
     end
     return buffers
@@ -181,10 +182,13 @@ function M.get_buffers(order)
   for _, number in ipairs(order) do
     for _, b in pairs(listed_buffers) do
       if b.bufnr == number then
-        local buffer = Buffer:new(b, #buffers + 1)
-        if buffer:is_valid() then
+        local buffer = Buffer:new(b)
+        if buffer.__is_valid then
           insert(buffers, buffer)
           insert(buffer_numbers, number)
+          if buffer.__is_shown then
+            index = index + 1
+          end
           break
         end
       end
@@ -195,9 +199,12 @@ function M.get_buffers(order)
   -- 'order' table.
   for _, b in pairs(listed_buffers) do
     if not contains(buffer_numbers, b.bufnr)then
-      local buffer = Buffer:new(b, #buffers + 1)
-      if buffer:is_valid() then
+      local buffer = Buffer:new(b)
+      if buffer.__is_valid then
         insert(buffers, buffer)
+        if buffer.__is_shown then
+          index = index + 1
+        end
       end
     end
   end

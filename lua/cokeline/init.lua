@@ -1,4 +1,4 @@
-local buffers = require('cokeline/buffers')
+local bufferz = require('cokeline/buffers')
 local augroups = require('cokeline/augroups')
 local defaults = require('cokeline/defaults')
 local mappings = require('cokeline/mappings')
@@ -11,6 +11,7 @@ local fn = vim.fn
 local cmd = vim.cmd
 local opt = vim.opt
 local map = vim.tbl_map
+local filter = vim.tbl_filter
 
 local M = {}
 
@@ -44,8 +45,18 @@ local get_target_index = function(args)
       return
     end
     target_index = args.target
+    local invisible_buffers_before_target = 0
+    for i=1,target_index do
+      if not state.buffers[i].__is_shown then
+        invisible_buffers_before_target = invisible_buffers_before_target + 1
+      end
+    end
+    target_index = target_index + invisible_buffers_before_target
   else
     local current_index = get_current_index()
+    if not current_index then
+      return
+    end
     target_index = current_index + args.step
     if target_index < 1 or target_index > #state.buffers then
       if settings.cycle_prev_next_mappings then
@@ -64,10 +75,13 @@ end
 
 function M.focus(args)
   if opt.showtabline._value == 0 then
+    state.buffers = bufferz.get_buffers(state.order)
+  end
+  if #state.buffers == 1 then
     return
   end
   local target_index = get_target_index(args)
-  if not target_index then
+  if not target_index or not state.buffers[target_index] then
     return
   end
   cmd('buffer ' .. state.buffers[target_index].number)
@@ -75,11 +89,14 @@ end
 
 function M.switch(args)
   if opt.showtabline._value == 0 then
+    state.buffers = bufferz.get_buffers(state.order)
+  end
+  if #state.buffers == 1 then
     return
   end
   local current_index = get_current_index()
   local target_index = get_target_index(args)
-  if not target_index then
+  if not target_index or not state.buffers[target_index] then
     return
   end
   local current_buffer = state.buffers[current_index]
@@ -93,7 +110,7 @@ end
 function M.setup(preferences)
   settings = defaults.merge(preferences)
   components = componentz.setup(settings)
-  buffers.setup(settings.buffers)
+  bufferz.setup(settings.buffers)
   augroups.setup()
   mappings.setup()
   opt.showtabline = 2
@@ -101,22 +118,21 @@ function M.setup(preferences)
 end
 
 function _G.cokeline()
-  state.buffers = buffers.get_buffers(state.order)
+  state.buffers = bufferz.get_buffers(state.order)
+  local buffers = filter(function(b) return b.__is_shown end, state.buffers)
 
-  if (settings.hide_when_one_buffer and #state.buffers == 1)
-      or #state.buffers == 0 then
+  if (settings.hide_when_one_buffer and #buffers == 1) or (#buffers == 0) then
     opt.showtabline = 0
     return
   end
 
   local cokeline = Cokeline:new()
 
-  for _, buffer in pairs(state.buffers) do
+  for _, buffer in pairs(buffers) do
     local line = Line:new(buffer)
     for _, component in pairs(components) do
       line:add_component(component:render(buffer))
     end
-
     if buffer.is_focused then
       focused_line = {
         width = line.width,
@@ -125,7 +141,6 @@ function _G.cokeline()
         colend = cokeline.width + line.width,
       }
     end
-
     cokeline:add_line(line)
   end
 
