@@ -182,7 +182,7 @@ function M.get_buffers(order)
   for _, number in ipairs(order) do
     for _, b in pairs(listed_buffers) do
       if b.bufnr == number then
-        local buffer = Buffer:new(b)
+        local buffer = Buffer:new(b, index)
         if buffer.__is_valid then
           insert(buffers, buffer)
           insert(buffer_numbers, number)
@@ -199,7 +199,7 @@ function M.get_buffers(order)
   -- 'order' table.
   for _, b in pairs(listed_buffers) do
     if not contains(buffer_numbers, b.bufnr)then
-      local buffer = Buffer:new(b)
+      local buffer = Buffer:new(b, index)
       if buffer.__is_valid then
         insert(buffers, buffer)
         if buffer.__is_shown then
