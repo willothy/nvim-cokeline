@@ -153,7 +153,7 @@ function Buffer:new(b, index)
   end
 
   buffer.__is_valid = buffer.filetype ~= 'netrw'
-  buffer.__is_shown = user_filter and user_filter(buffer)
+  buffer.__is_shown = (not user_filter) or user_filter(buffer)
 
   return buffer
 end
