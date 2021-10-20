@@ -10,6 +10,7 @@ local defaults = {
     filter = nil,
   },
 
+  -- TODO: refactor
   default_hl = {
     focused = {
       fg = get_hex('ColorColumn', 'bg'),
@@ -52,16 +53,18 @@ function M.merge(preferences)
   local settings = defaults
 
   local echoerr = function(msg)
-    local fmt = '[cokeline.nvim]: %s'
-    vim.api.nvim_echo({{fmt:format(msg), 'ErrorMsg'}}, true, {})
+    vim.api.nvim_echo(
+      {{('[cokeline.nvim]: %s'):format(msg), 'ErrorMsg'}},
+      true,
+      {}
+    )
   end
 
   for k, v in pairs(preferences) do
     if defaults[k] ~= nil then
       settings[k] = v
     else
-      local msg = 'Configuration option "%s" does not exist!'
-      echoerr(msg:format(k))
+      echoerr(('Configuration option "%s" does not exist!'):format(k))
     end
   end
 

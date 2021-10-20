@@ -39,6 +39,8 @@ local get_current_index = function()
 end
 
 local get_target_index = function(args)
+  -- TODO: refactor. This is way too complex to read. Maybe figure out a
+  -- cleaner way to deal with buffers that aren't shown.
   local target_index
   if args.target then
     if args.target < 1 or args.target > #state.buffers then
@@ -109,6 +111,9 @@ end
 
 function M.setup(preferences)
   settings = defaults.merge(preferences)
+  -- TODO: the default highlight groups for the components should be defined
+  -- here, so that I can do componentz.setup(settings.components)
+  -- hlgroups.setup(settings.default_hl)
   components = componentz.setup(settings)
   bufferz.setup(settings.buffers)
   augroups.setup()
@@ -133,6 +138,8 @@ function _G.cokeline()
     for _, component in pairs(components) do
       line:add_component(component:render(buffer))
     end
+    -- TODO: refactor it so that this if is not necessary and define
+    -- focused_line in cokeline.lua.
     if buffer.is_focused then
       focused_line = {
         width = line.width,

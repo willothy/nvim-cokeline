@@ -34,6 +34,7 @@ local M = {}
 local user_filter
 
 local function get_unique_prefix(filename)
+  -- TODO: refactor and clean.
   -- Taken from github.com/famiu/feline.nvim
 
   if fn.has('win32') == 1 then
@@ -122,11 +123,11 @@ function Buffer:new(b, index)
      or ''
 
   if has_devicons then
-    local name = fn.fnamemodify(buffer.path, ':t')
+    local name =
+      buffer.type == 'terminal'
+      and 'terminal'
+       or fn.fnamemodify(buffer.path, ':t')
     local extension = fn.fnamemodify(buffer.path, ':e')
-    if buffer.type == 'terminal' then
-      name = 'terminal'
-    end
     local icon, color =
       devicons.get_icon_color(name, extension, {default = true})
     buffer.devicon = {
@@ -152,7 +153,7 @@ function Buffer:new(b, index)
   end
 
   buffer.__is_valid = buffer.filetype ~= 'netrw'
-  buffer.__is_shown = user_filter(buffer)
+  buffer.__is_shown = user_filter and user_filter(buffer)
 
   return buffer
 end
