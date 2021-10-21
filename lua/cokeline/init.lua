@@ -18,8 +18,6 @@ local M = {}
 
 local settings = {}
 local components = {}
-local focused_line = {}
-
 local state = {
   buffers = {},
   order = {},
@@ -137,20 +135,10 @@ function _G.cokeline()
     for _, component in pairs(components) do
       line:add_component(component:render(buffer))
     end
-    -- TODO: refactor it so that this if is not necessary and define
-    -- focused_line in cokeline.lua.
-    if buffer.is_focused then
-      focused_line = {
-        width = line.width,
-        index = buffer.index,
-        colstart = cokeline.width + 1,
-        colend = cokeline.width + line.width,
-      }
-    end
     cokeline:add_line(line)
   end
 
-  cokeline:render(focused_line)
+  cokeline:render(settings.rendering)
 
   return
     cokeline.before

@@ -6,16 +6,22 @@ local defaults = {
   hide_when_one_buffer = false,
   cycle_prev_next_mappings = false,
 
+  rendering = {
+    default = {
+      enable = true,
+    },
+  },
+
   buffers = {
     filter = nil,
   },
 
-  -- TODO: refactor
   default_hl = {
     focused = {
       fg = get_hex('ColorColumn', 'bg'),
       bg = get_hex('Normal', 'fg'),
     },
+
     unfocused = {
       fg = get_hex('Normal', 'fg'),
       bg = get_hex('ColorColumn', 'bg'),
