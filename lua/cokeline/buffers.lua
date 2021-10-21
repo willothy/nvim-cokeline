@@ -1,12 +1,11 @@
+local reverse = require('cokeline/utils').reverse
 local diagnostics = require('cokeline/diagnostics')
 
 local has_devicons, devicons = pcall(require, 'nvim-web-devicons')
 
-local reverse = string.reverse
 local insert = table.insert
 
 local contains = vim.tbl_contains
-local filter = vim.tbl_filter
 local map = vim.tbl_map
 local fn = vim.fn
 
@@ -33,55 +32,47 @@ local M = {}
 
 local user_filter
 
-local function get_unique_prefix(filename)
-  -- TODO: refactor and clean.
-  -- Taken from github.com/famiu/feline.nvim
+local compute_unique_prefixes = function(buffers)
+  local paths
+  local path_separator
 
-  if fn.has('win32') == 1 then
-    filename = filename:gsub('/', '\\')
+  if fn.has('win32') == 0 then
+    path_separator = '/'
+    paths = map(function(b)
+      return reverse(fn.split(b.path, '/'))
+    end, buffers)
+  else
+    path_separator = '\\'
+    paths = map(function(b)
+      return reverse(fn.split(b.path:gsub('/', '\\'), '\\'))
+    end, buffers)
   end
 
-  local listed_buffers = fn.getbufinfo({buflisted = 1})
-  local filenames = map(function(b)
-    return (fn.has('win32') == 0) and b.name or b.name:gsub('/', '\\')
-  end, listed_buffers)
-  local other_filenames = filter(
-    function(f) return filename ~= f end,
-    filenames
-  )
+  local prefixes = map(function() return {} end, buffers)
 
-  if #other_filenames == 0 then
-    return fn.fnamemodify(filename, ':t')
-  end
-
-  filename = reverse(filename)
-  other_filenames = map(reverse, other_filenames)
-
-  local index = math.max(unpack(map(
-    function(f)
-      for i = 1, #f do
-        if filename:sub(i, i) ~= f:sub(i, i) then
-          return i
-        end
+  for i, _ in ipairs(paths) do
+    for j=i+1,#paths do
+      local k = 1
+      while paths[i][k] == paths[j][k] do
+        k = k + 1
+        prefixes[i][k - 1] = prefixes[i][k - 1] or paths[i][k]
+        prefixes[j][k - 1] = prefixes[j][k - 1] or paths[j][k]
       end
-      return 1
-    end,
-    other_filenames
-  )))
-
-  local path_separator = (fn.has('win32') == 0) and '/' or '\\'
-
-  while index <= #filename do
-    if filename:sub(index, index) == path_separator then
-      index = index - 1
-      break
+      if k ~= 1 then
+        prefixes[i][k - 1] = prefixes[i][k - 1] or paths[i][k]
+        prefixes[j][k - 1] = prefixes[j][k - 1] or paths[j][k]
+      end
     end
-
-    index = index + 1
   end
 
-  local aux = filename:sub(1, index)
-  return reverse(aux:sub(#fn.fnamemodify(reverse(filename), ':t') + 1, #aux))
+  for i, buffer in ipairs(buffers) do
+    buffer.unique_prefix =
+      (#prefixes[i] == #paths[i] and path_separator or '')
+      .. fn.join(reverse(prefixes[i]), path_separator)
+      .. (#prefixes[i] > 0 and path_separator or '')
+  end
+
+  return buffers
 end
 
 function Buffer:new(b, index)
@@ -89,14 +80,7 @@ function Buffer:new(b, index)
   setmetatable(buffer, self)
   self.__index = self
 
-  buffer.index = index
-  buffer.number = b.bufnr
-  buffer.type = vim.bo[b.bufnr].buftype
   buffer.filetype = vim.bo[b.bufnr].filetype
-  buffer.is_focused = (b.bufnr == fn.bufnr('%'))
-  buffer.is_modified = vim.bo[b.bufnr].modified
-  buffer.is_readonly = vim.bo[b.bufnr].readonly
-
   -- vim.bo[b.bufnr].filetype doesn't work for netrw buffers.
   -- Try nvim . -> :ls. The bufnr should be 1 but :lua
   -- print(vim.bo[1].filetype) returns an empty string (however :lua
@@ -105,9 +89,19 @@ function Buffer:new(b, index)
     buffer.filetype = 'netrw'
   end
 
-  if b.name then
-    buffer.path = b.name
+  buffer.__is_valid = buffer.filetype ~= 'netrw'
+
+  if not buffer.__is_valid then
+    return buffer
   end
+
+  buffer.index = index
+  buffer.number = b.bufnr
+  buffer.type = vim.bo[b.bufnr].buftype
+  buffer.is_focused = (b.bufnr == fn.bufnr('%'))
+  buffer.is_modified = vim.bo[b.bufnr].modified
+  buffer.is_readonly = vim.bo[b.bufnr].readonly
+  buffer.path = b.name
 
   if buffer.type == 'quickfix' then
     buffer.filename = '[Quickfix List]'
@@ -116,11 +110,6 @@ function Buffer:new(b, index)
   else
     buffer.filename = '[No Name]'
   end
-
-  buffer.unique_prefix =
-    #fn.getbufinfo({buflisted = 1}) ~= 1
-    and get_unique_prefix(buffer.path)
-     or ''
 
   if has_devicons then
     local name =
@@ -152,7 +141,6 @@ function Buffer:new(b, index)
     }
   end
 
-  buffer.__is_valid = buffer.filetype ~= 'netrw'
   buffer.__is_shown = (not user_filter) or user_filter(buffer)
 
   return buffer
@@ -173,7 +161,7 @@ function M.get_buffers(order)
         end
       end
     end
-    return buffers
+    return compute_unique_prefixes(buffers)
   end
 
   local buffer_numbers = {}
@@ -199,7 +187,7 @@ function M.get_buffers(order)
   -- Then add all the listed buffers whose numbers are not yet in the global
   -- 'order' table.
   for _, b in pairs(listed_buffers) do
-    if not contains(buffer_numbers, b.bufnr)then
+    if not contains(buffer_numbers, b.bufnr) then
       local buffer = Buffer:new(b, index)
       if buffer.__is_valid then
         insert(buffers, buffer)
@@ -210,7 +198,7 @@ function M.get_buffers(order)
     end
   end
 
-  return buffers
+  return compute_unique_prefixes(buffers)
 end
 
 function M.setup(settings)

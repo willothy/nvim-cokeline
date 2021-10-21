@@ -114,9 +114,9 @@ function M.setup(preferences)
   -- TODO: the default highlight groups for the components should be defined
   -- here, so that I can do componentz.setup(settings.components)
   -- hlgroups.setup(settings.default_hl)
-  components = componentz.setup(settings)
-  bufferz.setup(settings.buffers)
   augroups.setup()
+  bufferz.setup(settings.buffers)
+  components = componentz.setup(settings)
   mappings.setup()
   opt.showtabline = 2
   opt.tabline = '%!v:lua.cokeline()'
@@ -126,7 +126,7 @@ function _G.cokeline()
   state.buffers = bufferz.get_buffers(state.order)
   local buffers = filter(function(b) return b.__is_shown end, state.buffers)
 
-  if (settings.hide_when_one_buffer and #buffers == 1) or (#buffers == 0) then
+  if (#buffers == 0) or (settings.hide_when_one_buffer and #buffers == 1) then
     opt.showtabline = 0
     return
   end
