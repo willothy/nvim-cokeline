@@ -1,5 +1,6 @@
 local bufferz = require('cokeline/buffers')
 local augroups = require('cokeline/augroups')
+local hlgroups = require('cokeline/hlgroups')
 local defaults = require('cokeline/defaults')
 local mappings = require('cokeline/mappings')
 local componentz = require('cokeline/components')
@@ -111,13 +112,11 @@ end
 
 function M.setup(preferences)
   settings = defaults.merge(preferences)
-  -- TODO: the default highlight groups for the components should be defined
-  -- here, so that I can do componentz.setup(settings.components)
-  -- hlgroups.setup(settings.default_hl)
   augroups.setup()
-  bufferz.setup(settings.buffers)
-  components = componentz.setup(settings)
   mappings.setup()
+  bufferz.setup(settings.buffers)
+  hlgroups.setup(settings.default_hl)
+  components = componentz.setup(settings.components)
   opt.showtabline = 2
   opt.tabline = '%!v:lua.cokeline()'
 end

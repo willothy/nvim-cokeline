@@ -1,13 +1,11 @@
-local Hlgroup = require('cokeline/hlgroups').Hlgroup
+local hlgroups = require('cokeline/hlgroups')
+local Hlgroup = hlgroups.Hlgroup
 
-local format = string.format
 local insert = table.insert
 
 local fn = vim.fn
 
 local M = {}
-
-local default_hl = {}
 
 M.Component = {
   text = '',
@@ -16,13 +14,7 @@ M.Component = {
 
   index = 0,
   width = 0,
-
   hlgroup = nil,
-  default_hlgroup = {
-    focused = nil,
-    unfocused = nil,
-  },
-
   cutoff_fmt = {
     left = ' …%s',
     right = '%s… ',
@@ -42,27 +34,10 @@ function M.Component:new(c, index)
   setmetatable(component, self)
   self.__index = self
 
+  component.index = index
   component.text = c.text
   component.hl = c.hl
   component.delete_buffer_on_left_click = c.delete_buffer_on_left_click
-
-  component.index = index
-
-  component.default_hlgroup.focused = Hlgroup:new({
-    name = 'CokeFocused',
-    opts = {
-      guifg = default_hl.focused.fg,
-      guibg = default_hl.focused.bg,
-    }
-  })
-
-  component.default_hlgroup.unfocused = Hlgroup:new({
-    name = 'CokeUnfocused',
-    opts = {
-      guifg = default_hl.unfocused.fg,
-      guibg = default_hl.unfocused.bg,
-    }
-  })
 
   return component
 end
@@ -76,18 +51,15 @@ function M.Component:render(buffer)
   component.width = fn.strwidth(component.text)
 
   if self.delete_buffer_on_left_click and fn.has('tablineat') then
-    component.text = format(
-      '%%%s@cokeline#close_button_handle_click@%s%%%s@cokeline#handle_click@',
-      buffer.number,
-      component.text,
-      buffer.number
-    )
+    local fmt =
+      '%%%s@cokeline#close_button_handle_click@%s%%%s@cokeline#handle_click@'
+    component.text = fmt:format(buffer.number, component.text, buffer.number)
   end
 
   component.hlgroup =
     buffer.is_focused
-    and self.default_hlgroup.focused
-     or self.default_hlgroup.unfocused
+    and hlgroups.defaults.focused
+     or hlgroups.defaults.unfocused
 
   if self.hl then
     local gui =
@@ -107,7 +79,7 @@ function M.Component:render(buffer)
 
     component.hlgroup = Hlgroup:new({
       name =
-        format('%s%s_%s', component.hlgroup.name, buffer.number, self.index),
+        ('%s%s_%s'):format(component.hlgroup.name, buffer.number, self.index),
       opts = {
         gui = gui,
         guifg = guifg,
@@ -152,9 +124,8 @@ function M.Component:cutoff(args)
 end
 
 function M.setup(settings)
-  default_hl = settings.default_hl
   local components = {}
-  for index, c in ipairs(settings.components) do
+  for index, c in ipairs(settings) do
     insert(components, M.Component:new(c, index))
   end
   return components

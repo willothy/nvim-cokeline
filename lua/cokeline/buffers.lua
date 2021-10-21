@@ -6,6 +6,7 @@ local has_devicons, devicons = pcall(require, 'nvim-web-devicons')
 local insert = table.insert
 
 local contains = vim.tbl_contains
+local split = vim.split
 local map = vim.tbl_map
 local fn = vim.fn
 
@@ -39,12 +40,12 @@ local compute_unique_prefixes = function(buffers)
   if fn.has('win32') == 0 then
     path_separator = '/'
     paths = map(function(b)
-      return reverse(fn.split(b.path, '/'))
+      return reverse(split(b.path, '/'))
     end, buffers)
   else
     path_separator = '\\'
     paths = map(function(b)
-      return reverse(fn.split(b.path:gsub('/', '\\'), '\\'))
+      return reverse(split(b.path:gsub('/', '\\'), '\\'))
     end, buffers)
   end
 

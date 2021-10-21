@@ -1,5 +1,3 @@
-local format = string.format
-
 local cmd = vim.cmd
 
 local M = {}
@@ -14,17 +12,17 @@ M.Hlgroup = {
 }
 
 function M.Hlgroup:embed(text)
-  return format('%%#%s#%s%%*', self.name, text)
+  return ('%%#%s#%s%%*'):format(self.name, text)
 end
 
 function M.Hlgroup:exec()
   local opts = ''
   for k, v in pairs(self.opts) do
-    opts = opts .. format('%s=%s', k, v) .. ' '
+    opts = opts .. ('%s=%s'):format(k, v) .. ' '
   end
   -- Clear the highlight group before (re)defining it
-  cmd(format('highlight clear %s', self.name))
-  cmd(format('highlight %s %s', self.name, opts))
+  cmd(('highlight clear %s'):format(self.name))
+  cmd(('highlight %s %s'):format(self.name, opts))
 end
 
 function M.Hlgroup:new(args)
@@ -35,6 +33,26 @@ function M.Hlgroup:new(args)
   hlgroup.opts = args.opts
   hlgroup:exec()
   return hlgroup
+end
+
+function M.setup(defaults)
+  M.defaults = {
+    focused = M.Hlgroup:new({
+      name = 'CokeFocused',
+      opts = {
+        guifg = defaults.focused.fg,
+        guibg = defaults.focused.bg,
+      }
+    }),
+
+    unfocused = M.Hlgroup:new({
+      name = 'CokeUnfocused',
+      opts = {
+        guifg = defaults.unfocused.fg,
+        guibg = defaults.unfocused.bg,
+      }
+    }),
+  }
 end
 
 return M
