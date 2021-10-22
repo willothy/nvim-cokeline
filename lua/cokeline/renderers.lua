@@ -1,26 +1,19 @@
-local concat = table.concat
-local map = vim.tbl_map
-
 local M = {}
 
-local conclines = function(lines)
-  return concat(map(function(line)
-    return line:text()
-  end, lines))
-end
-
 M.default = function(cokeline, focused_line)
+  local fl = cokeline.lines[focused_line.index]
+
   local available_space_tot = vim.o.columns
 
   local available_space_minus_flwidth =
     available_space_tot - focused_line.width
 
   if available_space_minus_flwidth <= 0 then
-    cokeline.lines[focused_line.index]:cutoff({
+    fl:cutoff({
       direction = 'right',
       available_space = available_space_tot,
     })
-    cokeline.main = cokeline.lines[focused_line.index]:text()
+    cokeline.main = fl:text()
     return
   end
 
@@ -36,33 +29,21 @@ M.default = function(cokeline, focused_line)
   local width_right_of_focused_line = cokeline.width - focused_line.colend
 
   local unused_space = {
-    left = available_space.left - width_left_of_focused_line,
-    right = available_space.right - width_right_of_focused_line,
+    left = math.max(available_space.left - width_left_of_focused_line, 0),
+    right = math.max(available_space.right - width_right_of_focused_line, 0),
   }
 
-  local left, right
+  local left = cokeline:subline({
+    upto = focused_line.index - 1,
+    available_space = available_space.left + unused_space.right,
+  })
 
-  if unused_space.left >= 0 then
-    left = conclines({unpack(cokeline.lines, 1, focused_line.index - 1)})
-  else
-    local left_lines = cokeline:subline({
-      upto = focused_line.index - 1,
-      available_space = available_space.left + math.max(unused_space.right, 0),
-    })
-    left = conclines(left_lines)
-  end
+  local right = cokeline:subline({
+    startfrom = focused_line.index + 1,
+    available_space = available_space.right + unused_space.left,
+  })
 
-  if unused_space.right >= 0 then
-    right = conclines({unpack(cokeline.lines, focused_line.index + 1)})
-  else
-    local right_lines = cokeline:subline({
-      startfrom = focused_line.index + 1,
-      available_space = available_space.right + math.max(unused_space.left, 0),
-    })
-    right = conclines(right_lines)
-  end
-
-  cokeline.main = left .. cokeline.lines[focused_line.index]:text() .. right
+  cokeline.main = left .. fl:text() .. right
 end
 
 return M

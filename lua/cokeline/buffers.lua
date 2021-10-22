@@ -1,4 +1,3 @@
-local reverse = require('cokeline/utils').reverse
 local diagnostics = require('cokeline/diagnostics')
 
 local has_devicons, devicons = pcall(require, 'nvim-web-devicons')
@@ -40,12 +39,12 @@ local compute_unique_prefixes = function(buffers)
   if fn.has('win32') == 0 then
     path_separator = '/'
     paths = map(function(b)
-      return reverse(split(b.path, '/'))
+      return fn.reverse(split(b.path, '/'))
     end, buffers)
   else
     path_separator = '\\'
     paths = map(function(b)
-      return reverse(split(b.path:gsub('/', '\\'), '\\'))
+      return fn.reverse(split(b.path:gsub('/', '\\'), '\\'))
     end, buffers)
   end
 
@@ -69,7 +68,7 @@ local compute_unique_prefixes = function(buffers)
   for i, buffer in ipairs(buffers) do
     buffer.unique_prefix =
       (#prefixes[i] == #paths[i] and path_separator or '')
-      .. fn.join(reverse(prefixes[i]), path_separator)
+      .. fn.join(fn.reverse(prefixes[i]), path_separator)
       .. (#prefixes[i] > 0 and path_separator or '')
   end
 

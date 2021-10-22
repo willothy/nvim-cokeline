@@ -2,7 +2,11 @@ local renderers = require('cokeline/renderers')
 local reverse = require('cokeline/utils').reverse
 
 local unpack = unpack or table.unpack
+local concat = table.concat
 local insert = table.insert
+
+local map = vim.tbl_map
+local fn = vim.fn
 
 local M = {}
 
@@ -53,29 +57,41 @@ function M.Cokeline:subline(args)
     lines = {unpack(self.lines, args.startfrom)}
   end
 
-  local subline = M.Cokeline:new()
-
   local remaining_space = args.available_space
+  local sublines = {}
 
-  for _, line in ipairs(lines) do
-    if line.width < remaining_space then
-      subline:add_line(line)
+  for i, line in ipairs(lines) do
+    if (remaining_space > line.width)
+        or (remaining_space == line.width and i == #lines) then
+      insert(sublines, line)
       remaining_space = remaining_space - line.width
     else
+      -- If the remaining space is less than the width of the cutoff format we
+      -- cutoff the previous line.
+      if remaining_space <
+          fn.strwidth(line.components[1].cutoff_fmt[direction]:format('')) then
+        sublines[i - 1]:cutoff({
+          direction = direction,
+          available_space = sublines[i - 1].width + remaining_space,
+        })
+        break
+      end
       line:cutoff({
         direction = direction,
         available_space = remaining_space,
       })
-      subline:add_line(line)
+      insert(sublines, line)
       break
     end
   end
 
-  if args.upto then
-    subline.lines = reverse(subline.lines)
+  if direction == 'left' then
+    sublines = reverse(sublines)
   end
 
-  return subline.lines
+  return concat(map(function(line)
+    return line:text()
+  end, sublines))
 end
 
 function M.Cokeline:render(settings)
