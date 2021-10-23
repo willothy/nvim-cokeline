@@ -18,6 +18,7 @@ local M = {}
 
 local settings = {}
 local components = {}
+
 local state = {
   buffers = {},
   order = {},
@@ -38,21 +39,18 @@ local get_current_index = function()
 end
 
 local get_target_index = function(args)
-  -- TODO: refactor. This is way too complex to read. Maybe figure out a
-  -- cleaner way to deal with buffers that aren't shown.
+  if opt.showtabline._value == 0 then
+    state.buffers = bufferz.get_buffers(state.order)
+  end
+
   local target_index
+
   if args.target then
-    if args.target < 1 or args.target > #state.buffers then
-      return
-    end
-    target_index = args.target
-    local invisible_buffers_before_target = 0
-    for i=1,target_index do
-      if not state.buffers[i].__is_shown then
-        invisible_buffers_before_target = invisible_buffers_before_target + 1
+    for i, buffer in ipairs(state.buffers) do
+      if buffer.index == args.target and buffer.__is_shown then
+        target_index = i
       end
     end
-    target_index = target_index + invisible_buffers_before_target
   else
     local current_index = get_current_index()
     if not current_index then
@@ -67,43 +65,30 @@ local get_target_index = function(args)
       end
     end
   end
+
   return target_index
 end
 
 function M.toggle()
-  opt.showtabline = #fn.getbufinfo({buflisted = 1}) == 0 and 0 or 2
+  opt.showtabline = (#fn.getbufinfo({buflisted = 1}) > 0) and 2 or 0
 end
 
 function M.focus(args)
-  if opt.showtabline._value == 0 then
-    state.buffers = bufferz.get_buffers(state.order)
-  end
-  if #state.buffers == 1 then
+  local target = get_target_index(args)
+  if not target then
     return
   end
-  local target_index = get_target_index(args)
-  if not target_index or not state.buffers[target_index] then
-    return
-  end
-  cmd('buffer ' .. state.buffers[target_index].number)
+  cmd('buffer ' .. state.buffers[target].number)
 end
 
 function M.switch(args)
-  if opt.showtabline._value == 0 then
-    state.buffers = bufferz.get_buffers(state.order)
-  end
-  if #state.buffers == 1 then
+  local target = get_target_index(args)
+  if not target then
     return
   end
-  local current_index = get_current_index()
-  local target_index = get_target_index(args)
-  if not target_index or not state.buffers[target_index] then
-    return
-  end
-  local current_buffer = state.buffers[current_index]
-  local target_buffer = state.buffers[target_index]
-  state.buffers[current_index] = target_buffer
-  state.buffers[target_index] = current_buffer
+  local current = get_current_index()
+  state.buffers[current], state.buffers[target]
+    = state.buffers[target], state.buffers[current]
   state.order = map(function(buffer) return buffer.number end, state.buffers)
   redraw()
 end

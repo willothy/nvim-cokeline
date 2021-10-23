@@ -151,6 +151,8 @@ function M.get_buffers(order)
   local buffers = {}
   local index = 1
 
+  -- TODO: can these 3 for loops be condensed into 1?
+
   if not next(order) then
     for _, b in ipairs(listed_buffers) do
       local buffer = Buffer:new(b, index)

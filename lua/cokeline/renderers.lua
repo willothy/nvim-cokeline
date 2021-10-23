@@ -1,6 +1,9 @@
 local M = {}
 
 M.default = function(cokeline, focused_line)
+  -- TODO: filter terminal buffers, open two buffers, open a new terminal
+  -- buffer, close the 2nd buffer -> E5108 attempt to index local 'fl'.
+
   local fl = cokeline.lines[focused_line.index]
 
   local available_space_tot = vim.o.columns

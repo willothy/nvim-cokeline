@@ -25,15 +25,10 @@ function M.Line:new(buffer)
   return line
 end
 
-function M.Line:add_component(component, direction)
-  local insert_component =
-    (direction == 'left')
-    and function(c) insert(self.components, 1, c) end
-     or function(c) insert(self.components, c) end
-
+function M.Line:add_component(component)
   if component.text and component.text ~= '' then
     self.width = self.width + component.width
-    insert_component(component)
+    insert(self.components, component)
   end
 end
 
