@@ -5,33 +5,28 @@ local defaults = require('cokeline/defaults')
 local mappings = require('cokeline/mappings')
 local componentz = require('cokeline/components')
 
-local Line = require('cokeline/lines').Line
 local Cokeline = require('cokeline/cokeline').Cokeline
+local Line = require('cokeline/lines').Line
 
-local fn = vim.fn
 local cmd = vim.cmd
 local opt = vim.opt
-local map = vim.tbl_map
-local filter = vim.tbl_filter
+local fn = vim.fn
 
 local M = {}
 
-local settings = {}
-local components = {}
-
-local state = {
-  buffers = {},
+local buffers = {
   order = {},
+  valid = {},
+  visible = {},
 }
 
-local redraw = function()
-  cmd('redrawtabline')
-  cmd('redraw')
-end
+local components = {}
+
+local settings = {}
 
 local get_current_index = function()
   local current_buffer_number = fn.bufnr('%')
-  for index, buffer in ipairs(state.buffers) do
+  for index, buffer in ipairs(buffers.valid) do
     if current_buffer_number == buffer.number then
       return index
     end
@@ -40,15 +35,16 @@ end
 
 local get_target_index = function(args)
   if opt.showtabline._value == 0 then
-    state.buffers = bufferz.get_buffers(state.order)
+    buffers = bufferz.get_buffers(buffers.order)
   end
 
   local target_index
 
   if args.target then
-    for i, buffer in ipairs(state.buffers) do
+    for i, buffer in ipairs(buffers.valid) do
       if buffer.index == args.target and buffer.__is_shown then
         target_index = i
+        break
       end
     end
   else
@@ -57,9 +53,9 @@ local get_target_index = function(args)
       return
     end
     target_index = current_index + args.step
-    if target_index < 1 or target_index > #state.buffers then
+    if target_index < 1 or target_index > #buffers.valid then
       if settings.cycle_prev_next_mappings then
-        target_index = (target_index - 1) % #state.buffers + 1
+        target_index = (target_index - 1) % #buffers.valid + 1
       else
         return
       end
@@ -70,7 +66,8 @@ local get_target_index = function(args)
 end
 
 function M.toggle()
-  opt.showtabline = (#fn.getbufinfo({buflisted = 1}) > 0) and 2 or 0
+  buffers = bufferz.get_buffers(buffers.order)
+  opt.showtabline = (#buffers.valid > 0) and 2 or 0
 end
 
 function M.focus(args)
@@ -78,7 +75,7 @@ function M.focus(args)
   if not target then
     return
   end
-  cmd('buffer ' .. state.buffers[target].number)
+  cmd('buffer ' .. buffers.order[target])
 end
 
 function M.switch(args)
@@ -87,10 +84,9 @@ function M.switch(args)
     return
   end
   local current = get_current_index()
-  state.buffers[current], state.buffers[target]
-    = state.buffers[target], state.buffers[current]
-  state.order = map(function(buffer) return buffer.number end, state.buffers)
-  redraw()
+  buffers.order[current], buffers.order[target]
+    = buffers.order[target], buffers.order[current]
+  cmd('redrawtabline | redraw')
 end
 
 function M.setup(preferences)
@@ -105,17 +101,17 @@ function M.setup(preferences)
 end
 
 function _G.cokeline()
-  state.buffers = bufferz.get_buffers(state.order)
-  local buffers = filter(function(b) return b.__is_shown end, state.buffers)
+  buffers = bufferz.get_buffers(buffers.order)
+  local visible = buffers.visible
 
-  if (#buffers == 0) or (settings.hide_when_one_buffer and #buffers == 1) then
+  if (#visible == 0) or (#visible == 1 and settings.hide_when_one_buffer) then
     opt.showtabline = 0
     return
   end
 
   local cokeline = Cokeline:new()
 
-  for _, buffer in pairs(buffers) do
+  for _, buffer in pairs(visible) do
     local line = Line:new(buffer)
     for _, component in pairs(components) do
       line:add_component(component:render(buffer))

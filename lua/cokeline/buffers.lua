@@ -5,6 +5,7 @@ local has_devicons, devicons = pcall(require, 'nvim-web-devicons')
 local insert = table.insert
 
 local contains = vim.tbl_contains
+local filter = vim.tbl_filter
 local split = vim.split
 local map = vim.tbl_map
 local fn = vim.fn
@@ -147,60 +148,45 @@ function Buffer:new(b, index)
 end
 
 function M.get_buffers(order)
-  local listed_buffers = fn.getbufinfo({buflisted = 1})
-  local buffers = {}
+  local listed_buffers = {}
+  for _, b in pairs(fn.getbufinfo({buflisted = 1})) do
+    listed_buffers[b.bufnr] = b
+  end
+
+  -- First find all the buffers whose numbers are already in the 'order' table.
+  local old_buffers = {}
+  for _, number in pairs(order) do
+    insert(old_buffers, listed_buffers[number])
+  end
+
+  -- Then add all the buffers whose numbers are not yet in the 'order' table.
+  local new_buffers = filter(function(b)
+    return not contains(order, b.bufnr)
+  end, listed_buffers)
+
   local index = 1
+  local buffers = {
+    order = {},
+    valid = {},
+    visible = {},
+  }
 
-  -- TODO: can these 3 for loops be condensed into 1?
-
-  if not next(order) then
-    for _, b in ipairs(listed_buffers) do
-      local buffer = Buffer:new(b, index)
-      if buffer.__is_valid then
-        insert(buffers, buffer)
-        if buffer.__is_shown then
-          index = index + 1
-        end
-      end
-    end
-    return compute_unique_prefixes(buffers)
-  end
-
-  local buffer_numbers = {}
-
-  -- First add the buffers whose numbers are in the global 'order' table that
-  -- are still listed.
-  for _, number in ipairs(order) do
-    for _, b in pairs(listed_buffers) do
-      if b.bufnr == number then
-        local buffer = Buffer:new(b, index)
-        if buffer.__is_valid then
-          insert(buffers, buffer)
-          insert(buffer_numbers, number)
-          if buffer.__is_shown then
-            index = index + 1
-          end
-          break
-        end
+  for i=1,(#old_buffers + #new_buffers) do
+    local b = old_buffers[i] or new_buffers[i - #old_buffers]
+    local buffer = Buffer:new(b, index)
+    if buffer.__is_valid then
+      insert(buffers.order, buffer.number)
+      insert(buffers.valid, buffer)
+      if buffer.__is_shown then
+        index = index + 1
       end
     end
   end
 
-  -- Then add all the listed buffers whose numbers are not yet in the global
-  -- 'order' table.
-  for _, b in pairs(listed_buffers) do
-    if not contains(buffer_numbers, b.bufnr) then
-      local buffer = Buffer:new(b, index)
-      if buffer.__is_valid then
-        insert(buffers, buffer)
-        if buffer.__is_shown then
-          index = index + 1
-        end
-      end
-    end
-  end
+  buffers.valid = compute_unique_prefixes(buffers.valid)
+  buffers.visible = filter(function(b) return b.__is_shown end, buffers.valid)
 
-  return compute_unique_prefixes(buffers)
+  return buffers
 end
 
 function M.setup(settings)
