@@ -10,7 +10,7 @@ local fn = vim.fn
 
 local M = {}
 
-local focused_line = {}
+local centered_l
 
 M.Cokeline = {
   before = '',
@@ -34,10 +34,9 @@ end
 
 function M.Cokeline:add_line(line)
   if line.buffer.is_focused then
-    focused_line = {
-      width = line.width,
+    centered_l = {
       index = line.buffer.index,
-      colstart = self.width + 1,
+      colprv = self.width,
       colend = self.width + line.width,
     }
   end
@@ -96,7 +95,7 @@ end
 
 function M.Cokeline:render(settings)
   if settings.default.enable then
-    renderers.default(self, focused_line)
+    renderers.default(self, centered_l)
   end
 end
 

@@ -1,52 +1,55 @@
 local M = {}
 
-M.default = function(cokeline, focused_line)
-  -- TODO: filter terminal buffers, open two buffers, open a new terminal
-  -- buffer, close the 2nd buffer -> E5108 attempt to index local 'fl'.
+M.default = function(cokeline, centered_l)
+  -- 3 buffers, first 2 are visible, last one isn't. We focus the last buffer,
+  -- then the 2nd, then close the 2nd. Without this check centered_index would
+  -- still be 2, which would cause centered_line to be nil.
+  local centered_index =
+    cokeline.lines[centered_l.index]
+    and centered_l.index
+     or centered_l.index - 1
 
-  local fl = cokeline.lines[focused_line.index]
+  local centered_line = cokeline.lines[centered_index]
 
   local available_space_tot = vim.o.columns
 
-  local available_space_minus_flwidth =
-    available_space_tot - focused_line.width
+  local available_space_sides = available_space_tot - centered_line.width
 
-  if available_space_minus_flwidth <= 0 then
-    fl:cutoff({
+  if available_space_sides <= 0 then
+    centered_line:cutoff({
       direction = 'right',
       available_space = available_space_tot,
     })
-    cokeline.main = fl:text()
+    cokeline.main = centered_line:text()
     return
   end
 
-  local available_space_left_right =
-    math.floor((available_space_minus_flwidth)/2)
-
   local available_space = {
-    left = available_space_left_right,
-    right = available_space_left_right + available_space_minus_flwidth % 2,
+    left = math.floor(available_space_sides/2),
+    right = math.floor(available_space_sides/2) + available_space_sides % 2,
   }
 
-  local width_left_of_focused_line = focused_line.colstart - 1
-  local width_right_of_focused_line = cokeline.width - focused_line.colend
+  local sides_width = {
+    left = centered_l.colprv,
+    right = cokeline.width - centered_l.colend,
+  }
 
   local unused_space = {
-    left = math.max(available_space.left - width_left_of_focused_line, 0),
-    right = math.max(available_space.right - width_right_of_focused_line, 0),
+    left = math.max(available_space.left - sides_width.left, 0),
+    right = math.max(available_space.right - sides_width.right, 0),
   }
 
   local left = cokeline:subline({
-    upto = focused_line.index - 1,
+    upto = centered_index - 1,
     available_space = available_space.left + unused_space.right,
   })
 
   local right = cokeline:subline({
-    startfrom = focused_line.index + 1,
+    startfrom = centered_index + 1,
     available_space = available_space.right + unused_space.left,
   })
 
-  cokeline.main = left .. fl:text() .. right
+  cokeline.main = left .. centered_line:text() .. right
 end
 
 return M
