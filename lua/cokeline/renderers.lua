@@ -4,10 +4,13 @@ M.default = function(cokeline, centered_l)
   -- 3 buffers, first 2 are visible, last one isn't. We focus the last buffer,
   -- then the 2nd, then close the 2nd. Without this check centered_index would
   -- still be 2, which would cause centered_line to be nil.
-  local centered_index =
-    cokeline.lines[centered_l.index]
-    and centered_l.index
-     or centered_l.index - 1
+  local centered_index = centered_l.index
+  while true do
+    if cokeline.lines[centered_index] then
+      break
+    end
+    centered_index = centered_index - 1
+  end
 
   local centered_line = cokeline.lines[centered_index]
 
