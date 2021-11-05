@@ -1,4 +1,6 @@
-local get_hex = require('cokeline/utils').get_hex
+local utils = require('cokeline/utils')
+local echoerr = utils.echoerr
+local get_hex = utils.get_hex
 
 local M = {}
 
@@ -7,9 +9,8 @@ local defaults = {
   cycle_prev_next_mappings = false,
 
   rendering = {
-    default = {
-      enable = true,
-    },
+    min_line_width = nil,
+    max_line_width = nil,
   },
 
   buffers = {
@@ -58,19 +59,12 @@ local defaults = {
 function M.merge(preferences)
   local settings = defaults
 
-  local echoerr = function(msg)
-    vim.api.nvim_echo(
-      {{('[cokeline.nvim]: %s'):format(msg), 'ErrorMsg'}},
-      true,
-      {}
-    )
-  end
-
-  for k, v in pairs(preferences) do
-    if defaults[k] ~= nil then
-      settings[k] = v
+  -- TODO: does this fail if I pass in e.g. rendering.min_line_width?
+  for option, value in pairs(preferences) do
+    if defaults[option] ~= nil then
+      settings[option] = value
     else
-      echoerr(('Configuration option "%s" does not exist!'):format(k))
+      echoerr(('Configuration option "%s" does not exist!'):format(option))
     end
   end
 

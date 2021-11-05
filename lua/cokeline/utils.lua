@@ -1,39 +1,52 @@
-local format = string.format
-local tohex = bit.tohex
-
-local get_hl_by_name = vim.api.nvim_get_hl_by_name
+local fn = vim.fn
+local echo = vim.api.nvim_echo
 
 local M = {}
 
--- Return the table with the reversed order
-function M.reverse(t)
-  local rev = {}
-  for i = #t, 1, -1 do
-    rev[#rev + 1] = t[i]
-  end
-  return rev
+-- Formats an error message
+function M.echoerr(msg)
+  echo({{('[cokeline.nvim]: %s'):format(msg), 'ErrorMsg'}}, true, {})
 end
 
 -- Given a highlight group name and an attribute (foreground or background),
 -- return the color set by the current colorscheme for that highlight group's
 -- attribute in hexadecimal format.
-function M.get_hex(hlname, attr)
-  local attribute =
-    attr == 'fg'
-    and 'foreground'
-     or 'background'
+function M.get_hex(hlgroup_name, attr)
+  local hlgroup_ID = fn.synIDtrans(fn.hlID(hlgroup_name))
+  local hex = fn.synIDattr(hlgroup_ID, attr)
+  return (hex ~= '') and hex or 'NONE'
+end
 
-  -- TODO: not sure why this fails if I call 'get_hl_by_name' directly instead
-  -- of through a pcall.
-  local _, hldef = pcall(get_hl_by_name, hlname, true)
-  if hldef and hldef[attribute] then
-    return format('#%s', tohex(hldef[attribute], 6))
+-- Returns the table with the reversed order
+function M.reverse(t)
+  local rev = {}
+  for i=#t,1,-1 do
+    rev[#rev + 1] = t[i]
   end
+  return rev
+end
 
-  -- TODO: nvim-bufferline handles a couple of fallbacks here in case
-  -- 'get_hl_by_name' doesn't find a color for the given attribute.
-
-  return 'NONE'
+-- Taken from http://lua-users.org/wiki/CopyTable
+function M.deepcopy(orig, copies)
+  copies = copies or {}
+  local orig_type = type(orig)
+  local copy
+  if orig_type == 'table' then
+    if copies[orig] then
+      copy = copies[orig]
+    else
+      copy = {}
+      copies[orig] = copy
+      for orig_key, orig_value in next, orig, nil do
+          copy[M.deepcopy(orig_key, copies)] = M.deepcopy(orig_value, copies)
+      end
+      setmetatable(copy, M.deepcopy(getmetatable(orig), copies))
+    end
+  else
+    -- number, string, boolean, etc
+    copy = orig
+  end
+  return copy
 end
 
 return M

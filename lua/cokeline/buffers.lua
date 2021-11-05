@@ -11,6 +11,7 @@ local map = vim.tbl_map
 local fn = vim.fn
 
 local Buffer = {
+  -- Exposed to the user
   number = 0,
   index = 0,
   type = '',
@@ -25,6 +26,8 @@ local Buffer = {
     icon = '',
     color = '',
   },
+
+  -- Used internally.
   __is_valid = true,
   __is_shown = true,
 }
@@ -76,6 +79,8 @@ local compute_unique_prefixes = function(buffers)
   return buffers
 end
 
+-- TODO: refactor this, understand how `setmetatable` and `__index` really
+-- work.
 function Buffer:new(b, index)
   local buffer = {}
   setmetatable(buffer, self)
@@ -153,7 +158,7 @@ function M.get_buffers(order)
     listed_buffers[b.bufnr] = b
   end
 
-  -- First find all the buffers whose numbers are already in the 'order' table.
+  -- First add all the buffers whose numbers are already in the 'order' table.
   local old_buffers = {}
   for _, number in pairs(order) do
     insert(old_buffers, listed_buffers[number])
