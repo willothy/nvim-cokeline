@@ -6,23 +6,17 @@ local M = {}
 
 local centered_index
 
-M.Cokeline = {
-  before = '',
-  main = '',
-  after = '',
-  lines = {},
-}
+M.Cokeline = {}
 
--- TODO: refactor this, understand how `setmetatable` and `__index` really
--- work.
 function M.Cokeline:new()
-  local cokeline = {}
+  local cokeline = {
+    before = '',
+    main = '',
+    after = '',
+    lines = {},
+  }
   setmetatable(cokeline, self)
   self.__index = self
-  cokeline.before = ''
-  cokeline.main = ''
-  cokeline.after = ''
-  cokeline.lines = {}
   return cokeline
 end
 
@@ -33,6 +27,7 @@ function M.Cokeline:add_line(line)
   insert(self.lines, line)
 end
 
+-- TODO: refactor all this function.
 function M.Cokeline:render(settings)
   -- 3 buffers, first 2 are visible, last one isn't. We focus the last buffer,
   -- then the 2nd, then close the 2nd. Without this check centered_index would
@@ -58,7 +53,7 @@ function M.Cokeline:render(settings)
     if settings.min_line_width and (line.width < settings.min_line_width) then
       line = line:expand({available_space = settings.min_line_width})
     elseif settings.max_line_width and (line.width > settings.max_line_width) then
-      line = line:truncate({available_space = settings.max_line_width})
+      line = line:shorten({available_space = settings.max_line_width})
     end
 
     if i < centered_index then

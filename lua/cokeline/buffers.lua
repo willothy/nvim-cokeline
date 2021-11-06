@@ -10,30 +10,9 @@ local split = vim.split
 local map = vim.tbl_map
 local fn = vim.fn
 
-local Buffer = {
-  -- Exposed to the user
-  number = 0,
-  index = 0,
-  type = '',
-  filetype = '',
-  is_focused = false,
-  is_modified = false,
-  is_readonly = false,
-  path = '',
-  filename = '',
-  unique_prefix = '',
-  devicon = {
-    icon = '',
-    color = '',
-  },
-
-  -- Used internally.
-  __is_valid = true,
-  __is_shown = true,
-}
-
 local M = {}
 
+local Buffer = {}
 local user_filter
 
 local compute_unique_prefixes = function(buffers)
@@ -79,14 +58,36 @@ local compute_unique_prefixes = function(buffers)
   return buffers
 end
 
--- TODO: refactor this, understand how `setmetatable` and `__index` really
--- work.
-function Buffer:new(b, index)
-  local buffer = {}
+function Buffer:new(b)
+  local buffer = {
+    -- Exposed to the users
+    number = b.bufnr,
+    index = 0,
+    type = vim.bo[b.bufnr].buftype,
+    filetype = vim.bo[b.bufnr].filetype,
+    is_focused = (b.bufnr == fn.bufnr('%')),
+    is_modified = vim.bo[b.bufnr].modified,
+    is_readonly = vim.bo[b.bufnr].readonly,
+    path = b.name,
+    filename = '',
+    unique_prefix = '',
+    devicon = {
+      icon = '',
+      color = '',
+    },
+    lsp = {
+      errors = 0,
+      warnings = 0,
+      infos = 0,
+      hints = 0,
+    },
+    -- Used internally
+    __is_valid = true,
+    __is_shown = true,
+  }
   setmetatable(buffer, self)
   self.__index = self
 
-  buffer.filetype = vim.bo[b.bufnr].filetype
   -- vim.bo[b.bufnr].filetype doesn't work for netrw buffers.
   -- Try nvim . -> :ls. The bufnr should be 1 but :lua
   -- print(vim.bo[1].filetype) returns an empty string (however :lua
@@ -94,20 +95,6 @@ function Buffer:new(b, index)
   if b.variables and b.variables.netrw_browser_active then
     buffer.filetype = 'netrw'
   end
-
-  buffer.__is_valid = buffer.filetype ~= 'netrw'
-
-  if not buffer.__is_valid then
-    return buffer
-  end
-
-  buffer.index = index
-  buffer.number = b.bufnr
-  buffer.type = vim.bo[b.bufnr].buftype
-  buffer.is_focused = (b.bufnr == fn.bufnr('%'))
-  buffer.is_modified = vim.bo[b.bufnr].modified
-  buffer.is_readonly = vim.bo[b.bufnr].readonly
-  buffer.path = b.name
 
   if buffer.type == 'quickfix' then
     buffer.filename = '[Quickfix List]'
@@ -119,7 +106,7 @@ function Buffer:new(b, index)
 
   if has_devicons then
     local name =
-      buffer.type == 'terminal'
+      (buffer.type == 'terminal')
       and 'terminal'
        or fn.fnamemodify(buffer.path, ':t')
     local extension = fn.fnamemodify(buffer.path, ':e')
@@ -129,24 +116,13 @@ function Buffer:new(b, index)
       icon = icon .. ' ',
       color = color,
     }
-  else
-    buffer.devicon = {
-      icon = '',
-      color = '',
-    }
   end
 
   if vim.diagnostic or vim.lsp then
     buffer.lsp = diagnostics.get_status(buffer.number)
-  else
-    buffer.lsp = {
-      errors = 0,
-      warnings = 0,
-      infos = 0,
-      hints = 0,
-    }
   end
 
+  buffer.__is_valid = buffer.filetype ~= 'netrw'
   buffer.__is_shown = (not user_filter) or user_filter(buffer)
 
   return buffer
@@ -169,16 +145,17 @@ function M.get_buffers(order)
     return not contains(order, b.bufnr)
   end, listed_buffers)
 
-  local index = 1
   local buffers = {
     order = {},
     valid = {},
     visible = {},
   }
+  local index = 1
 
   for i=1,(#old_buffers + #new_buffers) do
     local b = old_buffers[i] or new_buffers[i - #old_buffers]
-    local buffer = Buffer:new(b, index)
+    local buffer = Buffer:new(b)
+    buffer.index = index
     if buffer.__is_valid then
       insert(buffers.order, buffer.number)
       insert(buffers.valid, buffer)

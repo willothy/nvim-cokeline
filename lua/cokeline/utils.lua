@@ -1,5 +1,5 @@
-local fn = vim.fn
 local echo = vim.api.nvim_echo
+local fn = vim.fn
 
 local M = {}
 
@@ -15,15 +15,6 @@ function M.get_hex(hlgroup_name, attr)
   local hlgroup_ID = fn.synIDtrans(fn.hlID(hlgroup_name))
   local hex = fn.synIDattr(hlgroup_ID, attr)
   return (hex ~= '') and hex or 'NONE'
-end
-
--- Returns the table with the reversed order
-function M.reverse(t)
-  local rev = {}
-  for i=#t,1,-1 do
-    rev[#rev + 1] = t[i]
-  end
-  return rev
 end
 
 -- Taken from http://lua-users.org/wiki/CopyTable

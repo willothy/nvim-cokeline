@@ -1,35 +1,14 @@
 local hlgroups = require('cokeline/hlgroups')
 local Hlgroup = hlgroups.Hlgroup
 
+local strrep = string.rep
 local insert = table.insert
 
 local fn = vim.fn
 
 local M = {}
 
-M.Component = {
-  -- Exposed to users
-  text = '',
-  hl = nil,
-  delete_buffer_on_left_click = false,
-  truncation = {
-    priority = 0,
-    direction = 'right',
-  },
-
-  -- Used internally
-  index = 0,
-  width = 0,
-  hlgroup = nil,
-  truncation_fmt = {
-    left = '…%s',
-    right = '%s…',
-  },
-  cutoff_fmt = {
-    left = ' …%s',
-    right = '%s… ',
-  }
-}
+M.Component = {}
 
 local evaluate_field = function(field, buffer)
   if type(field) == 'string' then
@@ -40,23 +19,35 @@ local evaluate_field = function(field, buffer)
 end
 
 function M.Component:new(c, index)
-  local component = {}
+  local component = {
+    -- Exposed to users
+    text = c.text,
+    hl = c.hl,
+    delete_buffer_on_left_click = c.delete_buffer_on_left_click,
+    truncation = {
+      priority = index,
+      direction = 'right',
+    },
+    -- Used internally
+    index = index,
+    width = 0,
+    hlgroup = nil,
+    truncation_fmt = {
+      left = '…%s',
+      right = '%s…',
+    },
+    cutoff_fmt = {
+      left = ' …%s',
+      right = '%s… ',
+    }
+  }
   setmetatable(component, self)
   self.__index = self
 
-  component.index = index
-  component.text = c.text
-  component.hl = c.hl
-  component.delete_buffer_on_left_click = c.delete_buffer_on_left_click
   if c.truncation then
     component.truncation = {
       priority = c.truncation.priority or index,
       direction = c.truncation.direction or 'right',
-    }
-  else
-    component.truncation = {
-      priority = index,
-      direction = 'right',
     }
   end
 
@@ -112,71 +103,36 @@ function M.Component:render(buffer)
   return component
 end
 
--- TODO: abstract away the common parts between truncate and cutoff.
-
-function M.Component:truncate(args)
-  local direction = self.truncation.direction
-  local empty_truncation = self.truncation_fmt[direction]:format('')
-  local available_space = args.available_space - fn.strwidth(empty_truncation)
-
-  local start =
-    direction == 'left'
-    and (fn.strwidth(self.text) - available_space)
-     or 0
-
-  -- fn.strcharpart can fail with wide characters. For example,
-  -- fn.strcharpart('｜', 0, 1) will still return '｜' since that character
-  -- takes up two columns. The last if is for cases like that.
-  self.text =
-    self.truncation_fmt[direction]:format(
-      fn.strcharpart(self.text, start, available_space)
-    )
-
-  self.width = fn.strwidth(self.text)
-
-  -- If it wasn't possible to truncate the component's width down to the
-  -- available space, we just set the text equal to the empty truncation format
-  -- plus however many spaces we need to fill the remaining space.
-  if self.width ~= args.available_space then
-    local spaces =
-      string.rep(' ', args.available_space - fn.strwidth(empty_truncation))
-    self.text =
-      direction == 'left'
-       and (spaces .. empty_truncation)
-        or (empty_truncation .. spaces)
+function M.Component:shorten(args)
+  local direction, shortened_fmt
+  if args.direction then
+    direction = args.direction
+    shortened_fmt = self.cutoff_fmt[direction]
+  else
+    direction = self.truncation.direction
+    shortened_fmt = self.truncation_fmt[direction]
   end
-end
 
-function M.Component:cutoff(args)
-  local direction = args.direction or self.truncation.direction
-  local empty_cutoff = self.cutoff_fmt[direction]:format('')
-  local available_space = args.available_space - fn.strwidth(empty_cutoff)
+  local empty_fmt = shortened_fmt:format('')
+  local available_space = args.available_space - fn.strwidth(empty_fmt)
+  local start_char =
+    (direction == 'right') and 0 or (fn.strwidth(self.text) - available_space)
 
-  local start =
-    args.direction == 'left'
-    and (fn.strwidth(self.text) - available_space)
-     or 0
-
-  -- fn.strcharpart can fail with wide characters. For example,
-  -- fn.strcharpart('｜', 0, 1) will still return '｜' since that character
-  -- takes up two columns. The last if is for cases like that.
-  self.text =
-    self.cutoff_fmt[args.direction]:format(
-      fn.strcharpart(self.text, start, available_space)
-    )
-
+  -- `fn.strcharpart` can fail with wide characters. For example,
+  -- `fn.strcharpart('｜', 0, 1)` will still return '｜' since that character
+  -- takes up two columns. The last `if` is to handle such cases.
+  local shortened_text = fn.strcharpart(self.text, start_char, available_space)
+  self.text = shortened_fmt:format(shortened_text)
   self.width = fn.strwidth(self.text)
 
-  -- If it wasn't possible to cutoff the component's width down to the
-  -- available space, we just set the text equal to the empty cutoff format
-  -- plus however many spaces we need to fill the remaining space.
+  -- If it wasn't possible to shorten the component's width down to the
+  -- available space, we just set its text equal to the empty shortened format
+  -- padded with however many spaces we need to fill the remaining space.
   if self.width ~= args.available_space then
-    local spaces =
-      string.rep(' ', args.available_space - fn.strwidth(empty_cutoff))
+    local spaces = strrep(' ', args.available_space - fn.strwidth(empty_fmt))
     self.text =
-      args.direction == 'left'
-       and (spaces .. empty_cutoff)
-        or (empty_cutoff .. spaces)
+      (direction == 'right') and (empty_fmt .. spaces) or (spaces .. empty_fmt)
+    self.width = fn.strwidth(self.text)
   end
 end
 

@@ -59,7 +59,6 @@ local defaults = {
 function M.merge(preferences)
   local settings = defaults
 
-  -- TODO: does this fail if I pass in e.g. rendering.min_line_width?
   for option, value in pairs(preferences) do
     if defaults[option] ~= nil then
       settings[option] = value

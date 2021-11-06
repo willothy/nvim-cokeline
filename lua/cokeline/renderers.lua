@@ -1,5 +1,3 @@
-local reverse = require('cokeline/utils').reverse
-
 local concat = table.concat
 local insert = table.insert
 
@@ -14,7 +12,9 @@ local render_lines = function(args)
   end
 
   if args.direction == 'left' then
-    args.lines = reverse(args.lines)
+    table.sort(args.lines, function(l1, l2)
+      return l1.buffer.index > l2.buffer.index
+    end)
   end
 
   local lines = {}
@@ -31,13 +31,13 @@ local render_lines = function(args)
       -- If the remaining space is less than the width of the empty cutoff
       -- string we cutoff the previous line.
       if remaining_space < cutoff_string_width then
-        lines[i - 1] = lines[i - 1]:cutoff({
+        lines[i - 1] = lines[i - 1]:shorten({
           direction = args.direction,
           available_space = lines[i - 1].width + remaining_space,
         })
         break
       end
-      line = line:cutoff({
+      line = line:shorten({
         direction = args.direction,
         available_space = remaining_space,
       })
@@ -47,7 +47,9 @@ local render_lines = function(args)
   end
 
   if args.direction == 'left' then
-    lines = reverse(lines)
+    table.sort(lines, function(l1, l2)
+      return l1.buffer.index < l2.buffer.index
+    end)
   end
 
   return concat(map(function(line) return line:render() end, lines))
@@ -57,7 +59,7 @@ M.default = function(lines, available_space_tot)
   local available_space_sides = available_space_tot - lines.center.width
 
   if available_space_sides <= 0 then
-    return lines.center:truncate({
+    return lines.center:shorten({
       available_space = available_space_tot,
     }):render()
   end

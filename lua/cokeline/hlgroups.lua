@@ -2,17 +2,17 @@ local cmd = vim.cmd
 
 local M = {}
 
-M.Hlgroup = {
-  name = '',
-  opts = {
-    gui = nil,
-    guifg = nil,
-    guibg = nil,
-  },
-}
+M.Hlgroup = {}
 
-function M.Hlgroup:embed(text)
-  return ('%%#%s#%s%%*'):format(self.name, text)
+function M.Hlgroup:new(args)
+  local hlgroup = {
+    name = args.name,
+    opts = args.opts,
+  }
+  setmetatable(hlgroup, self)
+  self.__index = self
+  hlgroup:exec()
+  return hlgroup
 end
 
 function M.Hlgroup:exec()
@@ -25,14 +25,8 @@ function M.Hlgroup:exec()
   cmd(('highlight %s %s'):format(self.name, opts))
 end
 
-function M.Hlgroup:new(args)
-  local hlgroup = {}
-  setmetatable(hlgroup, self)
-  self.__index = self
-  hlgroup.name = args.name
-  hlgroup.opts = args.opts
-  hlgroup:exec()
-  return hlgroup
+function M.Hlgroup:embed(text)
+  return ('%%#%s#%s%%*'):format(self.name, text)
 end
 
 function M.setup(defaults)
