@@ -8,6 +8,7 @@
 
 ![demo-gif](./.github/images/rendering.gif)
 
+
 ## :book: Table of Contents
 
 - [Features](#sparkles-features)
@@ -16,10 +17,17 @@
 - [Functioning](#bulb-functioning)
 - [Configuration](#wrench-configuration)
 - [Mappings](#musical_keyboard-mappings)
+- [Showoff of user configs](#nail_care-showoff-of-user-configs)
 - [TODOs](#chart_with_upwards_trend-todos)
 - [Credits](#pray-credits)
 
+
 ## :sparkles: Features
+
+<!-- TODO: -->
+
+<!--   1. add buffer filters -->
+<!--   2. rendering options -->
 
 ### Endlessly customizable
 
@@ -336,6 +344,52 @@ Don't like the order your buffers ended up in? Switch them around:
 
 ![reordering](.github/images/reordering.gif)
 
+
+### Line width constraints (experimental!)
+
+NOTE: Everything described in this section is still under development and the
+following configuration options are likely to change.
+
+You can constraint the width of each line with
+```lua
+require('cokeline').setup({
+  -- ...
+  rendering = {
+    min_line_width = int,
+    max_line_width = int,
+  }
+  -- ...
+})
+```
+if a line's width is bigger than `max_line_width` the default behaviour is to
+drop its components from right to left, with the last component that's included
+also being truncated from right to left.
+
+To change this each component accepts an optional `truncation` of the form
+```lua
+{
+  -- ...
+  truncation = {
+    priority = int,
+    direction = 'left' | 'right',
+  }
+}
+```
+the priority key is used to determine which component gets cut off first. The
+default value is the index of that component in the components table (i.e. the
+first component has default priority 1, the second one 2, and so on, so that
+components get cut from right to left). The direction key is used to determine
+in which direction the component gets cut. `'right'` is the default.
+
+For example, setting `max_line_width = 25` in my configuration results in:
+
+![lsp-styling](.github/images/line-truncation.png)
+
+Check out
+[this issue](https://github.com/noib3/cokeline.nvim/issues/6#issuecomment-961816354) for
+the configuration.
+
+
 ## :electric_plug: Requirements
 
 `cokeline.nvim` requires:
@@ -343,6 +397,7 @@ Don't like the order your buffers ended up in? Switch them around:
 - neovim 0.5+;
 - a patched font (see [Nerd Fonts](https://www.nerdfonts.com/));
 - `termguicolors` to be set.
+
 
 ## :package: Installation
 
@@ -388,6 +443,7 @@ require('cokeline').setup({
 EOF
 ```
 
+
 ## :bulb: Functioning
 
 Internally, `cokeline.nvim` defines two objects: *lines* and *components*.
@@ -420,7 +476,7 @@ A component's `text` can be either be a function or a string. If it's a
 function, it has to take the `buffer` linked to the line that component belongs
 to as a parameter.
 
-That `buffer` parameter is itself a key-value table with the following keys:
+That `buffer` parameter is a key-value table with the following keys:
 ```lua
   buffer = {
     -- The buffer's internal number as reported by `:ls`.
@@ -512,6 +568,7 @@ functions or strings, however:
 deleted when the user left clicks that component. This is usually used to
 implement close buttons.
 
+
 ## :wrench: Configuration
 
 `cokeline.nvim` is configured by passing a key-value table to the
@@ -530,7 +587,7 @@ require('cokeline').setup({
   cycle_prev_next_mappings = false,
 
   buffers = {
-    -- A function to filter out unwanted buffers. It takes a `buffer` table
+    -- A function to filter out unwanted buffers. It takes the `buffer` table
     -- (described above) as a parameter.
     -- For example, if you want to keep terminals out of your cokeline:
     --   filter = function(buffer) return buffer.type ~= 'terminal' end,
@@ -609,6 +666,183 @@ nmap <silent> <Leader>p <Plug>(cokeline-switch-prev)
 nmap <silent> <Leader>n <Plug>(cokeline-switch-next)
 ```
 
+
+## :nail_care: Showoff of user configs
+
+Open a new issue or send a PR if you'd like to have your configuration featured
+here!
+
+### author: @olimorris
+
+![userconfig-olimorris](.github/images/userconfig-olimorris.gif)
+
+<details>
+<summary>Click to see configuration</summary>
+
+```lua
+local M = {}
+
+function M.setup()
+  local present, cokeline = pcall(require, "cokeline")
+  if not present then
+    return
+  end
+
+  local colors = require("colors").get()
+
+  cokeline.setup({
+
+    hide_when_one_buffer = true,
+    cycle_prev_next_mappings = true,
+
+    default_hl = {
+      focused = {
+        fg = colors.purple,
+        bg = "NONE",
+        style = "bold",
+      },
+      unfocused = {
+        fg = colors.gray,
+        bg = "NONE",
+      },
+    },
+
+    components = {
+      {
+        text = function(buffer)
+          return buffer.index ~= 1 and "  "
+        end,
+      },
+      {
+        text = function(buffer)
+          return buffer.index .. ": "
+        end,
+        hl = {
+          style = function(buffer)
+            return buffer.is_focused and "bold" or nil
+          end,
+        },
+      },
+      {
+        text = function(buffer)
+          return buffer.unique_prefix
+        end,
+        hl = {
+          fg = function(buffer)
+            return buffer.is_focused and colors.purple or colors.gray
+          end,
+          style = "italic",
+        },
+      },
+      {
+        text = function(buffer)
+          return buffer.filename .. " "
+        end,
+        hl = {
+          style = function(buffer)
+            return buffer.is_focused and "bold" or nil
+          end,
+        },
+      },
+      {
+        text = function(buffer)
+          return buffer.is_modified and " ●"
+        end,
+        hl = {
+          fg = function(buffer)
+            return buffer.is_focused and colors.red
+          end,
+        },
+      },
+      {
+        text = "  ",
+      },
+    },
+  })
+end
+
+return M
+
+```
+</details>
+
+
+### author: @alex-popov-tech
+
+![userconfig-alex-popov-tech](.github/images/userconfig-alex-popov-tech.png)
+
+<details>
+<summary>Click to see configuration</summary>
+
+```lua
+return function()
+    local get_hex = require("cokeline/utils").get_hex
+    local space = {text = " "}
+    require("cokeline").setup(
+        {
+            cycle_prev_next_mappings = true,
+            default_hl = {
+                focused = {
+                    bg = "none"
+                },
+                unfocused = {
+                    fg = get_hex("Comment", "fg"),
+                    bg = "none"
+                }
+            },
+            components = {
+                space,
+                {
+                    text = function(buffer)
+                        return buffer.devicon.icon
+                    end,
+                    hl = {
+                        fg = function(buffer)
+                            return buffer.devicon.color
+                        end
+                    }
+                },
+                {
+                    text = function(buffer)
+                        return buffer.filename
+                    end,
+                    hl = {
+                        fg = function(buffer)
+                            if buffer.is_focused then
+                                return "#78dce8"
+                            end
+                            if buffer.is_modified then
+                                return "#e5c463"
+                            end
+                            if buffer.lsp.errors ~= 0 then
+                                return "#fc5d7c"
+                            end
+                        end,
+                        style = function(buffer)
+                            if buffer.is_focused then
+                                return "underline"
+                            end
+                            return nil
+                        end
+                    }
+                },
+                {
+                    text = function(buffer)
+                        if buffer.is_readonly then
+                            return " 🔒"
+                        end
+                        return ""
+                    end
+                },
+                space
+            }
+        }
+    )
+end
+```
+</details>
+
+
 ## :chart_with_upwards_trend: TODOs
 
 Some of the features yet to be implemented are:
@@ -622,6 +856,7 @@ Some of the features yet to be implemented are:
   title should take up *1/n*-th of the available space. This might be tricky to
   implement due to neovim being a terminal program and not a GUI one (i.e.,
   having to deal with discretely sized columns instead of pixels);
+
 
 ## :pray: Credits
 

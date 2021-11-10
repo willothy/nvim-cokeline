@@ -122,7 +122,7 @@ function Buffer:new(b)
     buffer.lsp = diagnostics.get_status(buffer.number)
   end
 
-  buffer.__is_valid = buffer.filetype ~= 'netrw'
+  buffer.__is_valid = (buffer.filetype ~= 'netrw')
   buffer.__is_shown = (not user_filter) or user_filter(buffer)
 
   return buffer
@@ -134,13 +134,13 @@ function M.get_buffers(order)
     listed_buffers[b.bufnr] = b
   end
 
-  -- First add all the buffers whose numbers are already in the 'order' table.
+  -- First add all the buffers whose numbers are already in the `order` table.
   local old_buffers = {}
   for _, number in pairs(order) do
     insert(old_buffers, listed_buffers[number])
   end
 
-  -- Then add all the buffers whose numbers are not yet in the 'order' table.
+  -- Then add all the buffers whose numbers are not yet in the `order` table.
   local new_buffers = filter(function(b)
     return not contains(order, b.bufnr)
   end, listed_buffers)
