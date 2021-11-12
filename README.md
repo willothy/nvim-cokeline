@@ -672,7 +672,7 @@ nmap <silent> <Leader>n <Plug>(cokeline-switch-next)
 Open a new issue or send a PR if you'd like to have your configuration featured
 here!
 
-### author: @olimorris
+### author: [@olimorris](https://github.com/olimorris/dotfiles)
 
 ![userconfig-olimorris](.github/images/userconfig-olimorris.gif)
 
@@ -767,7 +767,7 @@ return M
 </details>
 
 
-### author: @alex-popov-tech
+### author: [@alex-popov-tech](https://github.com/alex-popov-tech/.dotfiles)
 
 ![userconfig-alex-popov-tech](.github/images/userconfig-alex-popov-tech.png)
 
