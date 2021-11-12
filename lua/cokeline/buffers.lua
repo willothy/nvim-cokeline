@@ -33,10 +33,10 @@ local compute_unique_prefixes = function(buffers)
 
   local prefixes = map(function() return {} end, buffers)
 
-  for i, _ in ipairs(paths) do
+  for i=1,#paths do
     for j=i+1,#paths do
       local k = 1
-      while paths[i][k] == paths[j][k] do
+      while paths[i][k] == paths[j][k] and paths[i][k] do
         k = k + 1
         prefixes[i][k - 1] = prefixes[i][k - 1] or paths[i][k]
         prefixes[j][k - 1] = prefixes[j][k - 1] or paths[j][k]

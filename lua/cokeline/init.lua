@@ -54,11 +54,10 @@ local get_target_index = function(args)
     end
     target_index = current_index + args.step
     if target_index < 1 or target_index > #buffers.valid then
-      if settings.cycle_prev_next_mappings then
-        target_index = (target_index - 1) % #buffers.valid + 1
-      else
+      if not settings.cycle_prev_next_mappings then
         return
       end
+      target_index = (target_index - 1) % #buffers.valid + 1
     end
   end
 
