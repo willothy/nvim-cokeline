@@ -73,30 +73,28 @@ function M.View:update_focused_line()
 end
 
 function M.View:render_lines(args)
-  local lines_2_render
-  if args.direction == 'right' then
-    lines_2_render = self.lines.right
-  elseif args.direction == 'left' then
-    lines_2_render = self.lines.left
-    table.sort(lines_2_render, function(l1, l2)
+  local lines = self.lines[args.direction]
+
+  if args.direction == 'left' then
+    table.sort(lines, function(l1, l2)
       return l1.buffer.index > l2.buffer.index
     end)
   end
 
-  local lines = {}
+  local lines_2_render = {}
   local remaining_space = args.available_space
 
-  for i, line in ipairs(lines_2_render) do
+  for i, line in ipairs(lines) do
     if (line.width < remaining_space)
-        or (line.width == remaining_space and i == #lines_2_render) then
-      insert(lines, line)
+        or (line.width == remaining_space and i == #lines) then
+      insert(lines_2_render, line)
       remaining_space = remaining_space - line.width
     else
       -- If the remaining space is less than the width of an ellipses and a
       -- space we "cutoff" either the previous line or the focused line to its
       -- width plus the remaining space.
       if remaining_space < 2 then -- 2 = strwidth(' …') = strwidth('… ')
-        line = (i == 1) and self.lines.focused or lines[i - 1]
+        line = (i == 1) and self.lines.focused or lines_2_render[i - 1]
         line:cutoff({
           direction = args.direction,
           available_space =
@@ -108,18 +106,18 @@ function M.View:render_lines(args)
         direction = args.direction,
         available_space = remaining_space,
       })
-      insert(lines, line)
+      insert(lines_2_render, line)
       break
     end
   end
 
   if args.direction == 'left' then
-    table.sort(lines, function(l1, l2)
+    table.sort(lines_2_render, function(l1, l2)
       return l1.buffer.index < l2.buffer.index
     end)
   end
 
-  return concat(map(function(line) return line:render() end, lines))
+  return concat(map(function(line) return line:render() end, lines_2_render))
 end
 
 function M.View:render()
