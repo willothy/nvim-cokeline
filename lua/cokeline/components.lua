@@ -12,7 +12,7 @@ M.Component = {}
 
 local evaluate_field = function(field, buffer)
   if type(field) == 'string' then
-   return field
+    return field
   elseif type(field) == 'function' then
     return field(buffer)
   end
@@ -39,7 +39,7 @@ function M.Component:new(c, index)
     cutoff_fmt = {
       left = ' …%s',
       right = '%s… ',
-    }
+    },
   }
   setmetatable(component, self)
   self.__index = self

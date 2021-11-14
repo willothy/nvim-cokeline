@@ -5,7 +5,7 @@ local defaults = require('cokeline/defaults')
 local mappings = require('cokeline/mappings')
 local componentz = require('cokeline/components')
 
-local Cokeline = require('cokeline/cokeline').Cokeline
+local View = require('cokeline/rendering').View
 local Line = require('cokeline/lines').Line
 
 local cmd = vim.cmd
@@ -101,29 +101,23 @@ end
 
 function _G.cokeline()
   buffers = bufferz.get_buffers(buffers.order)
-  local visible = buffers.visible
 
-  if (#visible == 0) or (#visible == 1 and settings.hide_when_one_buffer) then
+  if #buffers.visible < settings.show_if_buffers_are_at_least then
     opt.showtabline = 0
     return
   end
 
-  local cokeline = Cokeline:new()
+  local view = View:new(settings.rendering)
 
-  for _, buffer in pairs(visible) do
+  for _, buffer in pairs(buffers.visible) do
     local line = Line:new(buffer)
     for _, component in pairs(components) do
       line:add_component(component:render(buffer))
     end
-    cokeline:add_line(line)
+    view:add_line(line)
   end
 
-  cokeline:render(settings.rendering)
-
-  return
-    cokeline.before
-    .. cokeline.main
-    .. cokeline.after
+  return view:render()
 end
 
 return M

@@ -5,7 +5,7 @@ local get_hex = utils.get_hex
 local M = {}
 
 local defaults = {
-  hide_when_one_buffer = false,
+  show_if_buffers_are_at_least = 1,
   cycle_prev_next_mappings = false,
 
   rendering = {
