@@ -49,7 +49,7 @@ function M.Line:shorten(args)
       -- If the remaining space is less than the width of the continuation
       -- indicator (either a single ellipses or an ellipses and a space) we
       -- shorten the previous component.
-      if remaining_space < args.continuation_indicator_width then
+      if remaining_space < args.continuation_fmt_width then
         local j = (i == 1) and 1 or i - 1
         components[j]:shorten({
           direction = args.direction,
@@ -82,7 +82,7 @@ function M.Line:truncate(args)
   self:shorten({
     direction = nil,
     available_space = args.available_space,
-    continuation_indicator_width = 1,
+    continuation_fmt_width = 1 -- 1 = strwidth('…')
   })
 end
 
@@ -95,7 +95,7 @@ function M.Line:cutoff(args)
   self:shorten({
     direction = args.direction,
     available_space = args.available_space,
-    continuation_indicator_width = 2,
+    continuation_fmt_width = 2,  -- 2 = strwidth(' …') = strwidth('… ')
   })
 end
 
@@ -105,6 +105,12 @@ end
 
 function M.Line:render()
   local text = concat(map(function(component)
+    if component.delete_buffer_on_left_click and fn.has('tablineat') then
+      local fmt =
+        '%%%s@cokeline#handle_close_button_click@%s%%%s@cokeline#handle_click@'
+      local number = self.buffer.number
+      component.text = fmt:format(number, component.text, number)
+    end
     return component.hlgroup:embed(component.text)
   end, self.components))
 

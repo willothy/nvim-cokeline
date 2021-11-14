@@ -1,5 +1,4 @@
-local sliders = require('cokeline/sliders')
-local DefaultSlider = sliders.CenterFocusedSlider
+local DefaultSlider = require('cokeline/sliders').CenterFocusedSlider
 
 local concat = table.concat
 local insert = table.insert
@@ -24,10 +23,7 @@ function M.View:new(settings)
     },
     min_line_width = settings.min_line_width or 0,
     max_line_width = settings.max_line_width or 999,
-    slider =
-      settings.slider
-      and settings.slider:new()
-       or DefaultSlider:new(),
+    slider = settings.slider and settings.slider:new() or DefaultSlider:new(),
   }
   setmetatable(view, self)
   self.__index = self
@@ -89,7 +85,6 @@ function M.View:render_lines(args)
 
   local lines = {}
   local remaining_space = args.available_space
-  local continuation_indicator_width = 2
 
   for i, line in ipairs(lines_2_render) do
     if (line.width < remaining_space)
@@ -100,7 +95,7 @@ function M.View:render_lines(args)
       -- If the remaining space is less than the width of an ellipses and a
       -- space we "cutoff" either the previous line or the focused line to its
       -- width plus the remaining space.
-      if remaining_space < continuation_indicator_width then
+      if remaining_space < 2 then -- 2 = strwidth(' …') = strwidth('… ')
         line = (i == 1) and self.lines.focused or lines[i - 1]
         line:cutoff({
           direction = args.direction,
