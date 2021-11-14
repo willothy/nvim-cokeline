@@ -578,8 +578,8 @@ implement close buttons.
 local get_hex = require('cokeline/utils').get_hex
 
 require('cokeline').setup({
-  -- If true the bufferline is hidden when only one buffer is listed
-  hide_when_one_buffer = false,
+  -- Show the bufferline when there are at least this many visible buffers.
+  show_if_buffers_are_at_least = 1,
 
   -- Controls what happens when the first (last) buffer is focused and the user
   -- tries to focus/switch to the previous (next) buffer. If true the last
@@ -692,7 +692,7 @@ function M.setup()
 
   cokeline.setup({
 
-    hide_when_one_buffer = true,
+    show_if_buffers_are_at_least = 2,
     cycle_prev_next_mappings = true,
 
     default_hl = {

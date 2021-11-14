@@ -173,9 +173,9 @@ CONFIGURATION                                           *cokeline-configuration*
 |cokeline.nvim| is configured by passing a key-value table to the
 `require('cokeline').setup` function. The following keys are recognized:
 
-  *hide_when_one_buffer*
-    If true the bufferline is hidden when only one buffer is listed.
-    default: `false`
+  *show_if_buffers_are_at_least*
+    Show the bufferline when there are at least this many visible buffers.
+    default: `1`
 
   *cycle_prev_next_mappings*
     Controls what happens when the first (last) buffer is focused and the user
