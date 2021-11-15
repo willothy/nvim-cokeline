@@ -37,6 +37,12 @@ function M.Component:new(c, index)
   return component
 end
 
+function M.Component:embed_text_in_close_button_fmt(bufnr)
+  local fmt =
+    '%%%s@cokeline#handle_close_button_click@%s%%%s@cokeline#handle_click@'
+  return fmt:format(bufnr, self.text, bufnr)
+end
+
 function M.Component:render(buffer)
   local component = {}
   setmetatable(component, self)

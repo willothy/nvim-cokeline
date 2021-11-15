@@ -95,7 +95,7 @@ function M.Line:cutoff(args)
   self:shorten({
     direction = args.direction,
     available_space = args.available_space,
-    continuation_fmt_width = 2,  -- 2 = strwidth(' …') = strwidth('… ')
+    continuation_fmt_width = 2, -- 2 = strwidth(' …') = strwidth('… ')
   })
 end
 
@@ -104,20 +104,19 @@ end
 -- end
 
 function M.Line:render()
-  local text = concat(map(function(component)
-    if component.delete_buffer_on_left_click and fn.has('tablineat') then
-      local fmt =
-        '%%%s@cokeline#handle_close_button_click@%s%%%s@cokeline#handle_click@'
-      local number = self.buffer.number
-      component.text = fmt:format(number, component.text, number)
-    end
-    return component.hlgroup:embed(component.text)
+  local line_text = concat(map(function(component)
+    local component_text =
+      (component.delete_buffer_on_left_click and fn.has('tablineat'))
+      and component:embed_text_in_close_button_fmt(self.buffer.number)
+       or component.text
+
+    return component.hlgroup:embed(component_text)
   end, self.components))
 
   return
     fn.has('tablineat')
-    and ('%%%s@cokeline#handle_click@%s'):format(self.buffer.number, text)
-     or text
+    and ('%%%s@cokeline#handle_click@%s'):format(self.buffer.number, line_text)
+     or line_text
 end
 
 return M

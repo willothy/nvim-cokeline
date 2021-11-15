@@ -96,22 +96,15 @@ function Buffer:new(b)
     buffer.filetype = 'netrw'
   end
 
-  if buffer.type == 'quickfix' then
-    buffer.filename = '[Quickfix List]'
-  elseif #buffer.path > 0 then
-    buffer.filename = fn.fnamemodify(buffer.path, ':t')
-  else
-    buffer.filename = '[No Name]'
-  end
+  buffer.filename =
+    (buffer.type == 'quickfix' and 'quickfix')
+    or (#buffer.path > 0 and fn.fnamemodify(buffer.path, ':t'))
+    or '[No Name]'
 
   if has_devicons then
-    local name =
-      (buffer.type == 'terminal')
-      and 'terminal'
-       or fn.fnamemodify(buffer.path, ':t')
-    local extension = fn.fnamemodify(buffer.path, ':e')
-    local icon, color =
-      devicons.get_icon_color(name, extension, {default = true})
+    local name = (buffer.type == 'terminal') and 'terminal' or buffer.filename
+    local ext = fn.fnamemodify(buffer.path, ':e')
+    local icon, color = devicons.get_icon_color(name, ext, {default = true})
     buffer.devicon = {
       icon = icon .. ' ',
       color = color,
