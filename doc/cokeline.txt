@@ -108,19 +108,19 @@ That `buffer` parameter is itself a key-value table with the following keys
     hexadecimal format.
     type: `string`
 
-  lsp.errors~
+  diagnostics.errors~
     The number of errors reported by the LSP.
     type: `int`
 
-  lsp.warnings~
+  diagnostics.warnings~
     The number of warnings reported by the LSP.
     type: `int`
 
-  lsp.infos~
+  diagnostics.infos~
     The number of infos reported by the LSP.
     type: `int`
 
-  lsp.hints~
+  diagnostics.hints~
     The number of hints reported by the LSP.
     type: `int`
 
@@ -187,6 +187,11 @@ CONFIGURATION                                           *cokeline-configuration*
     A function to filter out unwanted buffers. It takes a `buffer` table
     as a parameter.
     default: `nil`
+
+  *buffers.new_bufers_position*
+    If `last` new buffers are added to the end of the bufferline, if `next`
+    they are added next to the current buffer.
+    default: `last`
 
   *default_hl.focused.fg*
     Default color for the foreground of focused lines.

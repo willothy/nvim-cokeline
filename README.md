@@ -538,7 +538,7 @@ That `buffer` parameter is a key-value table with the following keys:
     -- If the buffer has an LSP client attached to it (you can check that with
     -- ':LspInfo'), this table lists the number of errors, warnings, infos and
     -- hints reported by the LSP.
-    lsp = {
+    diagnostics = {
       -- type: int
       errors = ..,
 
@@ -592,6 +592,10 @@ require('cokeline').setup({
     -- For example, if you want to keep terminals out of your cokeline:
     --   filter = function(buffer) return buffer.type ~= 'terminal' end,
     filter = nil,
+
+    -- If `last` new buffers are added to the end of the bufferline, if `next`
+    -- they are added next to the current buffer.
+    new_buffers_position = 'last',
   },
 
   -- Default colors for the foregound/background of focused/unfocused
