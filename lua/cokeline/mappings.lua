@@ -2,28 +2,37 @@ local keymap = vim.api.nvim_set_keymap
 
 local M = {}
 
-local plugmap = function(args)
-  keymap('n', args.lhs, args.rhs, {noremap = true, silent = true})
+local plugmap = function(lhs, rhs)
+  keymap('n', lhs, rhs, {noremap = true, silent = true})
 end
 
 function M.setup()
-  local lhs_fmt = '<Plug>(cokeline-%s-%s)'
-  local rhs_fmt = '<Cmd>lua require"cokeline".%s({%s = %s})<CR>'
+  plugmap(
+    '<Plug>(cokeline-switch-prev)',
+    '<Cmd>lua require"cokeline".switch_by_step(-1)<CR>'
+  )
+  plugmap(
+    '<Plug>(cokeline-switch-next)',
+    '<Cmd>lua require"cokeline".switch_by_step(1)<CR>'
+  )
+  plugmap(
+    '<Plug>(cokeline-focus-prev)',
+    '<Cmd>lua require"cokeline".focus_by_step(-1)<CR>'
+  )
+  plugmap(
+    '<Plug>(cokeline-focus-next)',
+    '<Cmd>lua require"cokeline".focus_by_step(1)<CR>'
+  )
 
-  for _, action in pairs({'focus', 'switch'}) do
-    for _, step in pairs({'1', '-1'}) do
-      plugmap({
-        lhs = lhs_fmt:format(action, step == '1' and 'next' or 'prev'),
-        rhs = rhs_fmt:format(action, 'step', step),
-      })
-    end
-
-    for target = 1,20 do
-      plugmap({
-        lhs = lhs_fmt:format(action, target),
-        rhs = rhs_fmt:format(action, 'target', target),
-      })
-    end
+  for i=1,20 do
+    plugmap(
+      ('<Plug>(cokeline-switch-%s)'):format(i),
+      ('<Cmd>lua require"cokeline".switch_by_target(%s)<CR>'):format(i)
+    )
+    plugmap(
+      ('<Plug>(cokeline-focus-%s)'):format(i),
+      ('<Cmd>lua require"cokeline".focus_by_target(%s)<CR>'):format(i)
+    )
   end
 end
 

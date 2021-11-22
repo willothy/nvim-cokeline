@@ -1,3 +1,4 @@
+local Line = require('cokeline/lines').Line
 local DefaultSlider = require('cokeline/sliders').CenterFocusedSlider
 
 local concat = table.concat
@@ -7,14 +8,13 @@ local remove = table.remove
 local map = vim.tbl_map
 local opt = vim.opt
 
-local focused_index
--- local in_view
+local settings, components, focused_index
 
 local M = {}
 
 M.View = {}
 
-function M.View:new(settings)
+function M.View:new()
   local view = {
     lines = {
       focused = nil,
@@ -141,6 +141,25 @@ function M.View:render()
   })
 
   return left .. self.lines.focused:render() .. right
+end
+
+function M.render(visible_buffers)
+  local view = M.View:new()
+
+  for _, buffer in pairs(visible_buffers) do
+    local line = Line:new(buffer)
+    for _, component in pairs(components) do
+      line:add_component(component:render(buffer))
+    end
+    view:add_line(line)
+  end
+
+  return view:render()
+end
+
+function M.setup(settngs, comps)
+  settings = settngs
+  components = comps
 end
 
 return M

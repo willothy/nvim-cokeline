@@ -124,9 +124,12 @@ function M.Component:shorten(args)
   end
 end
 
-function M.setup(settings)
+-- local new_component = function(c, i)
+-- end
+
+function M.setup(cs)
   local components = {}
-  for index, c in ipairs(settings) do
+  for index, c in ipairs(cs) do
     insert(components, M.Component:new(c, index))
   end
   return components

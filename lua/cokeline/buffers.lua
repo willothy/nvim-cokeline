@@ -1,38 +1,91 @@
-local diagnostics = require('cokeline/diagnostics')
-
 local has_devicons, devicons = pcall(require, 'nvim-web-devicons')
 
-local insert = table.insert
+local sort = table.sort
 
+local diagnostics = vim.diagnostic or vim.lsp.diagnostic
 local contains = vim.tbl_contains
 local filter = vim.tbl_filter
 local split = vim.split
 local map = vim.tbl_map
+local bopt = vim.bo
 local fn = vim.fn
+
+local settings, current_bufnr, bufnrs, revlookup
 
 local M = {}
 
-local Buffer = {}
-local user_filter
+---@class buffer
+---@field order         number
+---@field index         number
+---@field number        number
+---@field type          string
+---@field is_focused    boolean
+---@field is_modified   boolean
+---@field is_readonly   boolean
+---@field path          string
+---@field unique_prefix string
+---@field filename      string
+---@field filetype      string
+---@field devicon       devicon
+---@field diagnostics   diagnostics
 
-local compute_unique_prefixes = function(buffers)
-  local paths
-  local path_separator
+---@class devicon
+---@field icon  string
+---@field color string
 
-  if fn.has('win32') == 0 then
-    path_separator = '/'
-    paths = map(function(b)
-      return fn.reverse(split(b.path, '/'))
-    end, buffers)
-  else
-    path_separator = '\\'
-    paths = map(function(b)
-      return fn.reverse(split(b.path:gsub('/', '\\'), '\\'))
-    end, buffers)
+---@class diagnostics
+---@field errors    number
+---@field warnings  number
+---@field infos     number
+---@field hints     number
+
+---@param path      string
+---@param filename  string
+---@param type      string
+---@return devicon
+local get_devicon = function(path, filename, type)
+  local name = (type == 'terminal') and 'terminal' or filename
+  local extn = fn.fnamemodify(path, ':e')
+  local icon, color = devicons.get_icon_color(name, extn, {default = true})
+  return {
+    icon = icon .. ' ',
+    color = color,
+  }
+end
+
+---@param bufnr number
+---@return diagnostics
+local get_diagnostics = function(bufnr)
+  local diagns = diagnostics.get(bufnr)
+  return {
+    errors   = #filter(function(d) return d.severity == 1 end, diagns),
+    warnings = #filter(function(d) return d.severity == 2 end, diagns),
+    infos    = #filter(function(d) return d.severity == 3 end, diagns),
+    hints    = #filter(function(d) return d.severity == 4 end, diagns),
+  }
+end
+
+---@param  valid_buffers buffer[]
+---@return buffer[] valid_buffers
+local compute_unique_prefixes = function(valid_buffers)
+  -- FIXME: it appears in windows sometimes neovim reports directories
+  -- separated by '/' instead of '\\'??
+  if not fn.has('win32') == 0 then
+    valid_buffers = map(function(buffer)
+      buffer.path = buffer.path:gsub('/', '\\')
+      return buffer
+    end, valid_buffers)
   end
 
-  local prefixes = map(function() return {} end, buffers)
+  local path_separator = (fn.has('win32') == 0) and '/' or '\\'
 
+  local paths = map(function(buffer)
+    return fn.reverse(split(buffer.path, path_separator))
+  end, valid_buffers)
+
+  local prefixes = map(function() return {} end, valid_buffers)
+
+  -- FIXME: mutating
   for i=1,#paths do
     for j=i+1,#paths do
       local k = 1
@@ -48,124 +101,182 @@ local compute_unique_prefixes = function(buffers)
     end
   end
 
-  for i, buffer in ipairs(buffers) do
+  for i, buffer in ipairs(valid_buffers) do
+    -- FIXME: mutating
     buffer.unique_prefix =
       (#prefixes[i] == #paths[i] and path_separator or '')
       .. fn.join(fn.reverse(prefixes[i]), path_separator)
       .. (#prefixes[i] > 0 and path_separator or '')
   end
 
-  return buffers
+  return valid_buffers
 end
 
-function Buffer:new(b)
-  local buffer = {
-    -- Exposed to the users
-    number = b.bufnr,
-    index = 0,
-    type = vim.bo[b.bufnr].buftype,
-    filetype = vim.bo[b.bufnr].filetype,
-    is_focused = (b.bufnr == fn.bufnr('%')),
-    is_modified = vim.bo[b.bufnr].modified,
-    is_readonly = vim.bo[b.bufnr].readonly,
-    path = b.name,
-    filename = '',
-    unique_prefix = '',
-    devicon = {
-      icon = '',
-      color = '',
-    },
-    lsp = {
-      errors = 0,
-      warnings = 0,
-      infos = 0,
-      hints = 0,
-    },
-    -- Used internally
-    __is_valid = true,
-    __is_shown = true,
-  }
-  setmetatable(buffer, self)
-  self.__index = self
+---@param b table
+---@return buffer
+local new_buffer = function(b)
+  local opts = bopt[b.bufnr]
 
-  -- vim.bo[b.bufnr].filetype doesn't work for netrw buffers.
-  -- Try nvim . -> :ls. The bufnr should be 1 but :lua
-  -- print(vim.bo[1].filetype) returns an empty string (however :lua
-  -- print(vim.bo[0].filetype) works for some reason??).
-  if b.variables and b.variables.netrw_browser_active then
-    buffer.filetype = 'netrw'
-  end
+  local order = -1
+  local index = -1
+  local number = b.bufnr
+  local type = opts.buftype
+  local is_focused = (number == fn.bufnr('%'))
+  local is_modified = opts.modified
+  local is_readonly = opts.readonly
+  local path = b.name
+  local unique_prefix = ''
 
-  buffer.filename =
-    (buffer.type == 'quickfix' and 'quickfix')
-    or (#buffer.path > 0 and fn.fnamemodify(buffer.path, ':t'))
+  local filename =
+    (type == 'quickfix' and 'quickfix')
+    or (#path > 0 and fn.fnamemodify(path, ':t'))
     or '[No Name]'
 
-  if has_devicons then
-    local name = (buffer.type == 'terminal') and 'terminal' or buffer.filename
-    local ext = fn.fnamemodify(buffer.path, ':e')
-    local icon, color = devicons.get_icon_color(name, ext, {default = true})
-    buffer.devicon = {
-      icon = icon .. ' ',
-      color = color,
-    }
-  end
+  local filetype =
+    not (b.variables and b.variables.netrw_browser_active)
+    and opts.filetype
+     or 'netrw'
 
-  if vim.diagnostic or vim.lsp then
-    buffer.lsp = diagnostics.get_status(buffer.number)
-  end
+  local devicon =
+    has_devicons
+    and get_devicon(path, filename, type)
+     or {icon = '', color = ''}
 
-  buffer.__is_valid = (buffer.filetype ~= 'netrw')
-  buffer.__is_shown = (not user_filter) or user_filter(buffer)
+  local diagns = get_diagnostics(number)
 
-  return buffer
+  return {
+    order = order,
+    index = index,
+    number = number,
+    type = type,
+    is_focused = is_focused,
+    is_modified = is_modified,
+    is_readonly = is_readonly,
+    path = path,
+    unique_prefix = unique_prefix,
+    filename = filename,
+    filetype = filetype,
+    devicon = devicon,
+    diagnostics = diagns,
+  }
 end
 
-function M.get_buffers(order)
-  local listed_buffers = {}
-  for _, b in pairs(fn.getbufinfo({buflisted = 1})) do
-    listed_buffers[b.bufnr] = b
+---@param bufnr_order number[]
+local update_bufnrs = function(bufnr_order)
+  bufnrs = bufnr_order
+  -- Add a reverse lookup for the buffer numbers (bufnr -> index).
+  revlookup = {}
+  for i, bufnr in pairs(bufnr_order) do
+    revlookup[bufnr] = i
   end
+end
 
-  -- First add all the buffers whose numbers are already in the `order` table.
-  local old_buffers = {}
-  for _, number in pairs(order) do
-    insert(old_buffers, listed_buffers[number])
+---@param buffer buffer
+---@return boolean
+local is_old = function(buffer) return contains(bufnrs, buffer.number) end
+
+---@param buffer buffer
+---@return boolean
+local is_new = function(buffer) return not is_old(buffer) end
+
+---@param buffer1 buffer
+---@param buffer2 buffer
+---@return boolean
+local sort_by_longevity = function(buffer1, buffer2)
+  if is_old(buffer1) and is_old(buffer2) then
+    return revlookup[buffer1.number] < revlookup[buffer2.number]
+
+  elseif is_old(buffer1) and is_new(buffer2) then
+    return true
+
+  elseif is_new(buffer1) and is_old(buffer2) then
+    return false
+
+  else
+    return buffer1.number < buffer2.number
   end
+end
 
-  -- Then add all the buffers whose numbers are not yet in the `order` table.
-  local new_buffers = filter(function(b)
-    return not contains(order, b.bufnr)
+local t = 0
+---@param buffer1 buffer
+---@param buffer2 buffer
+---@return boolean
+local sort_by_new_after_current = function(buffer1, buffer2)
+  print(t .. ' ----')
+  if is_old(buffer1) and is_old(buffer2) then
+    print('old old ' .. buffer1.number .. ' ' .. buffer2.number .. ', current: ' .. revlookup[current_bufnr])
+    -- If both buffers are either before or after (inclusive) the current
+    -- buffer then respect the current order.
+    if (revlookup[buffer1.number] - revlookup[current_bufnr])
+        * (revlookup[buffer2.number] - revlookup[current_bufnr]) >= 0 then
+      print(revlookup[buffer1.number] < revlookup[buffer2.number])
+      return revlookup[buffer1.number] < revlookup[buffer2.number]
+    end
+    print(revlookup[buffer1.number] < revlookup[current_bufnr])
+    return revlookup[buffer1.number] < revlookup[current_bufnr]
+
+  elseif is_old(buffer1) and is_new(buffer2) then
+    print('old new ' .. buffer1.number .. ' ' .. buffer2.number .. ', current: ' .. revlookup[current_bufnr])
+    print(revlookup[buffer1.number] <= revlookup[current_bufnr])
+    return revlookup[buffer1.number] <= revlookup[current_bufnr]
+
+  elseif is_new(buffer1) and is_old(buffer2) then
+    print('new old ' .. buffer1.number .. ' ' .. buffer2.number .. ', current: ' .. revlookup[current_bufnr])
+    print(revlookup[buffer2.number] > revlookup[current_bufnr])
+    return revlookup[buffer2.number] > revlookup[current_bufnr]
+
+  else
+    print('new new ' .. buffer1.number .. ' ' .. buffer2.number )
+    print(buffer1.number < buffer2.number)
+    return buffer1.number < buffer2.number
+  end
+end
+
+---@param bufnr_order number[]
+---@return buffer[], buffer[]
+M.get_bufinfos = function(bufnr_order)
+  -- FIXME: mutating
+  update_bufnrs(bufnr_order)
+
+  local listed_buffers = fn.getbufinfo({buflisted = 1})
+
+  local buffers = map(function(b)
+    return new_buffer(b)
   end, listed_buffers)
 
-  local buffers = {
-    order = {},
-    valid = {},
-    visible = {},
-  }
-  local index = 1
+  local valid = compute_unique_prefixes(filter(function(buffer)
+    return buffer.filetype ~= 'netrw'
+  end, buffers))
 
-  for i=1,(#old_buffers + #new_buffers) do
-    local b = old_buffers[i] or new_buffers[i - #old_buffers]
-    local buffer = Buffer:new(b)
-    buffer.index = index
-    if buffer.__is_valid then
-      insert(buffers.order, buffer.number)
-      insert(buffers.valid, buffer)
-      if buffer.__is_shown then
-        index = index + 1
-      end
-    end
+  local sorter =
+    (settings.new_buffers_position == 'last' and sort_by_longevity)
+     or (settings.new_buffers_position == 'next' and sort_by_new_after_current)
+
+  -- FIXME: mutating
+  sort(valid, sorter)
+  t = t + 1
+
+  -- FIXME: mutating
+  for i, buffer in ipairs(valid) do
+    buffer.order = i
+    if buffer.is_focused then current_bufnr = buffer.number end
   end
 
-  buffers.valid = compute_unique_prefixes(buffers.valid)
-  buffers.visible = filter(function(b) return b.__is_shown end, buffers.valid)
+  local visible =
+    not settings.filter and valid
+     or filter(function(buffer) return settings.filter(buffer) end, valid)
 
-  return buffers
+  -- FIXME: mutating
+  for i, buffer in ipairs(visible) do
+    buffer.index = i
+  end
+
+  return valid, visible
 end
 
-function M.setup(settings)
-  user_filter = settings.filter
+---@param settngs table
+M.setup = function(settngs)
+  settings = settngs
 end
 
 return M

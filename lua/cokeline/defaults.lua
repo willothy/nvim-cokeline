@@ -15,6 +15,7 @@ local defaults = {
 
   buffers = {
     filter = nil,
+    new_buffers_position = 'last',
   },
 
   default_hl = {
@@ -56,7 +57,7 @@ local defaults = {
   },
 }
 
-function M.merge(preferences)
+M.merge = function(preferences)
   local settings = defaults
 
   for option, value in pairs(preferences) do

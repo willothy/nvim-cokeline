@@ -1,123 +1,134 @@
-local bufferz = require('cokeline/buffers')
-local augroups = require('cokeline/augroups')
-local hlgroups = require('cokeline/hlgroups')
-local defaults = require('cokeline/defaults')
-local mappings = require('cokeline/mappings')
-local componentz = require('cokeline/components')
+local buffers = require('cokeline/buffers')
+local rendering = require('cokeline/rendering')
+local setup_buffers = buffers.setup
+local setup_rendering = rendering.setup
+local setup_augroups = require('cokeline/augroups').setup
+local setup_hlgroups = require('cokeline/hlgroups').setup
+local defaults_merge = require('cokeline/defaults').merge
+local setup_mappings = require('cokeline/mappings').setup
+local setup_components = require('cokeline/components').setup
 
-local View = require('cokeline/rendering').View
-local Line = require('cokeline/lines').Line
-
+local map = vim.tbl_map
 local cmd = vim.cmd
 local opt = vim.opt
-local fn = vim.fn
 
 local M = {}
 
-local buffers = {
-  order = {},
-  valid = {},
-  visible = {},
-}
+local settings, valid_buffers, visible_buffers
 
-local components = {}
+---@return number[]
+local get_bufnr_order = function()
+  return not valid_buffers and {} or map(function(buffer)
+    return buffer.number
+  end, valid_buffers)
+end
 
-local settings = {}
-
+---@return number|nil
 local get_current_index = function()
-  local current_buffer_number = fn.bufnr('%')
-  for index, buffer in ipairs(buffers.valid) do
-    if current_buffer_number == buffer.number then
-      return index
-    end
+  for _, buffer in pairs(valid_buffers) do
+    if buffer.is_focused then return buffer.order end
   end
 end
 
-local get_target_index = function(args)
-  if opt.showtabline._value == 0 then
-    buffers = bufferz.get_buffers(buffers.order)
+---@param current number
+---@param step    number
+---@return number|nil
+local get_index_from_step = function(current, step)
+  local target = current + step
+  if target < 1 or target > #valid_buffers then
+    if not settings.cycle_prev_next_mappings then return end
+    return (target - 1) % #valid_buffers + 1
   end
-
-  local target_index
-
-  if args.target then
-    for i, buffer in ipairs(buffers.valid) do
-      if buffer.index == args.target and buffer.__is_shown then
-        target_index = i
-        break
-      end
-    end
-  else
-    local current_index = get_current_index()
-    if not current_index then
-      return
-    end
-    target_index = current_index + args.step
-    if target_index < 1 or target_index > #buffers.valid then
-      if not settings.cycle_prev_next_mappings then
-        return
-      end
-      target_index = (target_index - 1) % #buffers.valid + 1
-    end
-  end
-
-  return target_index
+  return target
 end
 
-function M.toggle()
-  buffers = bufferz.get_buffers(buffers.order)
-  opt.showtabline = (#buffers.valid > 0) and 2 or 0
+---@param target number
+---@return number|nil
+local get_index_from_target = function(target)
+  for _, buffer in pairs(visible_buffers) do
+    if buffer.index == target then return buffer.order end
+  end
 end
 
-function M.focus(args)
-  local target = get_target_index(args)
-  if not target then
-    return
-  end
-  cmd('buffer ' .. buffers.order[target])
-end
-
-function M.switch(args)
-  local target = get_target_index(args)
-  if not target then
-    return
-  end
-  local current = get_current_index()
-  buffers.order[current], buffers.order[target]
-    = buffers.order[target], buffers.order[current]
+---@param current number
+---@param target  number
+local switch_buffer_order = function(current, target)
+  valid_buffers[current], valid_buffers[target]
+    = valid_buffers[target], valid_buffers[current]
   cmd('redrawtabline | redraw')
 end
 
-function M.setup(preferences)
-  settings = defaults.merge(preferences)
-  augroups.setup()
-  mappings.setup()
-  bufferz.setup(settings.buffers)
-  hlgroups.setup(settings.default_hl)
-  components = componentz.setup(settings.components)
+---@param step number
+M.switch_by_step = function(step)
+  if opt.showtabline._value == 0 then
+    valid_buffers, visible_buffers = buffers.get_bufinfos(get_bufnr_order())
+  end
+  local current_index = get_current_index()
+  if not current_index then return end
+  local target_index = get_index_from_step(current_index, step)
+  if not target_index then return end
+  switch_buffer_order(current_index, target_index)
+end
+
+---@param target number
+M.switch_by_target = function(target)
+  local current_index = get_current_index()
+  if not current_index then return end
+  local target_index = get_index_from_target(target)
+  if not target_index then return end
+  switch_buffer_order(current_index, target_index)
+end
+
+---@param bufnr number
+local focus_buffer = function(bufnr)
+  cmd('buffer ' .. bufnr)
+end
+
+---@param step number
+M.focus_by_step = function(step)
+  if opt.showtabline._value == 0 then
+    valid_buffers, visible_buffers = buffers.get_bufinfos(get_bufnr_order())
+  end
+  local current_index = get_current_index()
+  if not current_index then return end
+  local target_index = get_index_from_step(current_index, step)
+  if not target_index then return end
+  focus_buffer(valid_buffers[target_index].number)
+end
+
+---@param target number
+M.focus_by_target = function(target)
+  local target_index = get_index_from_target(target)
+  if not target_index then return end
+  focus_buffer(valid_buffers[target_index].number)
+end
+
+M.toggle = function()
+  valid_buffers, _ = buffers.get_bufinfos(get_bufnr_order())
+  opt.showtabline = (#valid_buffers > 0) and 2 or 0
+end
+
+---@param preferences table
+M.setup = function(preferences)
+  settings = defaults_merge(preferences)
+  local components = setup_components(settings.components)
+  setup_rendering(settings.rendering, components)
+  setup_hlgroups(settings.default_hl)
+  setup_buffers(settings.buffers)
+  setup_augroups()
+  setup_mappings()
   opt.showtabline = 2
   opt.tabline = '%!v:lua.cokeline()'
 end
 
-function _G.cokeline()
-  buffers = bufferz.get_buffers(buffers.order)
-
-  if #buffers.visible < settings.show_if_buffers_are_at_least then
+---@return string
+_G.cokeline = function()
+  valid_buffers, visible_buffers = buffers.get_bufinfos(get_bufnr_order())
+  if #visible_buffers < settings.show_if_buffers_are_at_least then
     opt.showtabline = 0
     return
   end
-
-  local view = View:new(settings.rendering)
-
-  for _, buffer in pairs(buffers.visible) do
-    local line = Line:new(buffer)
-    for _, component in pairs(components) do
-      line:add_component(component:render(buffer))
-    end
-    view:add_line(line)
-  end
-
-  return view:render()
+  return rendering.render(visible_buffers)
 end
 
 return M
