@@ -197,37 +197,26 @@ local sort_by_longevity = function(buffer1, buffer2)
   end
 end
 
-local t = 0
 ---@param buffer1 buffer
 ---@param buffer2 buffer
 ---@return boolean
 local sort_by_new_after_current = function(buffer1, buffer2)
-  print(t .. ' ----')
   if is_old(buffer1) and is_old(buffer2) then
-    print('old old ' .. buffer1.number .. ' ' .. buffer2.number .. ', current: ' .. revlookup[current_bufnr])
     -- If both buffers are either before or after (inclusive) the current
     -- buffer then respect the current order.
     if (revlookup[buffer1.number] - revlookup[current_bufnr])
         * (revlookup[buffer2.number] - revlookup[current_bufnr]) >= 0 then
-      print(revlookup[buffer1.number] < revlookup[buffer2.number])
       return revlookup[buffer1.number] < revlookup[buffer2.number]
     end
-    print(revlookup[buffer1.number] < revlookup[current_bufnr])
     return revlookup[buffer1.number] < revlookup[current_bufnr]
 
   elseif is_old(buffer1) and is_new(buffer2) then
-    print('old new ' .. buffer1.number .. ' ' .. buffer2.number .. ', current: ' .. revlookup[current_bufnr])
-    print(revlookup[buffer1.number] <= revlookup[current_bufnr])
     return revlookup[buffer1.number] <= revlookup[current_bufnr]
 
   elseif is_new(buffer1) and is_old(buffer2) then
-    print('new old ' .. buffer1.number .. ' ' .. buffer2.number .. ', current: ' .. revlookup[current_bufnr])
-    print(revlookup[buffer2.number] > revlookup[current_bufnr])
     return revlookup[buffer2.number] > revlookup[current_bufnr]
 
   else
-    print('new new ' .. buffer1.number .. ' ' .. buffer2.number )
-    print(buffer1.number < buffer2.number)
     return buffer1.number < buffer2.number
   end
 end
@@ -254,7 +243,6 @@ M.get_bufinfos = function(bufnr_order)
 
   -- FIXME: mutating
   sort(valid, sorter)
-  t = t + 1
 
   -- FIXME: mutating
   for i, buffer in ipairs(valid) do
