@@ -22,11 +22,13 @@ local defaults = {
     focused = {
       fg = get_hex('ColorColumn', 'bg'),
       bg = get_hex('Normal', 'fg'),
+      style = 'NONE',
     },
 
     unfocused = {
       fg = get_hex('Normal', 'fg'),
       bg = get_hex('ColorColumn', 'bg'),
+      style = 'NONE',
     },
   },
 
