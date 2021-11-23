@@ -1,6 +1,6 @@
 local utils = require('cokeline/utils')
-local echoerr = utils.echoerr
 local get_hex = utils.get_hex
+local update = utils.update
 
 local M = {}
 
@@ -9,12 +9,12 @@ local defaults = {
   cycle_prev_next_mappings = false,
 
   rendering = {
-    min_line_width = nil,
-    max_line_width = nil,
+    min_line_width = 0,
+    max_line_width = 999,
   },
 
   buffers = {
-    filter = nil,
+    filter = false,
     new_buffers_position = 'last',
   },
 
@@ -57,18 +57,8 @@ local defaults = {
   },
 }
 
-M.merge = function(preferences)
-  local settings = defaults
-
-  for option, value in pairs(preferences) do
-    if defaults[option] ~= nil then
-      settings[option] = value
-    else
-      echoerr(('Configuration option "%s" does not exist!'):format(option))
-    end
-  end
-
-  return settings
+M.update = function(preferences)
+  return update(defaults, preferences)
 end
 
 return M

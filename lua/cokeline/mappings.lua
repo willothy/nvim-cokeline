@@ -27,11 +27,11 @@ function M.setup()
   for i=1,20 do
     plugmap(
       ('<Plug>(cokeline-switch-%s)'):format(i),
-      ('<Cmd>lua require"cokeline".switch_by_target(%s)<CR>'):format(i)
+      ('<Cmd>lua require"cokeline".switch_by_index(%s)<CR>'):format(i)
     )
     plugmap(
       ('<Plug>(cokeline-focus-%s)'):format(i),
-      ('<Cmd>lua require"cokeline".focus_by_target(%s)<CR>'):format(i)
+      ('<Cmd>lua require"cokeline".focus_by_index(%s)<CR>'):format(i)
     )
   end
 end

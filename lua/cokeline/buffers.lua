@@ -14,59 +14,8 @@ local settings, current_bufnr, bufnrs, revlookup
 
 local M = {}
 
----@class buffer
----@field order         number
----@field index         number
----@field number        number
----@field type          string
----@field is_focused    boolean
----@field is_modified   boolean
----@field is_readonly   boolean
----@field path          string
----@field unique_prefix string
----@field filename      string
----@field filetype      string
----@field devicon       devicon
----@field diagnostics   diagnostics
-
----@class devicon
----@field icon  string
----@field color string
-
----@class diagnostics
----@field errors    number
----@field warnings  number
----@field infos     number
----@field hints     number
-
----@param path      string
----@param filename  string
----@param type      string
----@return devicon
-local get_devicon = function(path, filename, type)
-  local name = (type == 'terminal') and 'terminal' or filename
-  local extn = fn.fnamemodify(path, ':e')
-  local icon, color = devicons.get_icon_color(name, extn, {default = true})
-  return {
-    icon = icon .. ' ',
-    color = color,
-  }
-end
-
----@param bufnr number
----@return diagnostics
-local get_diagnostics = function(bufnr)
-  local diagns = diagnostics.get(bufnr)
-  return {
-    errors   = #filter(function(d) return d.severity == 1 end, diagns),
-    warnings = #filter(function(d) return d.severity == 2 end, diagns),
-    infos    = #filter(function(d) return d.severity == 3 end, diagns),
-    hints    = #filter(function(d) return d.severity == 4 end, diagns),
-  }
-end
-
----@param  valid_buffers buffer[]
----@return buffer[] valid_buffers
+---@param valid_buffers Buffer[]
+---@return Buffer[]
 local compute_unique_prefixes = function(valid_buffers)
   -- FIXME: it appears in windows sometimes neovim reports directories
   -- separated by '/' instead of '\\'??
@@ -112,12 +61,67 @@ local compute_unique_prefixes = function(valid_buffers)
   return valid_buffers
 end
 
+---@class Devicon
+---@field icon  string
+---@field color string
+
+---@param path      string
+---@param filename  string
+---@param type      string
+---@return Devicon
+local get_devicon = function(path, filename, type)
+  local name = (type == 'terminal') and 'terminal' or filename
+  local extn = fn.fnamemodify(path, ':e')
+  local icon, color = devicons.get_icon_color(name, extn, {default = true})
+  return {
+    icon = icon .. ' ',
+    color = color,
+  }
+end
+
+---@class Diagnostics
+---@field errors    number
+---@field warnings  number
+---@field infos     number
+---@field hints     number
+
+---@param bufnr bufnr
+---@return Diagnostics
+local get_diagnostics = function(bufnr)
+  local diagns = diagnostics.get(bufnr)
+  return {
+    errors   = #filter(function(d) return d.severity == 1 end, diagns),
+    warnings = #filter(function(d) return d.severity == 2 end, diagns),
+    infos    = #filter(function(d) return d.severity == 3 end, diagns),
+    hints    = #filter(function(d) return d.severity == 4 end, diagns),
+  }
+end
+
+---@alias vidx  number
+---@alias index number
+---@alias bufnr number
+
+---@class Buffer
+---@field _vidx         vidx
+---@field index         index
+---@field number        bufnr
+---@field type          string
+---@field is_focused    boolean
+---@field is_modified   boolean
+---@field is_readonly   boolean
+---@field path          string
+---@field unique_prefix string
+---@field filename      string
+---@field filetype      string
+---@field devicon       Devicon
+---@field diagnostics   Diagnostics
+
 ---@param b table
----@return buffer
+---@return Buffer
 local new_buffer = function(b)
   local opts = bopt[b.bufnr]
 
-  local order = -1
+  local _vidx = -1
   local index = -1
   local number = b.bufnr
   local type = opts.buftype
@@ -145,7 +149,7 @@ local new_buffer = function(b)
   local diagns = get_diagnostics(number)
 
   return {
-    order = order,
+    _vidx = _vidx,
     index = index,
     number = number,
     type = type,
@@ -161,28 +165,18 @@ local new_buffer = function(b)
   }
 end
 
----@param bufnr_order number[]
-local update_bufnrs = function(bufnr_order)
-  bufnrs = bufnr_order
-  -- Add a reverse lookup for the buffer numbers (bufnr -> index).
-  revlookup = {}
-  for i, bufnr in pairs(bufnr_order) do
-    revlookup[bufnr] = i
-  end
-end
-
----@param buffer buffer
+---@param buffer Buffer
 ---@return boolean
 local is_old = function(buffer) return contains(bufnrs, buffer.number) end
 
----@param buffer buffer
+---@param buffer Buffer
 ---@return boolean
 local is_new = function(buffer) return not is_old(buffer) end
 
----@param buffer1 buffer
----@param buffer2 buffer
+---@param buffer1 Buffer
+---@param buffer2 Buffer
 ---@return boolean
-local sort_by_longevity = function(buffer1, buffer2)
+local sort_by_new_after_last = function(buffer1, buffer2)
   if is_old(buffer1) and is_old(buffer2) then
     return revlookup[buffer1.number] < revlookup[buffer2.number]
 
@@ -197,8 +191,8 @@ local sort_by_longevity = function(buffer1, buffer2)
   end
 end
 
----@param buffer1 buffer
----@param buffer2 buffer
+---@param buffer1 Buffer
+---@param buffer2 Buffer
 ---@return boolean
 local sort_by_new_after_current = function(buffer1, buffer2)
   if is_old(buffer1) and is_old(buffer2) then
@@ -221,11 +215,21 @@ local sort_by_new_after_current = function(buffer1, buffer2)
   end
 end
 
----@param bufnr_order number[]
----@return buffer[], buffer[]
-M.get_bufinfos = function(bufnr_order)
+---@param bufnrz bufnr[]
+local update_bufnrs = function(bufnrz)
+  bufnrs = bufnrz
+  -- Add a reverse lookup for the buffer numbers (bufnr -> i).
+  revlookup = {}
+  for i, bufnr in ipairs(bufnrs) do
+    revlookup[bufnr] = i
+  end
+end
+
+---@param bufnrz bufnr[]
+---@return Buffer[], Buffer[]
+M.get_bufinfos = function(bufnrz)
   -- FIXME: mutating
-  update_bufnrs(bufnr_order)
+  update_bufnrs(bufnrz)
 
   local listed_buffers = fn.getbufinfo({buflisted = 1})
 
@@ -238,7 +242,7 @@ M.get_bufinfos = function(bufnr_order)
   end, buffers))
 
   local sorter =
-    (settings.new_buffers_position == 'last' and sort_by_longevity)
+    (settings.new_buffers_position == 'last' and sort_by_new_after_last)
      or (settings.new_buffers_position == 'next' and sort_by_new_after_current)
 
   -- FIXME: mutating
@@ -246,7 +250,7 @@ M.get_bufinfos = function(bufnr_order)
 
   -- FIXME: mutating
   for i, buffer in ipairs(valid) do
-    buffer.order = i
+    buffer._vidx = i
     if buffer.is_focused then current_bufnr = buffer.number end
   end
 
@@ -262,9 +266,9 @@ M.get_bufinfos = function(bufnr_order)
   return valid, visible
 end
 
----@param settngs table
-M.setup = function(settngs)
-  settings = settngs
+---@param settingz table
+M.setup = function(settingz)
+  settings = settingz
 end
 
 return M

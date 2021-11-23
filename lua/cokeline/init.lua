@@ -4,7 +4,7 @@ local setup_buffers = buffers.setup
 local setup_rendering = rendering.setup
 local setup_augroups = require('cokeline/augroups').setup
 local setup_hlgroups = require('cokeline/hlgroups').setup
-local defaults_merge = require('cokeline/defaults').merge
+local update_defaults = require('cokeline/defaults').update
 local setup_mappings = require('cokeline/mappings').setup
 local setup_components = require('cokeline/components').setup
 
@@ -16,24 +16,26 @@ local M = {}
 
 local settings, valid_buffers, visible_buffers
 
----@return number[]
-local get_bufnr_order = function()
+---@return bufnr[]
+local get_bufnrs = function()
   return not valid_buffers and {} or map(function(buffer)
     return buffer.number
   end, valid_buffers)
 end
 
----@return number|nil
-local get_current_index = function()
+---@return vidx|nil
+local get_current_vidx = function()
   for _, buffer in pairs(valid_buffers) do
-    if buffer.is_focused then return buffer.order end
+    if buffer.is_focused then return buffer._vidx end
   end
 end
 
----@param current number
----@param step    number
----@return number|nil
-local get_index_from_step = function(current, step)
+---@alias step '1'|'-1'
+
+---@param current vidx
+---@param step    step
+---@return vidx|nil
+local get_vidx_from_step = function(current, step)
   local target = current + step
   if target < 1 or target > #valid_buffers then
     if not settings.cycle_prev_next_mappings then return end
@@ -42,75 +44,75 @@ local get_index_from_step = function(current, step)
   return target
 end
 
----@param target number
----@return number|nil
-local get_index_from_target = function(target)
+---@param index index
+---@return vidx|nil
+local get_vidx_from_index = function(index)
   for _, buffer in pairs(visible_buffers) do
-    if buffer.index == target then return buffer.order end
+    if buffer.index == index then return buffer._vidx end
   end
 end
 
----@param current number
----@param target  number
-local switch_buffer_order = function(current, target)
-  valid_buffers[current], valid_buffers[target]
-    = valid_buffers[target], valid_buffers[current]
+---@param vidx1 vidx
+---@param vidx2 vidx
+local switch_buffer_order = function(vidx1, vidx2)
+  valid_buffers[vidx1], valid_buffers[vidx2]
+    = valid_buffers[vidx2], valid_buffers[vidx1]
   cmd('redrawtabline | redraw')
 end
 
----@param step number
+---@param step step
 M.switch_by_step = function(step)
   if opt.showtabline._value == 0 then
-    valid_buffers, visible_buffers = buffers.get_bufinfos(get_bufnr_order())
+    valid_buffers, visible_buffers = buffers.get_bufinfos(get_bufnrs())
   end
-  local current_index = get_current_index()
-  if not current_index then return end
-  local target_index = get_index_from_step(current_index, step)
-  if not target_index then return end
-  switch_buffer_order(current_index, target_index)
+  local current = get_current_vidx()
+  if not current then return end
+  local target = get_vidx_from_step(current, step)
+  if not target then return end
+  switch_buffer_order(current, target)
 end
 
----@param target number
-M.switch_by_target = function(target)
-  local current_index = get_current_index()
-  if not current_index then return end
-  local target_index = get_index_from_target(target)
-  if not target_index then return end
-  switch_buffer_order(current_index, target_index)
+---@param index index
+M.switch_by_index = function(index)
+  local current = get_current_vidx()
+  if not current then return end
+  local target = get_vidx_from_index(index)
+  if not target then return end
+  switch_buffer_order(current, target)
 end
 
----@param bufnr number
+---@param bufnr bufnr
 local focus_buffer = function(bufnr)
   cmd('buffer ' .. bufnr)
 end
 
----@param step number
+---@param step step
 M.focus_by_step = function(step)
   if opt.showtabline._value == 0 then
-    valid_buffers, visible_buffers = buffers.get_bufinfos(get_bufnr_order())
+    valid_buffers, visible_buffers = buffers.get_bufinfos(get_bufnrs())
   end
-  local current_index = get_current_index()
-  if not current_index then return end
-  local target_index = get_index_from_step(current_index, step)
-  if not target_index then return end
-  focus_buffer(valid_buffers[target_index].number)
+  local current = get_current_vidx()
+  if not current then return end
+  local target = get_vidx_from_step(current, step)
+  if not target then return end
+  focus_buffer(valid_buffers[target].number)
 end
 
----@param target number
-M.focus_by_target = function(target)
-  local target_index = get_index_from_target(target)
-  if not target_index then return end
-  focus_buffer(valid_buffers[target_index].number)
+---@param index index
+M.focus_by_index = function(index)
+  local target = get_vidx_from_index(index)
+  if not target then return end
+  focus_buffer(valid_buffers[target].number)
 end
 
 M.toggle = function()
-  valid_buffers, _ = buffers.get_bufinfos(get_bufnr_order())
+  valid_buffers, _ = buffers.get_bufinfos(get_bufnrs())
   opt.showtabline = (#valid_buffers > 0) and 2 or 0
 end
 
 ---@param preferences table
 M.setup = function(preferences)
-  settings = defaults_merge(preferences)
+  settings = update_defaults(preferences)
   local components = setup_components(settings.components)
   setup_rendering(settings.rendering, components)
   setup_hlgroups(settings.default_hl)
@@ -123,7 +125,7 @@ end
 
 ---@return string
 _G.cokeline = function()
-  valid_buffers, visible_buffers = buffers.get_bufinfos(get_bufnr_order())
+  valid_buffers, visible_buffers = buffers.get_bufinfos(get_bufnrs())
   if #visible_buffers < settings.show_if_buffers_are_at_least then
     opt.showtabline = 0
     return
