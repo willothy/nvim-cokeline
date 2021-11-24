@@ -215,9 +215,9 @@ local sort_by_new_after_current = function(buffer1, buffer2)
   end
 end
 
----@param bufnrz bufnr[]
+---@param bufnrz bufnr[]|nil
 local update_bufnrs = function(bufnrz)
-  bufnrs = bufnrz
+  bufnrs = bufnrz and bufnrz or {}
   -- Add a reverse lookup for the buffer numbers (bufnr -> i).
   revlookup = {}
   for i, bufnr in ipairs(bufnrs) do
@@ -225,8 +225,8 @@ local update_bufnrs = function(bufnrz)
   end
 end
 
----@param bufnrz bufnr[]
----@return Buffer[], Buffer[]
+---@param bufnrz bufnr[]|nil
+---@return Buffer[], Buffer[], bufnr[]
 M.get_bufinfos = function(bufnrz)
   -- FIXME: mutating
   update_bufnrs(bufnrz)
@@ -249,8 +249,10 @@ M.get_bufinfos = function(bufnrz)
   sort(valid, sorter)
 
   -- FIXME: mutating
+  bufnrs = {}
   for i, buffer in ipairs(valid) do
     buffer._vidx = i
+    bufnrs[i] = buffer.number
     if buffer.is_focused then current_bufnr = buffer.number end
   end
 
@@ -263,7 +265,7 @@ M.get_bufinfos = function(bufnrz)
     buffer.index = i
   end
 
-  return valid, visible
+  return valid, visible, bufnrs
 end
 
 ---@param settingz table

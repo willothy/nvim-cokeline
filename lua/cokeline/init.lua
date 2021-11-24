@@ -8,20 +8,12 @@ local update_defaults = require('cokeline/defaults').update
 local setup_mappings = require('cokeline/mappings').setup
 local setup_components = require('cokeline/components').setup
 
-local map = vim.tbl_map
 local cmd = vim.cmd
 local opt = vim.opt
 
 local M = {}
 
-local settings, valid_buffers, visible_buffers
-
----@return bufnr[]
-local get_bufnrs = function()
-  return not valid_buffers and {} or map(function(buffer)
-    return buffer.number
-  end, valid_buffers)
-end
+local settings, valid_buffers, visible_buffers, bufnrs
 
 ---@return vidx|nil
 local get_current_vidx = function()
@@ -55,15 +47,14 @@ end
 ---@param vidx1 vidx
 ---@param vidx2 vidx
 local switch_buffer_order = function(vidx1, vidx2)
-  valid_buffers[vidx1], valid_buffers[vidx2]
-    = valid_buffers[vidx2], valid_buffers[vidx1]
+  bufnrs[vidx1], bufnrs[vidx2] = bufnrs[vidx2], bufnrs[vidx1]
   cmd('redrawtabline | redraw')
 end
 
 ---@param step step
 M.switch_by_step = function(step)
   if opt.showtabline._value == 0 then
-    valid_buffers, visible_buffers = buffers.get_bufinfos(get_bufnrs())
+    valid_buffers, visible_buffers = buffers.get_bufinfos(bufnrs)
   end
   local current = get_current_vidx()
   if not current then return end
@@ -89,7 +80,7 @@ end
 ---@param step step
 M.focus_by_step = function(step)
   if opt.showtabline._value == 0 then
-    valid_buffers, visible_buffers = buffers.get_bufinfos(get_bufnrs())
+    valid_buffers, visible_buffers = buffers.get_bufinfos(bufnrs)
   end
   local current = get_current_vidx()
   if not current then return end
@@ -106,7 +97,7 @@ M.focus_by_index = function(index)
 end
 
 M.toggle = function()
-  valid_buffers, _ = buffers.get_bufinfos(get_bufnrs())
+  valid_buffers, _ = buffers.get_bufinfos(bufnrs)
   opt.showtabline = (#valid_buffers > 0) and 2 or 0
 end
 
@@ -125,7 +116,7 @@ end
 
 ---@return string
 _G.cokeline = function()
-  valid_buffers, visible_buffers = buffers.get_bufinfos(get_bufnrs())
+  valid_buffers, visible_buffers, bufnrs = buffers.get_bufinfos(bufnrs)
   if #visible_buffers < settings.show_if_buffers_are_at_least then
     opt.showtabline = 0
     return
