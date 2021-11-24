@@ -6,7 +6,7 @@ local plugmap = function(lhs, rhs)
   keymap('n', lhs, rhs, {noremap = true, silent = true})
 end
 
-function M.setup()
+M.setup = function()
   plugmap(
     '<Plug>(cokeline-switch-prev)',
     '<Cmd>lua require"cokeline".switch_by_step(-1)<CR>'

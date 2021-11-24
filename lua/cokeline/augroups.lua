@@ -1,6 +1,6 @@
 local M = {}
 
-function M.setup()
+M.setup = function()
   vim.cmd([[
   augroup cokeline_toggle
     autocmd VimEnter,BufAdd * lua require"cokeline".toggle()

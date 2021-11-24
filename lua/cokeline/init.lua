@@ -15,6 +15,8 @@ local M = {}
 
 local settings, valid_buffers, visible_buffers, bufnrs
 
+---Returns the valid index of the currently focused buffer (if there is one in
+---`valid_buffers`).
 ---@return vidx|nil
 local get_current_vidx = function()
   for _, buffer in pairs(valid_buffers) do
@@ -22,10 +24,10 @@ local get_current_vidx = function()
   end
 end
 
----@alias step '1'|'-1'
-
----@param current vidx
----@param step    step
+---Returns a valid index from the valid index of the -currently focused buffer
+---and a step (either +1 or -1).
+---@param current  vidx
+---@param step  '-1'|'1'
 ---@return vidx|nil
 local get_vidx_from_step = function(current, step)
   local target = current + step
@@ -51,10 +53,10 @@ local switch_buffer_order = function(vidx1, vidx2)
   cmd('redrawtabline | redraw')
 end
 
----@param step step
+---@param step '-1'|'1'
 M.switch_by_step = function(step)
   if opt.showtabline._value == 0 then
-    valid_buffers, visible_buffers = buffers.get_bufinfos(bufnrs)
+    valid_buffers, visible_buffers, bufnrs = buffers.get_bufinfos(bufnrs)
   end
   local current = get_current_vidx()
   if not current then return end
@@ -77,10 +79,10 @@ local focus_buffer = function(bufnr)
   cmd('buffer ' .. bufnr)
 end
 
----@param step step
+---@param step '-1'|'1'
 M.focus_by_step = function(step)
   if opt.showtabline._value == 0 then
-    valid_buffers, visible_buffers = buffers.get_bufinfos(bufnrs)
+    valid_buffers, visible_buffers, bufnrs = buffers.get_bufinfos(bufnrs)
   end
   local current = get_current_vidx()
   if not current then return end
@@ -97,7 +99,7 @@ M.focus_by_index = function(index)
 end
 
 M.toggle = function()
-  valid_buffers, _ = buffers.get_bufinfos(bufnrs)
+  valid_buffers, _, bufnrs = buffers.get_bufinfos(bufnrs)
   opt.showtabline = (#valid_buffers > 0) and 2 or 0
 end
 
@@ -116,6 +118,7 @@ end
 
 ---@return string
 _G.cokeline = function()
+  -- buffers.get_visible()??
   valid_buffers, visible_buffers, bufnrs = buffers.get_bufinfos(bufnrs)
   if #visible_buffers < settings.show_if_buffers_are_at_least then
     opt.showtabline = 0

@@ -1,6 +1,6 @@
-local utils = require('cokeline/utils')
-local get_hex = utils.get_hex
-local update = utils.update
+local get_hex = require('cokeline/utils').get_hex
+
+local echo = vim.api.nvim_echo
 
 local M = {}
 
@@ -58,6 +58,43 @@ local defaults = {
     }
   },
 }
+
+---Formats an error message.
+---@param msg  string
+local echoerr = function(msg)
+  echo({{('[cokeline.nvim]: %s'):format(msg), 'ErrorMsg'}}, true, {})
+end
+
+---Checks if `t` is a list table.
+---@param t  table
+---@return boolean
+local is_list_table = function(t)
+  return t[1] and true or false
+end
+
+---Updates the `settings` table with options from `preferences`, printing an
+---error message if a configuration option in `preferences` is not defined in
+---`settings`.
+---@param settings  table
+---@param preferences  table
+---@param key  string|nil
+---@return table
+local update
+update = function(settings, preferences, key)
+  local updated = settings
+  for k, v in pairs(preferences) do
+    local key_tree = key and ('%s.%s'):format(key, k) or k
+    if settings[k] == nil then
+      echoerr(('Configuration option "%s" does not exist!'):format(key_tree))
+    else
+      updated[k] =
+        (type(v) == 'table' and not is_list_table(v))
+        and update(settings[k], v, key_tree)
+         or v
+    end
+  end
+  return updated
+end
 
 M.update = function(preferences)
   return update(defaults, preferences)

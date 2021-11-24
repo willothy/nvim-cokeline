@@ -10,10 +10,12 @@ local map = vim.tbl_map
 local bopt = vim.bo
 local fn = vim.fn
 
-local settings, current_bufnr, bufnrs, revlookup
+-- local settings, valid_buffers, visible_buffers, current_bufnr, bufnrs, vidxs
+local settings, current_bufnr, bufnrs, vidxs
 
 local M = {}
 
+---Returns the `valid_buffers` table it takes as a parameter wit
 ---@param valid_buffers Buffer[]
 ---@return Buffer[]
 local compute_unique_prefixes = function(valid_buffers)
@@ -80,26 +82,26 @@ local get_devicon = function(path, filename, type)
 end
 
 ---@class Diagnostics
----@field errors    number
+---@field errors  number
 ---@field warnings  number
----@field infos     number
----@field hints     number
+---@field infos  number
+---@field hints  number
 
----@param bufnr bufnr
+---@param bufnr  bufnr
 ---@return Diagnostics
 local get_diagnostics = function(bufnr)
   local diagns = diagnostics.get(bufnr)
   return {
-    errors   = #filter(function(d) return d.severity == 1 end, diagns),
+    errors = #filter(function(d) return d.severity == 1 end, diagns),
     warnings = #filter(function(d) return d.severity == 2 end, diagns),
-    infos    = #filter(function(d) return d.severity == 3 end, diagns),
-    hints    = #filter(function(d) return d.severity == 4 end, diagns),
+    infos = #filter(function(d) return d.severity == 3 end, diagns),
+    hints = #filter(function(d) return d.severity == 4 end, diagns),
   }
 end
 
 ---@alias vidx  number
----@alias index number
----@alias bufnr number
+---@alias index  number
+---@alias bufnr  number
 
 ---@class Buffer
 ---@field _vidx         vidx
@@ -116,7 +118,7 @@ end
 ---@field devicon       Devicon
 ---@field diagnostics   Diagnostics
 
----@param b table
+---@param b  table
 ---@return Buffer
 local new_buffer = function(b)
   local opts = bopt[b.bufnr]
@@ -165,20 +167,21 @@ local new_buffer = function(b)
   }
 end
 
----@param buffer Buffer
+---@param buffer  Buffer
 ---@return boolean
 local is_old = function(buffer) return contains(bufnrs, buffer.number) end
 
----@param buffer Buffer
+---@param buffer  Buffer
 ---@return boolean
 local is_new = function(buffer) return not is_old(buffer) end
 
----@param buffer1 Buffer
----@param buffer2 Buffer
+---Sorter used to open new buffers at the end of the bufferline.
+---@param buffer1  Buffer
+---@param buffer2  Buffer
 ---@return boolean
 local sort_by_new_after_last = function(buffer1, buffer2)
   if is_old(buffer1) and is_old(buffer2) then
-    return revlookup[buffer1.number] < revlookup[buffer2.number]
+    return vidxs[buffer1.number] < vidxs[buffer2.number]
 
   elseif is_old(buffer1) and is_new(buffer2) then
     return true
@@ -191,41 +194,45 @@ local sort_by_new_after_last = function(buffer1, buffer2)
   end
 end
 
----@param buffer1 Buffer
----@param buffer2 Buffer
+---Sorter used to open new buffers next to the current buffer.
+---@param buffer1  Buffer
+---@param buffer2  Buffer
 ---@return boolean
 local sort_by_new_after_current = function(buffer1, buffer2)
   if is_old(buffer1) and is_old(buffer2) then
     -- If both buffers are either before or after (inclusive) the current
     -- buffer then respect the current order.
-    if (revlookup[buffer1.number] - revlookup[current_bufnr])
-        * (revlookup[buffer2.number] - revlookup[current_bufnr]) >= 0 then
-      return revlookup[buffer1.number] < revlookup[buffer2.number]
+    if (vidxs[buffer1.number] - vidxs[current_bufnr])
+        * (vidxs[buffer2.number] - vidxs[current_bufnr]) >= 0 then
+      return vidxs[buffer1.number] < vidxs[buffer2.number]
     end
-    return revlookup[buffer1.number] < revlookup[current_bufnr]
+    return vidxs[buffer1.number] < vidxs[current_bufnr]
 
   elseif is_old(buffer1) and is_new(buffer2) then
-    return revlookup[buffer1.number] <= revlookup[current_bufnr]
+    return vidxs[buffer1.number] <= vidxs[current_bufnr]
 
   elseif is_new(buffer1) and is_old(buffer2) then
-    return revlookup[buffer2.number] > revlookup[current_bufnr]
+    return vidxs[buffer2.number] > vidxs[current_bufnr]
 
   else
     return buffer1.number < buffer2.number
   end
 end
 
----@param bufnrz bufnr[]|nil
+---Updates the list of buffer numbers, adding a reverse lookup bufnr -> _vidx.
+---@param bufnrz  bufnr[]|nil
 local update_bufnrs = function(bufnrz)
   bufnrs = bufnrz and bufnrz or {}
-  -- Add a reverse lookup for the buffer numbers (bufnr -> i).
-  revlookup = {}
+  vidxs = {}
   for i, bufnr in ipairs(bufnrs) do
-    revlookup[bufnr] = i
+    vidxs[bufnr] = i
   end
 end
 
----@param bufnrz bufnr[]|nil
+---Takes in a list of buffer numbers (used to determine if some buffers have
+---been switched around), returns the currently listed valid buffers, visible
+---buffers and the updated list of buffer numbers.
+---@param bufnrz  bufnr[]|nil
 ---@return Buffer[], Buffer[], bufnr[]
 M.get_bufinfos = function(bufnrz)
   -- FIXME: mutating
@@ -268,7 +275,7 @@ M.get_bufinfos = function(bufnrz)
   return valid, visible, bufnrs
 end
 
----@param settingz table
+---@param settingz  table
 M.setup = function(settingz)
   settings = settingz
 end

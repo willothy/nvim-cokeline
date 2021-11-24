@@ -868,7 +868,7 @@ This being my first ever neovim plugin, I looked at how `bufferline.nvim`
 solved a couple of issues that I stumbled into along the way.
 
 With that being said, `bufferline.nvim` is a much bigger project with a
-codebase almost 5x bigger than the one of `cokeline.nvim`, and while there are
-some features yet to be added (see
-[TODOs](#chart_with_upwards_trend-todostodos)), the plan is to always keep this
+codebase more than 3x bigger than the one of `cokeline.nvim`, and while there
+are some features yet to be added (see
+[TODOs](#chart_with_upwards_trend-todos)), the plan is to always keep this
 plugin fairly small and minimal compared to other similar projects.
