@@ -293,10 +293,10 @@ reported by the LSP.
         text = function(buffer) return buffer.filename end,
         hl = {
           fg = function(buffer)
-            if buffer.lsp.errors ~= 0 then
+            if buffer.diagnostics.errors ~= 0 then
               return vim.g.terminal_color_1 -- red
             end
-            if buffer.lsp.warnings ~= 0 then
+            if buffer.diagnostics.warnings ~= 0 then
               return vim.g.terminal_color_3 -- yellow
             end
           end,
@@ -306,7 +306,7 @@ reported by the LSP.
             if buffer.is_focused then
               style = 'bold'
             end
-            if buffer.lsp.errors ~= 0 then
+            if buffer.diagnostics.errors ~= 0 then
               if style then
                 style = style .. ',underline'
               else
