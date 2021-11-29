@@ -8,17 +8,35 @@ local filter = vim.tbl_filter
 local split = vim.split
 local map = vim.tbl_map
 local bopt = vim.bo
+local cmd = vim.cmd
+local opt = vim.opt
 local fn = vim.fn
 
--- local settings, valid_buffers, visible_buffers, current_bufnr, bufnrs, vidxs
-local settings, current_bufnr, bufnrs, vidxs
+---WARNING(state): this variable is used as global immutable state
+---@type table
+local settings
 
-local M = {}
+---WARNING(state,mutable): this variable is used as global mutable state
+---@type Buffer[]
+local valid_buffers = {}
 
----Returns the `valid_buffers` table it takes as a parameter wit
----@param valid_buffers Buffer[]
----@return Buffer[]
-local compute_unique_prefixes = function(valid_buffers)
+---WARNING(state,mutable): this variable is used as global mutable state
+---@type Buffer[]
+local visible_buffers = {}
+
+---WARNING(state,mutable): this variable is used as global mutable state
+---@type bufnr[]
+local bufnrs = {}
+
+---WARNING(state,mutable): this variable is used as global mutable state
+---@type vidx[]
+local vidxs = {}
+
+---WARNING(state,mutable): this variable is used as global mutable state
+---@type bufnr
+local current_bufnr
+
+local compute_unique_prefixes = function()
   -- FIXME: it appears in windows sometimes neovim reports directories
   -- separated by '/' instead of '\\'??
   if not fn.has('win32') == 0 then
@@ -36,7 +54,6 @@ local compute_unique_prefixes = function(valid_buffers)
 
   local prefixes = map(function() return {} end, valid_buffers)
 
-  -- FIXME: mutating
   for i=1,#paths do
     for j=i+1,#paths do
       local k = 1
@@ -53,24 +70,17 @@ local compute_unique_prefixes = function(valid_buffers)
   end
 
   for i, buffer in ipairs(valid_buffers) do
-    -- FIXME: mutating
     buffer.unique_prefix =
       (#prefixes[i] == #paths[i] and path_separator or '')
       .. fn.join(fn.reverse(prefixes[i]), path_separator)
       .. (#prefixes[i] > 0 and path_separator or '')
   end
-
-  return valid_buffers
 end
 
----@class Devicon
----@field icon  string
----@field color string
-
----@param path      string
+---@param path  string
 ---@param filename  string
----@param type      string
----@return Devicon
+---@param type  string
+---@return table<string, string>
 local get_devicon = function(path, filename, type)
   local name = (type == 'terminal') and 'terminal' or filename
   local extn = fn.fnamemodify(path, ':e')
@@ -81,14 +91,8 @@ local get_devicon = function(path, filename, type)
   }
 end
 
----@class Diagnostics
----@field errors  number
----@field warnings  number
----@field infos  number
----@field hints  number
-
 ---@param bufnr  bufnr
----@return Diagnostics
+---@return table<string, number>
 local get_diagnostics = function(bufnr)
   local diagns = diagnostics.get(bufnr)
   return {
@@ -115,8 +119,8 @@ end
 ---@field unique_prefix string
 ---@field filename      string
 ---@field filetype      string
----@field devicon       Devicon
----@field diagnostics   Diagnostics
+---@field devicon       table<string, string>
+---@field diagnostics   table<string, number>
 
 ---@param b  table
 ---@return Buffer
@@ -219,65 +223,164 @@ local sort_by_new_after_current = function(buffer1, buffer2)
   end
 end
 
----Updates the list of buffer numbers, adding a reverse lookup bufnr -> _vidx.
----@param bufnrz  bufnr[]|nil
-local update_bufnrs = function(bufnrz)
-  bufnrs = bufnrz and bufnrz or {}
-  vidxs = {}
-  for i, bufnr in ipairs(bufnrs) do
-    vidxs[bufnr] = i
-  end
-end
-
 ---Takes in a list of buffer numbers (used to determine if some buffers have
----been switched around), returns the currently listed valid buffers, visible
----buffers and the updated list of buffer numbers.
----@param bufnrz  bufnr[]|nil
----@return Buffer[], Buffer[], bufnr[]
-M.get_bufinfos = function(bufnrz)
-  -- FIXME: mutating
-  update_bufnrs(bufnrz)
-
-  local listed_buffers = fn.getbufinfo({buflisted = 1})
-
+---been switched around), returns the currently listed valid buffers.
+---@param bufnrs_  bufnr[]
+local get_valid_buffers = function(bufnrs_)
   local buffers = map(function(b)
     return new_buffer(b)
-  end, listed_buffers)
+  end, fn.getbufinfo({buflisted = 1}))
 
-  local valid = compute_unique_prefixes(filter(function(buffer)
+  valid_buffers = filter(function(buffer)
     return buffer.filetype ~= 'netrw'
-  end, buffers))
+  end, buffers)
+
+  compute_unique_prefixes()
 
   local sorter =
     (settings.new_buffers_position == 'last' and sort_by_new_after_last)
      or (settings.new_buffers_position == 'next' and sort_by_new_after_current)
 
-  -- FIXME: mutating
-  sort(valid, sorter)
+  vidxs = {}
+  for i, bufnr in ipairs(bufnrs_) do
+    vidxs[bufnr] = i
+  end
 
-  -- FIXME: mutating
+  sort(valid_buffers, sorter)
+
   bufnrs = {}
-  for i, buffer in ipairs(valid) do
+  for i, buffer in ipairs(valid_buffers) do
     buffer._vidx = i
     bufnrs[i] = buffer.number
     if buffer.is_focused then current_bufnr = buffer.number end
   end
 
-  local visible =
-    not settings.filter and valid
-     or filter(function(buffer) return settings.filter(buffer) end, valid)
+  return valid_buffers
+end
 
-  -- FIXME: mutating
-  for i, buffer in ipairs(visible) do
+---@return Buffer[]
+local get_visible_buffers = function()
+  valid_buffers = get_valid_buffers(bufnrs)
+
+  visible_buffers =
+    not settings.filter
+    and valid_buffers
+     or filter(function(buffer)
+          return settings.filter(buffer)
+        end, valid_buffers)
+
+  for i, buffer in ipairs(visible_buffers) do
     buffer.index = i
   end
 
-  return valid, visible, bufnrs
+  return visible_buffers
 end
 
----@param settingz  table
-M.setup = function(settingz)
-  settings = settingz
+
+
+---Returns the valid index of the currently focused buffer (if there is one in
+---`valid_buffers`).
+---@return vidx|nil
+local get_current_vidx = function()
+  for _, buffer in pairs(valid_buffers) do
+    if buffer.is_focused then return buffer._vidx end
+  end
 end
 
-return M
+---Returns a valid index from the valid index of the currently focused buffer
+---and a step (either +1 or -1).
+---@param current  vidx
+---@param step  '-1'|'1'
+---@return vidx|nil
+local get_vidx_from_step = function(current, step)
+  local target = current + step
+  if target < 1 or target > #valid_buffers then
+    if not settings.cycle_prev_next_mappings then return end
+    return (target - 1) % #valid_buffers + 1
+  end
+  return target
+end
+
+---@param index index
+---@return vidx|nil
+local get_vidx_from_index = function(index)
+  for _, buffer in pairs(visible_buffers) do
+    if buffer.index == index then return buffer._vidx end
+  end
+end
+
+---@param vidx1 vidx
+---@param vidx2 vidx
+local switch_buffer_order = function(vidx1, vidx2)
+  valid_buffers[vidx1], valid_buffers[vidx2]
+    = valid_buffers[vidx2], valid_buffers[vidx1]
+  cmd('redrawtabline | redraw')
+end
+
+---@param index index
+local switch_by_index = function(index)
+  local current = get_current_vidx()
+  if not current then return end
+  local target = get_vidx_from_index(index)
+  if not target then return end
+  switch_buffer_order(current, target)
+end
+
+---@param step '-1'|'1'
+local switch_by_step = function(step)
+  if opt.showtabline._value == 0 then
+    valid_buffers = get_valid_buffers(bufnrs)
+  end
+  local current = get_current_vidx()
+  if not current then return end
+  local target = get_vidx_from_step(current, step)
+  if not target then return end
+  switch_buffer_order(current, target)
+end
+
+---@param bufnr bufnr
+local focus_buffer = function(bufnr)
+  cmd('buffer ' .. bufnr)
+end
+
+---@param index index
+local focus_by_index = function(index)
+  local target = get_vidx_from_index(index)
+  if not target then return end
+  focus_buffer(valid_buffers[target].number)
+end
+
+---@param step '-1'|'1'
+local focus_by_step = function(step)
+  if opt.showtabline._value == 0 then
+    valid_buffers = get_valid_buffers(bufnrs)
+  end
+  local current = get_current_vidx()
+  if not current then return end
+  local target = get_vidx_from_step(current, step)
+  if not target then return end
+  focus_buffer(valid_buffers[target].number)
+end
+
+local toggle = function()
+  local listed_buffers = fn.getbufinfo({buflisted = 1})
+  opt.showtabline = (#listed_buffers > 0) and 2 or 0
+end
+
+
+
+---@param settings_  table
+local setup = function(settings_, cycle_prev_next_mappings)
+  settings = settings_
+  settings.cycle_prev_next_mappings = cycle_prev_next_mappings
+end
+
+return {
+  get_visible_buffers = get_visible_buffers,
+  switch_by_index = switch_by_index,
+  switch_by_step = switch_by_step,
+  focus_by_index = focus_by_index,
+  focus_by_step = focus_by_step,
+  toggle = toggle,
+  setup = setup,
+}

@@ -2,8 +2,6 @@ local get_hex = require('cokeline/utils').get_hex
 
 local echo = vim.api.nvim_echo
 
-local M = {}
-
 local defaults = {
   show_if_buffers_are_at_least = 1,
   cycle_prev_next_mappings = false,
@@ -96,8 +94,6 @@ update = function(settings, preferences, key)
   return updated
 end
 
-M.update = function(preferences)
-  return update(defaults, preferences)
-end
-
-return M
+return {
+  update = function(preferences) return update(defaults, preferences) end,
+}
