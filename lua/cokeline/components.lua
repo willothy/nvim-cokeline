@@ -1,138 +1,190 @@
-local hlgroups = require('cokeline/hlgroups')
+local rq_hlgroups = require('cokeline/hlgroups')
 
-local strrep = string.rep
-local insert = table.insert
+local str_rep = string.rep
+local tbl_concat = table.concat
+local tbl_insert = table.insert
 
-local fn = vim.fn
+local vim_fn = vim.fn
+local vim_map = vim.tbl_map
 
-local M = {}
+local gl_continuation_fmts = {
+  edges = { left = ' …%s', right = '%s… ', },
+  buffers = { left = '…%s', right = '%s…', },
+}
 
-local evaluate_field = function(field, buffer)
-  if type(field) == 'string' then
-    return field
-  elseif type(field) == 'function' then
-    return field(buffer)
-  end
-end
+---@class Cmp
+---@field text  string | fun(buffer: Buffer): string
+---@field hl  Hl | nil
+---@field delete_buffer_on_left_click  boolean | nil
+---@field truncation  table | nil
 
-M.Component = {}
+---@class Comp
+---@field text  string | fun(buffer: Buffer): string
+---@field hl  Hl | nil
+---@field delete_buffer_on_left_click  boolean
+---@field truncation  table
+---@field idx  number
 
-function M.Component:new(c, index)
-  local component = {
-    -- Exposed to users
-    text = c.text,
-    hl = c.hl,
-    delete_buffer_on_left_click = c.delete_buffer_on_left_click,
-    truncation = {
-      priority = c.truncation and c.truncation.priority or index,
-      direction = c.truncation and c.truncation.direction or 'right',
-    },
-    -- Used internally
-    index = index,
-    width = 0,
-    hlgroup = nil,
+---@class Component
+---@field text  string
+---@field hlgroup  Hlgroup
+---@field delete_buffer_on_left_click  boolean
+---@field truncation  table
+---@field idx  number
+---@field bufnr  bufnr
+---@field width  number
+
+---@param cmp  Cmp
+---@param idx  number
+---@return Comp
+local cmp_to_comp = function(cmp, idx)
+  local text = cmp.text
+  local hl = cmp.hl
+  local delete_buffer_on_left_click = cmp.delete_buffer_on_left_click or false
+  local priority = cmp.truncation and cmp.truncation.priority or idx
+  local direction = cmp.truncation and cmp.truncation.direction or 'right'
+
+  return {
+    text = text,
+    hl = hl,
+    delete_buffer_on_left_click = delete_buffer_on_left_click,
+    truncation = { priority = priority, direction = direction, },
+    idx = idx,
   }
-  setmetatable(component, self)
-  self.__index = self
-  return component
 end
 
-function M.Component:embed_text_in_close_button_fmt(bufnr)
-  local fmt =
-    '%%%s@cokeline#handle_close_button_click@%s%%%s@cokeline#handle_click@'
-  return fmt:format(bufnr, self.text, bufnr)
+---@param cmps  Cmp[]
+---@return Comp[]
+local cmps_to_comps = function(cmps)
+  local comps = {}
+  for i, cmp in ipairs(cmps) do
+    tbl_insert(comps, cmp_to_comp(cmp, i))
+  end
+  return comps
 end
 
-function M.Component:render(buffer)
-  local component = {}
-  setmetatable(component, self)
-  self.__index = self
-
-  component.text = evaluate_field(self.text, buffer)
-  component.width = fn.strwidth(component.text)
-
-  component.hlgroup =
-    buffer.is_focused
-    and hlgroups.defaults.focused
-     or hlgroups.defaults.unfocused
-
-  if self.hl then
-    local gui =
-      self.hl.style
-      and evaluate_field(self.hl.style, buffer)
-       or component.hlgroup.opts.gui
-
-    local guifg =
-      self.hl.fg
-      and evaluate_field(self.hl.fg, buffer)
-       or component.hlgroup.opts.guifg
-
-    local guibg =
-      self.hl.bg
-      and evaluate_field(self.hl.bg, buffer)
-       or component.hlgroup.opts.guibg
-
-    component.hlgroup = hlgroups.Hlgroup:new({
-      name =
-        ('%s%s_%s'):format(component.hlgroup.name, buffer.number, self.index),
-      opts = {
-        gui = gui,
-        guifg = guifg,
-        guibg = guibg,
-      }
-    })
+---@param comp  Comp
+---@param default_hl  Hl
+---@param buffer  Buffer
+---@return Component
+local comp_to_component = function(comp, default_hl, buffer)
+  ---@param field  string | hexcolor | attr | fun()
+  ---@return string | hexcolor | attr
+  local evaluate_field = function(field)
+    return
+      (type(field) == 'string' and field)
+      or (type(field) == 'function' and field(buffer))
   end
 
-  return component
+  local text = evaluate_field(comp.text)
+
+  local width = vim_fn.strwidth(text)
+
+  local bufnr = buffer.number
+
+  local hlgroup_name =
+    ('cokeline_buffer_%s_component_%s'):format(bufnr, comp.idx)
+
+  local guifg =
+    comp.hl and comp.hl.fg
+    and evaluate_field(comp.hl.fg)
+     or evaluate_field(default_hl.fg)
+
+  local guibg =
+    comp.hl and comp.hl.bg
+    and evaluate_field(comp.hl.bg)
+     or evaluate_field(default_hl.bg)
+
+  local gui =
+    comp.hl and comp.hl.style
+    and evaluate_field(comp.hl.style)
+     or evaluate_field(default_hl.style)
+
+  local hlgroup = rq_hlgroups.new_hlgroup(hlgroup_name, guifg, guibg, gui)
+
+  return {
+    text = text,
+    hlgroup = hlgroup,
+    delete_buffer_on_left_click = comp.delete_buffer_on_left_click,
+    truncation = comp.truncation,
+    idx = comp.idx,
+    bufnr = bufnr,
+    width = width,
+  }
 end
 
-function M.Component:shorten(args)
-  local direction, continuation_fmt, continuation_fmt_width
-  if args.direction then
-    -- If the direction is given this was called from a line:cutoff()
-    direction = args.direction
-    continuation_fmt = (direction == 'left') and ' …%s' or '%s… '
-    continuation_fmt_width = 2 -- 2 = strwidth(' …') = strwidth('… ')
-  else
-    -- If it isn't it was called from a line:truncate()
-    direction = self.truncation.direction
-    continuation_fmt = (direction == 'left') and '…%s' or '%s…'
-    continuation_fmt_width = 1 -- 1 = strwidth('…')
-  end
+---Takes in a `component`, returns a new component given by shortening the
+---`component`'s text to `available_space` characters in the given
+---`direction`. If a direction is not given it uses the
+---`component.truncation.direction` field instead.
+---@param component  Component
+---@param available_space  number
+---@param direction  '"left"' | '"right"' | nil
+---@return Component
+local shorten_component =
+  function(component, available_space, direction)
 
-  local available_space = args.available_space - continuation_fmt_width
-  local start_char = direction == 'right' and 0 or self.width - available_space
+  local continuation_fmt =
+    direction
+    and gl_continuation_fmts.edges[direction]
+     or gl_continuation_fmts.buffers[component.truncation.direction]
 
-  -- `fn.strcharpart` can fail with wide characters. For example,
-  -- `fn.strcharpart('｜', 0, 1)` will still return '｜' since that character
-  -- takes up two columns. The last `if` is to handle such cases.
-  local shortened_text = fn.strcharpart(self.text, start_char, available_space)
-  self.text = continuation_fmt:format(shortened_text)
-  self.width = fn.strwidth(self.text)
+  local net_available_space =
+    available_space - vim_fn.strwidth(continuation_fmt:format(''))
 
-  -- If for whatever reason it wasn't possible to shorten the component's width
-  -- down to the available space, we set its text equal to the empty
-  -- continuation format padded with however many spaces we need to fill the
-  -- remaining space.
-  if self.width ~= args.available_space then
-    local spaces = strrep(' ', args.available_space - continuation_fmt_width)
-    self.text =
-      direction == 'right'
-      and continuation_fmt:format('') .. spaces
-       or spaces .. continuation_fmt:format('')
-    self.width = fn.strwidth(self.text)
-  end
+  local start_char =
+    (direction or component.truncation.direction) == 'left'
+    and component.width - net_available_space
+     or 0
+
+  local cut_text =
+    vim_fn.strcharpart(component.text, start_char, net_available_space)
+
+  local text =
+    vim_fn.strwidth(cut_text) == net_available_space
+    and continuation_fmt:format(cut_text)
+     or continuation_fmt:format(str_rep(' ', net_available_space))
+
+  local width = vim_fn.strwidth(text)
+
+  return {
+    text = text,
+    hlgroup = component.hlgroup,
+    delete_buffer_on_left_click = component.delete_buffer_on_left_click,
+    truncation = component.truncation,
+    width = width,
+    bufnr = component.bufnr,
+    idx = component.idx,
+  }
 end
 
--- local new_component = function(c, i)
--- end
-
-function M.setup(cs)
-  local components = {}
-  for index, c in ipairs(cs) do
-    insert(components, M.Component:new(c, index))
-  end
-  return components
+---Takes in a component, returns its rendered string.
+---@param component  Component
+---@return string
+local render_component = function(component)
+  local text = rq_hlgroups.embed_in_hlgroup(component.hlgroup, component.text)
+  if not vim_fn.has('tablineat') then return text end
+  local bufnr = component.bufnr
+  return
+    component.delete_buffer_on_left_click
+    and ('%%%s@cokeline#handle_close_button_click@%s%%X'):format(bufnr, text)
+     or ('%%%s@cokeline#handle_click@%s%%X'):format(bufnr, text)
 end
 
-return M
+---Takes in a list of components, returns the concatnation of their rendered
+---strings.
+---@param components  Component[]
+---@return string
+local render_components = function(components)
+  return tbl_concat(vim_map(function(component)
+    return render_component(component)
+  end, components))
+end
+
+return {
+  gl_continuation_fmts = gl_continuation_fmts,
+  cmps_to_comps = cmps_to_comps,
+  comp_to_component = comp_to_component,
+  shorten_component = shorten_component,
+  render_components = render_components,
+}

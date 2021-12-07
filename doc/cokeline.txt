@@ -6,225 +6,281 @@
 ==============================================================================
 CONTENTS                                                     *cokeline-contents*
 
-  1. INTRODUCTION ................ |cokeline-intro|
-  2. FUNCTIONING ................. |cokeline-functioning|
-  3. CONFIGURATION ............... |cokeline-configuration|
-  4. MAPPINGS .................... |cokeline-mappings|
+  Usage ........................... |cokeline-usage|
+  Configuration ................... |cokeline-configuration|
+  Buffer .......................... |cokeline-buffer|
+  Components ...................... |cokeline-components|
+  Mappings ........................ |cokeline-mappings|
 
 ==============================================================================
-INTRODUCTION                                                    *cokeline-intro*
+USAGE                                                           *cokeline-usage*
 
-|cokeline.nvim| is a neovim plugin used to display all the currently listed
-buffers in the tabline ('tabline'). In other words, |cokeline.nvim| is to
-neovim what tab bars are to web browsers.
-
-==============================================================================
-FUNCTIONING                                               *cokeline-functioning*
-
-Internally, |cokeline.nvim| defines two objects: `lines` and `components`.
-
-The bufferline that is rendered and displayed to the user is a collection of
-lines, and every line is itself a collection of components.
-
-A line is linked to one (and only one) listed buffer. For example, if we open
-two files -- lets call them `foo.md` and `bar.md` -- then 'ls' will list two
-buffers, and cokeline will display two lines, one for `foo.md` and another for
-`bar.md`.
-
-The components that every line is made up of are configured in the
-`require('cokeline').setup` function by passing a list of components to the
-`components` key.
-
-Each component has to be a table of the form:
+Once you've turned the `termguicolors` option on, you can enable
+`cokeline.nvim` by simply calling its `setup` function somewhere in your
+config, for example:
 >
-  {
-    text = function(buffer) | '{string}',
-    hl = {
-      fg = function(buffer) | '#rrbbgg',
-      bg = function(buffer) | '#rrbbgg',
-      style = function(buffer) | '{style}',
-    },
-    delete_buffer_on_left_click = true | false,
-  },
-<
-A component's `text` can be either be a function or a string. If it is a
-function, it has to take the `buffer` linked to the line that component
-belongs to as a parameter.
-
-That `buffer` parameter is itself a key-value table with the following keys
-
-  number~
-    The buffer's internal number as reported by `:ls`.
-    type: `int`
-
-  index~
-    The buffer's index in the bufferline (1 for the first buffer, 2 for the
-    second one, etc.)
-    type: `int`
-
-  is_focused~
-    Set to true if the buffer is focused.
-    type: `bool`
-
-  is_modified~
-    Set to true if the buffer has been modified.
-    type: `bool`
-
-  is_readonly~
-    Set to true if the buffer is 'readonly'.
-    type: `bool`
-
-  type~
-    The buffer's type as reported by 'buftype'.
-    type: `string`
-
-  filetype~
-    The buffer's filetype as reported by 'filetype'.
-    type: `string`
-
-  path~
-    The buffer's full path.
-    type: `string`
-
-  filename~
-    The buffer's filename.
-    type: `string`
-
-  unique_prefix~
-    A unique filetree prefix used to distinguish buffers with the same
-    filename. For example, if we edit two files each named `foo.md`, one
-    inside the `bar` directory and the other inside the `baz` directory, then
-    one will have `bar/` as its unique prefix and the other one will have
-    `baz/`.
-    type: `string`
-
-  devicon.icon~
-    An icon representing the buffer's filetype (needs
-    `kyazdani42/nvim-web-devicons`)
-    type: `string`
-
-  devicon.color~
-    The color of the devicon (needs `kyazdani42/nvim-web-devicons`) in
-    hexadecimal format.
-    type: `string`
-
-  diagnostics.errors~
-    The number of errors reported by the LSP.
-    type: `int`
-
-  diagnostics.warnings~
-    The number of warnings reported by the LSP.
-    type: `int`
-
-  diagnostics.infos~
-    The number of infos reported by the LSP.
-    type: `int`
-
-  diagnostics.hints~
-    The number of hints reported by the LSP.
-    type: `int`
-
-`hl` is a table defining the foreground color, background color and style of
-that component (if different from the default ones, see
-|cokeline-configuration|). Like `text`, they too can either be functions or
-strings, however:
-
-  - `hl.fg` and `hl.bg` have to be strings representing a 24-bit color in
-    hexadecimal format, or functions returning a color in hexadecimal format.
-  - `hl.style` has to be a style among the ones listed in 'attr-list' or a
-    function returning one.
-
-`delete_buffer_on_left_click` expects a boolean value. If true, the buffer is
-deleted when the user left clicks that component. This is usually used to
-implement close buttons.
-
-The default value of the `components` key is:
->
-  components = {
-    {
-      text = function(buffer) return ' ' .. buffer.devicon.icon end,
-      hl = {
-        fg = function(buffer) return buffer.devicon.color end,
-      },
-    },
-    {
-      text = function(buffer) return buffer.unique_prefix end,
-      hl = {
-        fg = utils.get_hex('Comment', 'fg'),
-        style = 'italic',
-      },
-    },
-    {
-      text = function(buffer) return buffer.filename .. ' ' end,
-    },
-    {
-      text = '',
-      delete_buffer_on_left_click = true,
-    },
-    {
-      text = ' ',
-    }
-  }
+  -- In your init.lua
+  require('cokeline).setup()
 <
 
 ==============================================================================
 CONFIGURATION                                           *cokeline-configuration*
 
-|cokeline.nvim| is configured by passing a key-value table to the
-`require('cokeline').setup` function. The following keys are recognized:
+You can configure your `cokeline` by changing the contents of the Lua table
+passed to the `setup` function.
 
-  *show_if_buffers_are_at_least*
-    Show the bufferline when there are at least this many visible buffers.
-    default: `1`
+The valid keys are:
+>
+  require('cokeline').setup({
+    -- Show the bufferline when there are at least this many visible buffers.
+    -- default: `1`.
+    show_if_buffers_are_at_least = int,
 
-  *cycle_prev_next_mappings*
-    Controls what happens when the first (last) buffer is focused and the user
-    tries to focus/switch to the previous (next) buffer. If true the last
-    (first) buffer gets focused/switched to, if false nothing happens.
-    default: `false`
+    buffers = {
+      -- A function to filter out unwanted buffers. Takes a buffer table as a
+      -- parameter (see |cokeline-buffer|) and has to return either `true` or
+      -- `false`.
+      -- default: `false`.
+      filter_valid = function(buffer) -> boolean,
 
-  *buffers.filter*
-    A function to filter out unwanted buffers. It takes a `buffer` table
-    as a parameter.
-    default: `nil`
+      -- A looser version of `filter_valid`, use this function if you still
+      -- want the `cokeline-{switch,focus}-{prev,next}` mappings to work for
+      -- these buffers without displaying them in your bufferline.
+      -- default: `false`.
+      filter_visible = function(buffer) -> boolean,
 
-  *buffers.new_bufers_position*
-    If `last` new buffers are added to the end of the bufferline, if `next`
-    they are added next to the current buffer.
-    default: `last`
+      -- If set to `last` new buffers are added to the end of the bufferline,
+      -- if `next` they are added next to the current buffer.
+      -- default: 'last',
+      new_buffers_position = 'last' | 'next',
+    },
 
-  *default_hl.focused.fg*
-    Default color for the foreground of focused lines.
-    default: `ColorColumn`'s background
+    mappings = {
+      -- Controls what happens when the first (last) buffer is focused and you
+      -- try to focus/switch the previous (next) buffer. If `true` the last
+      -- (first) buffers gets focused/switched, if `false` nothing happens.
+      -- default: `true`.
+      cycle_prev_next = true | false,
+    },
 
-  *default_hl.focused.bg*
-    Default color for the background of focused lines.
-    default: `Normal`'s foreground
+    rendering = {
+      -- The maximum number of characters a rendered buffer is allowed to take
+      -- up. The buffer will be truncated if its width is bigger than this
+      -- value.
+      -- default: `999`.
+      max_buffer_width = int,
+    },
 
-  *default_hl.unfocused.fg*
-    Default color for the foreground of unfocused lines.
-    default: `Normal`'s foreground
+    -- The default highlight group values for focused and unfocused buffers.
+    -- The `fg` and `bg` keys are either colors in hexadecimal format or
+    -- functions taking a `buffer` parameter and returning a color in
+    -- hexadecimal format. Similarly, the `style` key is either a string
+    -- containing a comma separated list of items in `:h attr-list` or a
+    -- function returning one.
+    default_hl = {
+      focused = {
+        -- default: `ColorColumn`'s background color.
+        fg = '#rrggbb' | function(buffer) -> '#rrggbb',
 
-  *default_hl.unfocused.bg*
-    Default color for the background of unfocused lines.
-    default: `ColorColumn`'s background
+        -- default: `Normal`'s foreground color.
+        bg = '#rrggbb' | function(buffer) -> '#rrggbb',
 
-  *components*
-    A list of components used to build every line of the cokeline.
-    default: see |cokeline-intro|
+        -- default: `'NONE'`.
+        style = 'NONE' | 'bold' | 'italic',
+      },
+
+      unfocused = {
+        -- default: `Normal`'s foreground color.
+        fg = '#rrggbb' | function(buffer) -> '#rrggbb',
+
+        -- default: `ColorColumn`'s background color.
+        bg = '#rrggbb' | function(buffer) -> '#rrggbb',
+
+        -- default: `'NONE'`.
+        style = 'NONE' | 'bold' | 'italic',
+      },
+    },
+
+    -- A list of components to be rendered for each buffer (see
+    -- |cokeline-components|).
+    -- default: see
+    -- https://github.com/noib3/cokeline.nvim/blob/master/lua/cokeline/defaults.lua
+    components = {},
+  })
+<
+
+==============================================================================
+BUFFER                                                         *cokeline-buffer*
+
+Some of the configuration options can be set to functions that take a
+`buffer` as a single parameter. This is useful as it allows users to set the
+values of components dynamically based on the buffer that component is being
+rendered for.
+
+The `buffer` parameter is just a Lua table with the following keys:
+>
+  buffer = {
+    -- The buffer's order in the bufferline (`1` for the first buffer, `2` for
+    -- the second buffer, etc.).
+    index = int,
+
+    -- The buffer's internal number as reported by `:ls`.
+    number = int,
+
+    is_focused = bool,
+
+    is_modified = bool,
+
+    is_readonly = bool,
+
+    -- The buffer's type as reported by `:echo &buftype`.
+    type = 'string',
+
+    -- The buffer's filetype as reported by `:echo &filetype`.
+    filetype = 'string',
+
+    -- The buffer's full path.
+    path = 'string',
+
+    -- The buffer's filename.
+    filename = 'string',
+
+    -- A unique prefix used to distinguish buffers with the same filename
+    -- stored in different directories. For example, if we have two files
+    -- `bar/foo.md` and `baz/foo.md`, then the first will have `bar/` as its
+    -- unique prefix and the second one will have `baz/`.
+    unique_prefix = 'string',
+
+    -- This needs the `kyazdani42/nvim-web/devicons` plugin to be installed.
+    devicon = {
+      -- An icon representing the buffer's filetype.
+      icon = 'string',
+
+      -- The colors of the devicon in hexadecimal format (useful to be passed
+      -- to a component's `hl.fg` field (see |cokeline-components|).
+      color = '#rrggbb',
+    },
+
+    -- The values in this table are the ones reported by Neovim's built in
+    -- LSP interface.
+    diagnostics = {
+      errors = int,
+      warnings = int,
+      infos = int,
+      hints = int,
+    },
+  }
+<
+
+==============================================================================
+COMPONENTS                                                 *cokeline-components*
+
+You can configure what each buffer in your bufferline will be composed of by
+passing a list of components to the `setup` function.
+
+For example, let's imagine we want to construct a very minimal bufferline
+where the only things we're displaying for each buffer are its index, its
+filename and a close button.
+
+Then in our `setup` function we'd have:
+>
+  require('cokeline').setup({
+    -- ...
+
+    components = {
+      {
+        text = function(buffer) return ' ' .. buffer.index end,
+      },
+      {
+        text = function(buffer) return ' ' .. buffer.filename .. ' ' end,
+      },
+      {
+        text = '',
+        delete_buffer_on_left_click = true,
+      },
+      {
+        text = ' ',
+      }
+    }
+  }
+<
+in this case every buffer would be composed of four components: the first
+displaying a space followed by the buffer index, the second one with the
+filename padded by a space on each side, then a close button that allows us to
+`:bdelete` the buffer when we left click on it, and finally an extra space.
+
+This way of dividing every buffer into distinct components combined with the
+ability to define every component's text and color depending on some property
+of the buffer we're rendering allows for great customizability.
+
+Every component passed to the `components` list has to be a table of the form:
+>
+  {
+    text = 'string' | function(buffer) -> string,
+
+    -- The foreground, backgrond and style of the component. `style` is a
+    -- comma-separated string of values defined in `:h attr-list`.
+    hl = {
+      fg = '#rrggbb' | function(buffer) -> '#rrggbb' | nil,
+      bg = '#rrggbb' | function(buffer) -> '#rrggbb' | nil,
+      style = 'string' | nil,
+    },
+
+    -- If `true` the buffer will be deleted when this component is
+    -- left-clicked (useful to implement close buttons).
+    delete_buffer_on_left_click = boolean,
+
+    truncation = {
+      -- default: index of the component in the `components` table (1 for the
+      -- first component, 2 for the second, etc.).
+      priority = int,
+
+      -- default: `right`.
+      direction = 'left' | right',
+    },
+  }
+<
+a component's `text` is the only key that has to be set to a value, all the
+others are optional and can be omitted.
+
+The `truncation` table controls what happens when a buffer is too long to be
+displayed in its entirety.
+
+More specifically, if a buffer's width (given by the sum of the widths of all
+its components) is bigger than the `rendering.max_buffer_width` config option,
+the buffer will be truncated.
+
+The default behaviour is truncate the buffer by dropping components from right
+to left, with the text of the last component that's included also being
+shortened from right to left. This can be modified by changing the values of
+the `truncation.priority` and `truncation.direction` keys.
+
+The `truncation.priority` controls the order in which components are dropped:
+the first component to be dropped will be the one with the lowest priority. If
+that's still not enough to bring the width of the buffer within the
+`rendering.max_buffer_width` limit, the component with the second lowest
+priority will be dropped, and so on. Note that a higher priority means a
+smaller integer value: a component with a priority of `5` will be dropped
+*after* a component with a priority of `6`, even though `6 > 5`.
+
+The `truncation.direction` key simply controls from which direction a component
+is shortened. For example, you might want to set the `truncation.direction` of
+a component displaying a filename equal to `'left'`, so that if the filename
+has to be shortened you'll still be able to see its extension.
+
 
 ==============================================================================
 MAPPINGS                                                     *cokeline-mappings*
 
-The following `<Plug>` mappings can be used as the right-hand side of other
-mappings:
+The following `<Plug>` mappings can be used as the right-hand side to user
+defined mappings:
 
-  *<Plug>(cokeline-focus-i)*
-    Focuses the buffer with index `i`. Possible values for `i` are from 1 to 20.
+  *<Plug>(cokeline-focus-<i>)*
+    Focuses the buffer with index `i`.
 
-  *<Plug>(cokeline-switch-i)*
+  *<Plug>(cokeline-switch-<i>)*
     Switches the position of the currently focused buffer with the buffer with
-    index `i`. Possible values for `i` are from 1 to 20.
+    index `i`.
 
   *<Plug>(cokeline-focus-prev)*
   *<Plug>(cokeline-focus-next)*
@@ -234,5 +290,3 @@ mappings:
   *<Plug>(cokeline-switch-next)*
     Switches the position of the currently focused buffer with the
     previous/next buffer in the bufferline.
-
- vim:tw=78:ft=help:

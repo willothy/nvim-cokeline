@@ -1,9 +1,0 @@
-name: tests
-on: [push]
-jobs:
-  lines:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - run: cargo install tokei
-      - run: sloc_num=$(tokei --type=Lua,Vimscript --output=json . | jq .Total.code); if [ ${sloc_num} -gt 999 ]; then exit 1; fi

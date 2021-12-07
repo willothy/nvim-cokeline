@@ -1,55 +1,39 @@
-local M = {}
+local math_floor = math.floor
+local math_max = math.max
 
-M.Slider = {}
+local gl_scrolloff = 5
 
-function M.Slider:new()
-  local slider = {
-    widths = {
-      left = 0,
-      right = 0,
-    },
-  }
-  setmetatable(slider, self)
-  self.__index = self
-  return slider
+---@param available_space  number
+---@param width_left_of_current  number
+---@param width_right_of_current  number
+---@return number, number
+local center_current_buffer =
+  function(available_space, width_left_of_current, width_right_of_current)
+
+  local available_space_left = math_floor(available_space / 2)
+  local available_space_right = available_space_left + available_space % 2
+
+  local unused_space_left =
+    math_max(available_space_left - width_left_of_current, 0)
+  local unused_space_right =
+    math_max(available_space_right - width_right_of_current, 0)
+
+  return
+    available_space_left - unused_space_left + unused_space_right,
+    available_space_right - unused_space_right + unused_space_left
 end
 
-M.StatelessSlider = M.Slider:new()
-M.StatefulSlider = M.Slider:new()
+---@param available_space  number
+---@param width_left_of_current  number
+---@param width_right_of_current  number
+---@return number, number
+local slide_if_needed =
+  function(available_space, width_left_of_current, width_right_of_current)
 
-M.CenterFocusedSlider = M.StatelessSlider:new()
-
-function M.CenterFocusedSlider:compute_spaces(available_left_right)
-  -- This slider computes the spaces left and right of the focused line so as
-  -- to always keep it as centered as possible.
-  local available = {
-    left = math.floor(available_left_right/2),
-    right = math.floor(available_left_right/2) + available_left_right % 2,
-  }
-
-  local unused = {
-    left = math.max(available.left - self.widths.left, 0),
-    right = math.max(available.right - self.widths.right, 0),
-  }
-
-  return {
-    left = available.left - unused.left + unused.right,
-    right = available.right - unused.right + unused.left,
-  }
+  return gl_scrolloff, gl_scrolloff
 end
 
-M.GradualSlider = M.StatefulSlider:new()
-
-M.GradualSlider.scrolloff = {
-  left = 5,
-  right = 5,
+return {
+  center_current_buffer = center_current_buffer,
+  slide_if_needed = slide_if_needed,
 }
-
-function M.GradualSlider:compute_spaces(space_left_right)
-  return {
-    left = self.scrolloff.left,
-    right = self.scrolloff.right,
-  }
-end
-
-return M

@@ -1,0 +1,16 @@
+name: 'Commit message check'
+on: [push, pull_request]
+jobs:
+  # Taken from https://github.com/marketplace/actions/gs-commit-message-checker
+  check-commit-message:
+    name: Commit message nicely formatted
+    runs-on: ubuntu-latest
+    steps:
+      - uses: gsactions/commit-message-checker@v1
+        with:
+          pattern: '^(:bug: fix|:lipstick: refactor|:green_book: docs|:sparkles: feat|:broom: chore|:wrench: tooling|:rewind: revert|:zap: speed|:tada: release): [^ ]+'
+          error: 'Messages should be formatted as "<emoji> <type>: <description>"'
+          excludeDescription: 'true'
+          excludeTitle: 'true'
+          checkAllCommitMessages: 'true'
+          accessToken: ${{ secrets.GITHUB_TOKEN }}

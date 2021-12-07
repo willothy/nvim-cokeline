@@ -1,52 +1,57 @@
-local cmd = vim.cmd
+local tbl_concat = table.concat
 
-local M = {}
+local vim_cmd = vim.cmd
 
-M.Hlgroup = {}
+---@alias hexcolor  string
+---@alias attr  string
 
-function M.Hlgroup:new(args)
+---@class Hl
+---@field fg  hexcolor | fun(buffer: Buffer): hexcolor | nil
+---@field bg  hexcolor | fun(buffer: Buffer): hexcolor | nil
+---@field style  attr | fun(buffer: Buffer): attr | nil
+
+---@class Hlgroup
+---@field name  string
+---@field guifg  hexcolor
+---@field guibg  hexcolor
+---@field gui  attr
+
+---@param hlgroup  Hlgroup
+local hlgroup_exec = function(hlgroup)
+  local gui_options = tbl_concat({
+    ('guifg=%s'):format(hlgroup.guifg),
+    ('guibg=%s'):format(hlgroup.guibg),
+    ('gui=%s'):format(hlgroup.gui),
+  }, ' ')
+  -- Clear the highlight group before (re)defining it.
+  vim_cmd(('highlight clear %s'):format(hlgroup.name))
+  vim_cmd(('highlight %s %s'):format(hlgroup.name, gui_options))
+end
+
+---@param hlgroup  Hlgroup
+---@param str  string
+---@return string
+local embed_in_hlgroup = function(hlgroup, str)
+  return ('%%#%s#%s%%*'):format(hlgroup.name, str)
+end
+
+---@param name  string
+---@param guifg  hexcolor
+---@param guibg  hexcolor
+---@param gui  attr
+---@return Hlgroup
+local new_hlgroup = function(name, guifg, guibg, gui)
   local hlgroup = {
-    name = args.name,
-    opts = args.opts,
+    name = name,
+    guifg = guifg,
+    guibg = guibg,
+    gui = gui,
   }
-  setmetatable(hlgroup, self)
-  self.__index = self
-  hlgroup:exec()
+  hlgroup_exec(hlgroup)
   return hlgroup
 end
 
-function M.Hlgroup:exec()
-  local opts = ''
-  for k, v in pairs(self.opts) do
-    opts = opts .. ('%s=%s'):format(k, v) .. ' '
-  end
-  -- Clear the highlight group before (re)defining it
-  cmd(('highlight clear %s'):format(self.name))
-  cmd(('highlight %s %s'):format(self.name, opts))
-end
-
-function M.Hlgroup:embed(text)
-  return ('%%#%s#%s%%*'):format(self.name, text)
-end
-
-function M.setup(defaults)
-  M.defaults = {
-    focused = M.Hlgroup:new({
-      name = 'CokeFocused',
-      opts = {
-        guifg = defaults.focused.fg,
-        guibg = defaults.focused.bg,
-      }
-    }),
-
-    unfocused = M.Hlgroup:new({
-      name = 'CokeUnfocused',
-      opts = {
-        guifg = defaults.unfocused.fg,
-        guibg = defaults.unfocused.bg,
-      }
-    }),
-  }
-end
-
-return M
+return {
+  embed_in_hlgroup = embed_in_hlgroup,
+  new_hlgroup = new_hlgroup,
+}
