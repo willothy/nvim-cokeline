@@ -21,16 +21,6 @@ local setup = function(preferences)
   vim_opt.tabline = '%!v:lua.cokeline()'
 end
 
-_G.cokeline_handle_click = function(bufnr, _, button, _)
-  local command = (button == 'l') and 'buffer' or 'bdelete'
-  vim.cmd(('%s %s'):format(command, bufnr))
-end
-
-_G.cokeline_handle_close_button_click = function(bufnr, _, button, _)
-  if button ~= 'l' then return end
-  vim.cmd(('bdelete %s'):format(bufnr))
-end
-
 ---@return string
 _G.cokeline = function()
   local visible_buffers = rq_buffers.get_visible_buffers()

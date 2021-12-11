@@ -3,7 +3,7 @@
 </h1>
 
 <p align="center">
-<i>A neovim bufferline for people with addictive personalities</i>
+<i>A Neovim bufferline for people with addictive personalities</i>
 </p>
 
 ![demo-gif](./.github/images/rendering.gif)
@@ -357,7 +357,7 @@ Don't like the order your buffers ended up in? Switch them around:
 
 ### Lua
 
-If you ported your neovim config to Lua and use
+If you ported your Neovim config to Lua and use
 [packer.nvim](https://github.com/wbthomason/packer.nvim) as your plugin
 manager you can install this plugin with:
 ```lua
@@ -555,7 +555,7 @@ where the only things we're displaying for each buffer are its index, its
 filename and a close button.
 
 Then in our `setup` function we'd have:
-```
+```lua
 require('cokeline').setup({
   -- ...
 
@@ -586,7 +586,7 @@ ability to define every component's text and color depending on some property
 of the buffer we're rendering, allows for great customizability.
 
 Every component passed to the `components` list has to be a table of the form:
-```
+```lua
 {
   text = 'string' | function(buffer) -> 'string',
 

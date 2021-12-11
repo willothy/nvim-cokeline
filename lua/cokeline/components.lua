@@ -12,6 +12,8 @@ local gl_continuation_fmts = {
   buffers = { left = '…%s', right = '%s…', },
 }
 
+---@diagnostic disable: duplicate-doc-class
+
 ---@class Cmp
 ---@field text  string | fun(buffer: Buffer): string
 ---@field hl  Hl | nil

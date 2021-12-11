@@ -20,6 +20,8 @@ local gl_mut_bufnrs = {}
 ---@type bufnr
 local gl_mut_current_bufnr
 
+---@diagnostic disable: duplicate-doc-class
+
 ---@alias vidx  number
 ---@alias index  number
 ---@alias bufnr  number
@@ -193,7 +195,7 @@ end
 ---Sorter used to open new buffers at the end of the bufferline.
 ---@param vidxs  vidx[]
 ---@param current_bufnr  bufnr
----@return fun(buffer1: Buffer, buffer2:Buffer): boolean
+---@return fun(buffer1: Buffer, buffer2: Buffer): boolean
 local sort_by_new_after_last = function(vidxs, current_bufnr)
   ---@param buffer1  Buffer
   ---@param buffer2  Buffer
@@ -217,7 +219,7 @@ end
 ---Sorter used to open new buffers next to the current buffer.
 ---@param vidxs  vidx[]
 ---@param current_bufnr  bufnr
----@return fun(buffer1: Buffer, buffer2:Buffer): boolean
+---@return fun(buffer1: Buffer, buffer2: Buffer): boolean
 local sort_by_new_after_current = function(vidxs, current_bufnr)
   ---@param buffer1  Buffer
   ---@param buffer2  Buffer
@@ -304,7 +306,7 @@ local get_visible_buffers = function()
   return visible_buffers
 end
 
---@param settings  table
+---@param settings  table
 local setup = function(settings)
   gl_settings = settings
   gl_buffer_sorter =

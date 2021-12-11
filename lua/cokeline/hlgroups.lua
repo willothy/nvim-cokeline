@@ -2,6 +2,8 @@ local tbl_concat = table.concat
 
 local vim_cmd = vim.cmd
 
+---@diagnostic disable: duplicate-doc-class
+
 ---@alias hexcolor  string
 ---@alias attr  string
 
