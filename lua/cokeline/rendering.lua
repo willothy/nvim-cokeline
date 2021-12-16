@@ -214,7 +214,6 @@ end
 ---@param settings  table
 ---@param default_hl  table
 ---@param comps  Comp[]
----@return string
 local setup = function(settings, default_hl, comps)
   gl_settings = settings
   gl_default_hls = default_hl

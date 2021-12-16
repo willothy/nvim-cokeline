@@ -9,7 +9,7 @@ local vim_opt = vim.opt
 
 local gl_settings
 
----@param preferences table
+---@param preferences  table
 local setup = function(preferences)
   gl_settings = rq_defaults.update(preferences)
   rq_augroups.setup()
