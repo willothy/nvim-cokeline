@@ -13,10 +13,10 @@ The format is based on [Keep a Changelog], and this project adheres to
 
 - Started using Semantic Versioning, added this Changelog.
 - Added config option `buffers.filter_valid`
-  ([#29](https://github.com/noib3/cokeline.nvim/issues/29)).
+  ([#29](https://github.com/noib3/nvim-cokeline/issues/29)).
 - Highlights defined in `default_hl` can now accept a function taking a
   `buffer` as parameter to compute their values, just like the ones in
-  `components` ([#23](https://github.com/noib3/cokeline.nvim/issues/23)).
+  `components` ([#23](https://github.com/noib3/nvim-cokeline/issues/23)).
 - Added GitHub Actions test to make sure no line of code exceeds 79 characters.
 
 ### Changed
@@ -37,7 +37,7 @@ The format is based on [Keep a Changelog], and this project adheres to
 - Fixed an issue where opening multiple buffers at the same time with
   `buffers.new_buffers_position = 'next'` would cause them to be displayed in
   the opposite order of what they should be
-  ([#22](https://github.com/noib3/cokeline.nvim/issues/22#issuecomment-975955018)).
+  ([#22](https://github.com/noib3/nvim-cokeline/issues/22#issuecomment-975955018)).
 
 ### Removed
 
@@ -47,5 +47,5 @@ The format is based on [Keep a Changelog], and this project adheres to
 [Semantic Versioning]: https://semver.org/spec/v2.0.0.html
 [Keep a changelog]: https://keepachangelog.com/en/1.0.0/
 
-[unreleased]: https://github.com/noib3/cokeline.nvim/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/noib3/cokeline.nvim/releases/tag/v0.1.0
+[unreleased]: https://github.com/noib3/nvim-cokeline/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/noib3/nvim-cokeline/releases/tag/v0.1.0

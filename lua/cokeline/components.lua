@@ -123,9 +123,7 @@ end
 ---@param available_space  number
 ---@param direction  '"left"' | '"right"' | nil
 ---@return Component
-local shorten_component =
-  function(component, available_space, direction)
-
+local shorten_component = function(component, available_space, direction)
   local continuation_fmt =
     direction
     and gl_continuation_fmts.edges[direction]

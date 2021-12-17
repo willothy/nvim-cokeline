@@ -1,4 +1,5 @@
 local vim_cmd = vim.cmd
+local vim_fn = vim.fn
 local vim_keymap = vim.api.nvim_set_keymap
 local vim_opt = vim.opt
 
@@ -9,6 +10,10 @@ local gl_mut_valid_buffers
 
 ---@type Buffer[]
 local gl_mut_visible_buffers
+
+local gl_mut_is_picking_focus = false
+
+local gl_mut_is_picking_close = false
 
 ---@param buffers  Buffer[]
 local set_valid_buffers = function(buffers)
@@ -47,12 +52,20 @@ local get_vidx_from_index = function(index)
   end
 end
 
+---@param letter  string
+---@return vidx | nil
+local get_vidx_from_letter = function(letter)
+  for _, buffer in pairs(gl_mut_visible_buffers) do
+    if buffer.pick_letter == letter then return buffer._vidx end
+  end
+end
+
 ---@param vidx1  vidx
 ---@param vidx2  vidx
 local switch_buffer_order = function(vidx1, vidx2)
   local rq_buffers = require('cokeline/buffers')
   rq_buffers.switch_bufnrs_order(vidx1, vidx2)
-  vim_cmd('redrawtabline | redraw')
+  vim_cmd('redrawtabline')
 end
 
 ---@param index  index
@@ -77,16 +90,11 @@ local switch_by_step = function(step)
   switch_buffer_order(current, target)
 end
 
----@param bufnr  bufnr
-local focus_buffer = function(bufnr)
-  vim_cmd('buffer ' .. bufnr)
-end
-
 ---@param index  index
 local focus_by_index = function(index)
   local target = get_vidx_from_index(index)
   if not target then return end
-  focus_buffer(gl_mut_valid_buffers[target].number)
+  vim_cmd('buffer ' .. gl_mut_valid_buffers[target].number)
 end
 
 ---@param step  '-1' | '1'
@@ -99,7 +107,34 @@ local focus_by_step = function(step)
   if not current then return end
   local target = get_vidx_from_step(current, step)
   if not target then return end
-  focus_buffer(gl_mut_valid_buffers[target].number)
+  vim_cmd('buffer ' .. gl_mut_valid_buffers[target].number)
+end
+
+local pick_to_focus = function()
+  gl_mut_is_picking_focus = true
+  vim_cmd('redrawtabline')
+  gl_mut_is_picking_focus = false
+  local letter = vim_fn.nr2char(vim_fn.getchar())
+  local target = get_vidx_from_letter(letter)
+  if not target or gl_mut_valid_buffers[target].is_focused then
+    vim_cmd('redrawtabline')
+    return
+  end
+  vim_cmd('buffer ' .. gl_mut_valid_buffers[target].number)
+end
+
+local pick_to_close = function()
+  gl_mut_is_picking_close = true
+  vim_cmd('redrawtabline')
+  gl_mut_is_picking_close = false
+  local letter = vim_fn.nr2char(vim_fn.getchar())
+  local target = get_vidx_from_letter(letter)
+  if not target then
+    vim_cmd('redrawtabline')
+    return
+  end
+  vim_cmd('bdelete ' .. gl_mut_valid_buffers[target].number)
+  vim_cmd('redrawtabline')
 end
 
 ---@param lhs  string
@@ -139,6 +174,15 @@ local setup = function(settings)
     '<Plug>(cokeline-focus-next)',
     '<Cmd>lua require"cokeline/mappings".focus_by_step(1)<CR>'
   )
+
+  plugmap(
+    '<Plug>(cokeline-pick-focus)',
+    '<Cmd>lua require"cokeline/mappings".pick_to_focus()<CR>'
+  )
+  plugmap(
+    '<Plug>(cokeline-pick-close)',
+    '<Cmd>lua require"cokeline/mappings".pick_to_close()<CR>'
+  )
 end
 
 return {
@@ -148,5 +192,9 @@ return {
   switch_by_step = switch_by_step,
   focus_by_index = focus_by_index,
   focus_by_step = focus_by_step,
+  is_picking_focus = function() return gl_mut_is_picking_focus end,
+  is_picking_close = function() return gl_mut_is_picking_close end,
+  pick_to_focus = pick_to_focus,
+  pick_to_close = pick_to_close,
   setup = setup,
 }

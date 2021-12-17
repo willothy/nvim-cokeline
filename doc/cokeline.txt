@@ -1,5 +1,5 @@
 *cokeline.txt*    A bufferline for people with addictive personalities
-*cokeline.nvim* *cokeline*
+*nvim-cokeline* *cokeline*
 
   by Riccardo Mazzarini <riccardo.mazzarini@pm.me> ~
 
@@ -16,7 +16,7 @@ CONTENTS                                                     *cokeline-contents*
 USAGE                                                           *cokeline-usage*
 
 Once you've turned the `termguicolors` option on, you can enable
-`cokeline.nvim` by simply calling its `setup` function somewhere in your
+`nvim-cokeline` by simply calling its `setup` function somewhere in your
 config, for example:
 >
   -- In your init.lua
@@ -104,7 +104,7 @@ The valid keys are:
     -- A list of components to be rendered for each buffer (see
     -- |cokeline-components|).
     -- default: see
-    -- https://github.com/noib3/cokeline.nvim/blob/master/lua/cokeline/defaults.lua
+    -- https://github.com/noib3/nvim-cokeline/blob/master/lua/cokeline/defaults.lua
     components = {},
   })
 <
@@ -150,6 +150,10 @@ The `buffer` parameter is just a Lua table with the following keys:
     -- `bar/foo.md` and `baz/foo.md`, then the first will have `bar/` as its
     -- unique prefix and the second one will have `baz/`.
     unique_prefix = 'string',
+
+    -- The letter that is displayed when picking a buffer to either focus or
+    -- close it.
+    pick_letter = 'char',
 
     -- This needs the `kyazdani42/nvim-web/devicons` plugin to be installed.
     devicon = {
@@ -290,3 +294,9 @@ defined mappings:
   *<Plug>(cokeline-switch-next)*
     Switches the position of the currently focused buffer with the
     previous/next buffer in the bufferline.
+
+  *<Plug>(cokeline-pick-focus)*
+    Focus a buffer by its `pick_letter`.
+
+  *<Plug>(cokeline-pick-close)*
+    Close a buffer by its `pick_letter`.

@@ -1,7 +1,11 @@
+-- local math_abs = math.abs
 local math_floor = math.floor
 local math_max = math.max
 
-local gl_scrolloff = 5
+---@type table
+-- local gl_mut_prev_state
+
+-- local gl_scrolloff = 5
 
 ---@param available_space  number
 ---@param width_left_of_current  number
@@ -27,13 +31,47 @@ end
 ---@param width_left_of_current  number
 ---@param width_right_of_current  number
 ---@return number, number
-local slide_if_needed =
-  function(available_space, width_left_of_current, width_right_of_current)
+-- local slide_if_needed =
+--   function(available_space, width_left_of_current, width_right_of_current,
+--             current_buffer_index, prev_state)
 
-  return gl_scrolloff, gl_scrolloff
-end
+--   -- The first time the bufferline is rendered there is no previous state, so..
+--   if not gl_mut_prev_state then
+--     return 0, available_space
+--   end
+
+--   -- If the new current buffer was not fully in view in the previous state we..
+--   if current_buffer_index < prev_state.fully_in_view[1].index then
+--     local left =
+--       gl_scrolloff < width_left_of_current
+--       and gl_scrolloff
+--        or width_left_of_current
+--     local right = available_space - left
+--     return left, right
+
+--   elseif current_buffer_index >
+--           prev_state.fully_in_view[#prev_state.fully_in_view].index then
+--     local right =
+--       gl_scrolloff < width_right_of_current
+--       and gl_scrolloff
+--        or width_right_of_current
+--     local left = available_space - right
+--     return left, right
+--   end
+
+--   local index_range = math_abs(current_buffer_index - prev_state.current_index)
+--   local j = prev_state.current_index < current_buffer_index and 1 or -1
+
+--   local left, right = prev_state.spaces.left, prev_state.spaces.right
+--   for i=1,index_range do
+--     left = left + j * prev_state.fully_in_view[i].width
+--     right = right - j * prev_state.fully_in_view[i + 1].width
+--   end
+
+--   return left, right
+-- end
 
 return {
   center_current_buffer = center_current_buffer,
-  slide_if_needed = slide_if_needed,
+  -- slide_if_needed = slide_if_needed,
 }

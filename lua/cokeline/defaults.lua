@@ -68,7 +68,7 @@ local defaults = {
 ---Formats an error message.
 ---@param msg  string
 local echoerr = function(msg)
-  vim_echo({{('[cokeline.nvim]: %s'):format(msg), 'ErrorMsg'}}, true, {})
+  vim_echo({{('[nvim-cokeline]: %s'):format(msg), 'ErrorMsg'}}, true, {})
 end
 
 ---Updates the `settings` table with options from `preferences`, printing an

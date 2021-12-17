@@ -92,8 +92,8 @@ require('cokeline').setup({
 ```lua
 local get_hex = require('cokeline/utils').get_hex
 
-local yellow = vim.g.terminal_color_3
 local gren = vim.g.terminal_color_2
+local yellow = vim.g.terminal_color_3
 
 require('cokeline').setup({
   default_hl = {
@@ -218,6 +218,87 @@ reported by the LSP.
 
 ![lsp-styling](.github/images/lsp-styling.gif)
 
+### Buffer pick
+
+You can focus and close any buffer by typing its `pick_letter`. Letters are
+assigned by filename by default (e.g. `foo.txt` gets the letter `f`), and by
+keyboard reachability if the letter is already assigned to another buffer.
+
+<details>
+<summary>Click to see configuration</summary>
+
+```lua
+local is_picking_focus = require('cokeline/mappings').is_picking_focus
+local is_picking_close = require('cokeline/mappings').is_picking_close
+local get_hex = require('cokeline/utils').get_hex
+
+local red = vim.g.terminal_color_1
+local yellow = vim.g.terminal_color_3
+
+require('cokeline').setup({
+  default_hl = {
+    focused = {
+      fg = get_hex('Normal', 'fg'),
+      bg = get_hex('ColorColumn', 'bg'),
+    },
+    unfocused = {
+      fg = get_hex('Comment', 'fg'),
+      bg = get_hex('ColorColumn', 'bg'),
+    },
+  },
+
+  components = {
+    {
+      text = function(buffer) return (buffer.index ~= 1) and '▏' or '' end,
+    },
+    {
+      text = '  ',
+    },
+    {
+      text = function(buffer)
+        return
+          (is_picking_focus() or is_picking_close())
+            and buffer.pick_letter .. ' '
+             or buffer.devicon.icon
+      end,
+      hl = {
+        fg = function(buffer)
+          return
+            (is_picking_focus() and yellow)
+              or (is_picking_close() and red)
+              or buffer.devicon.color
+        end,
+        style = function(_)
+          return
+          (is_picking_focus() or is_picking_close())
+            and 'italic,bold'
+             or nil
+        end,
+      },
+    },
+    {
+      text = ' ',
+    },
+    {
+      text = function(buffer) return buffer.filename .. '  ' end,
+      hl = {
+        style = function(buffer) return buffer.is_focused and 'bold' or nil end,
+      }
+    },
+    {
+      text = '',
+      delete_buffer_on_left_click = true,
+    },
+    {
+      text = '  ',
+    },
+  },
+})
+```
+</details>
+
+![buffer-pick](.github/images/buffer-pick.gif)
+
 <!-- TODO -->
 <!-- ### Buffer filtering -->
 
@@ -241,13 +322,9 @@ them with a right click:
 
 ### Buffer re-ordering
 
-Don't like the order your buffers ended up in? Switch them around:
-
 ![reordering](.github/images/reordering.gif)
 
 ### Close icons
-
-Of course, you can add close icons to your `cokeline`:
 
 ![close-icons](.github/images/close-icons.gif)
 
@@ -427,6 +504,10 @@ buffer = {
   -- unique prefix and the second one will have `baz/`.
   unique_prefix = 'string',
 
+  -- The letter that is displayed when picking a buffer to either focus or
+  -- close it.
+  pick_letter = 'char',
+
   -- This needs the `kyazdani42/nvim-web-devicons` plugin to be installed.
   devicon = {
     -- An icon representing the buffer's filetype.
@@ -565,6 +646,12 @@ side of other mappings:
 
 -- Switches the position of the current buffer with the buffer of index `i`.
 <Plug>(cokeline-switch-i)
+
+-- Focus a buffer by its `pick_letter`.
+<Plug>(cokeline-pick-focus)
+
+-- Close a buffer by its `pick_letter`.
+<Plug>(cokeline-pick-close)
 ```
 
 A possible configuration could be:

@@ -20,6 +20,11 @@ local gl_mut_bufnrs = {}
 ---@type bufnr
 local gl_mut_current_bufnr
 
+local gl_mut_valid_pick_letters =
+  'asdfjkl;ghnmxcvbziowerutyqpASDFJKLGHNMXCVBZIOWERUTYQP'
+
+local gl_mut_taken_pick_letters = {}
+
 ---@diagnostic disable: duplicate-doc-class
 
 ---@alias vidx  number
@@ -38,6 +43,7 @@ local gl_mut_current_bufnr
 ---@field unique_prefix string
 ---@field filename      string
 ---@field filetype      string
+---@field pick_letter   string
 ---@field devicon       table<string, string>
 ---@field diagnostics   table<string, number>
 
@@ -84,9 +90,34 @@ local compute_unique_prefixes = function(buffers)
       vim_fn.join(vim_fn.reverse(prefixes[i]), path_separator),
       #prefixes[i] > 0 and path_separator or '',
     })
-    end
+  end
 
   return buffers
+end
+
+---@param filename  string
+---@param bufnr  bufnr
+---@return string
+local get_pick_letter = function(filename, bufnr)
+  if gl_mut_taken_pick_letters[bufnr] then
+    return gl_mut_taken_pick_letters[bufnr]
+  end
+
+  local init_letter = filename:sub(1, 1)
+  if gl_mut_valid_pick_letters:find(init_letter) then
+    gl_mut_valid_pick_letters = gl_mut_valid_pick_letters:gsub(init_letter, '')
+    gl_mut_taken_pick_letters[bufnr] = init_letter
+    return init_letter
+  end
+
+  if #gl_mut_valid_pick_letters > 0 then
+    local first_valid = gl_mut_valid_pick_letters:sub(1, 1)
+    gl_mut_valid_pick_letters = gl_mut_valid_pick_letters:sub(2)
+    gl_mut_taken_pick_letters[bufnr] = first_valid
+    return first_valid
+  end
+
+  return '?'
 end
 
 ---@param path  string
@@ -156,6 +187,8 @@ local new_buffer = function(b)
     and opts.filetype
      or 'netrw'
 
+  local pick_letter = get_pick_letter(filename, number)
+
   local devicon =
     has_devicons
     and get_devicon(path, filename, type)
@@ -175,6 +208,7 @@ local new_buffer = function(b)
     unique_prefix = unique_prefix,
     filename = filename,
     filetype = filetype,
+    pick_letter = pick_letter,
     devicon = devicon,
     diagnostics = diagns,
   }
