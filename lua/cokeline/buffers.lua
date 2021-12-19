@@ -5,6 +5,7 @@ local tbl_concat = table.concat
 local tbl_sort = table.sort
 
 local vim_bo = vim.bo
+local vim_cmd = vim.cmd
 local vim_contains = vim.tbl_contains
 local vim_diagnostics = vim.diagnostic or vim.lsp.diagnostic
 local vim_filter = vim.tbl_filter
@@ -18,7 +19,7 @@ local gl_settings, gl_buffer_sorter
 local gl_mut_bufnrs = {}
 
 ---@type bufnr
-local gl_mut_current_bufnr
+local gl_mut_current_vidx
 
 local gl_mut_valid_pick_letters =
   'asdfjkl;ghnmxcvbziowerutyqpASDFJKLGHNMXCVBZIOWERUTYQP'
@@ -187,7 +188,10 @@ local new_buffer = function(b)
     and opts.filetype
      or 'netrw'
 
-  local pick_letter = get_pick_letter(filename, number)
+  local pick_letter =
+    filename ~= '[No Name]'
+    and get_pick_letter(filename, number)
+     or '?'
 
   local devicon =
     has_devicons
@@ -228,9 +232,9 @@ end
 
 ---Sorter used to open new buffers at the end of the bufferline.
 ---@param vidxs  vidx[]
----@param current_bufnr  bufnr
+---@param current_vidx  vidx
 ---@return fun(buffer1: Buffer, buffer2: Buffer): boolean
-local sort_by_new_after_last = function(vidxs, current_bufnr)
+local sort_by_new_after_last = function(vidxs, current_vidx)
   ---@param buffer1  Buffer
   ---@param buffer2  Buffer
   ---@return boolean
@@ -252,9 +256,9 @@ end
 
 ---Sorter used to open new buffers next to the current buffer.
 ---@param vidxs  vidx[]
----@param current_bufnr  bufnr
+---@param current_vidx  vidx
 ---@return fun(buffer1: Buffer, buffer2: Buffer): boolean
-local sort_by_new_after_current = function(vidxs, current_bufnr)
+local sort_by_new_after_current = function(vidxs, current_vidx)
   ---@param buffer1  Buffer
   ---@param buffer2  Buffer
   ---@return boolean
@@ -262,17 +266,17 @@ local sort_by_new_after_current = function(vidxs, current_bufnr)
     if is_old(buffer1) and is_old(buffer2) then
       -- If both buffers are either before or after (inclusive) the current
       -- buffer then respect the current order.
-      if (vidxs[buffer1.number] - vidxs[current_bufnr])
-          * (vidxs[buffer2.number] - vidxs[current_bufnr]) >= 0 then
+      if (vidxs[buffer1.number] - current_vidx)
+          * (vidxs[buffer2.number] - current_vidx) >= 0 then
         return vidxs[buffer1.number] < vidxs[buffer2.number]
       end
-      return vidxs[buffer1.number] < vidxs[current_bufnr]
+      return vidxs[buffer1.number] < current_vidx
 
     elseif is_old(buffer1) and is_new(buffer2) then
-      return vidxs[buffer1.number] <= vidxs[current_bufnr]
+      return vidxs[buffer1.number] <= current_vidx
 
     elseif is_new(buffer1) and is_old(buffer2) then
-      return vidxs[buffer2.number] > vidxs[current_bufnr]
+      return vidxs[buffer2.number] > current_vidx
 
     else
       return buffer1.number < buffer2.number
@@ -285,6 +289,7 @@ end
 local switch_bufnrs_order = function(vidx1, vidx2)
   gl_mut_bufnrs[vidx1], gl_mut_bufnrs[vidx2] =
     gl_mut_bufnrs[vidx2], gl_mut_bufnrs[vidx1]
+  vim_cmd('redrawtabline')
 end
 
 ---@return Buffer[]
@@ -308,13 +313,13 @@ local get_valid_buffers = function()
     vidxs[bufnr] = i
   end
 
-  tbl_sort(valid_buffers, gl_buffer_sorter(vidxs, gl_mut_current_bufnr))
+  tbl_sort(valid_buffers, gl_buffer_sorter(vidxs, gl_mut_current_vidx))
 
   gl_mut_bufnrs = {}
   for i, buffer in ipairs(valid_buffers) do
     buffer._vidx = i
     gl_mut_bufnrs[i] = buffer.number
-    if buffer.is_focused then gl_mut_current_bufnr = buffer.number end
+    if buffer.is_focused then gl_mut_current_vidx = i end
   end
 
   rq_mappings.set_valid_buffers(valid_buffers)

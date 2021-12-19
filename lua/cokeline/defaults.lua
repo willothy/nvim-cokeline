@@ -20,6 +20,7 @@ local defaults = {
   rendering = {
     max_buffer_width = 999,
     slider = rq_sliders.center_current_buffer,
+    offsets = false,
   },
 
   ---@type table<string, Hl>

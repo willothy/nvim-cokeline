@@ -1,4 +1,3 @@
-local vim_cmd = vim.cmd
 local vim_fn = vim.fn
 local vim_opt = vim.opt
 
@@ -8,9 +7,9 @@ local toggle = function()
 end
 
 local setup = function()
-  vim_cmd([[
+  vim.cmd([[
   augroup cokeline_toggle
-    autocmd VimEnter,BufAdd * lua require"cokeline/augroups".toggle()
+    autocmd VimEnter,BufAdd * lua require('cokeline/augroups').toggle()
   augroup END
   ]])
 end

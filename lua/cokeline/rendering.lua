@@ -1,4 +1,5 @@
 local rq_components = require('cokeline/components')
+-- local rq_offset = require('cokeline/offset')
 
 local tbl_insert = table.insert
 local tbl_remove = table.remove
@@ -17,14 +18,14 @@ local gl_mut_current_buffer_index
 
 ---@param buffers  Buffer[]
 ---@return Buffer
-local find_current_buffer = function(buffers)
+local find_current_buffer = function(buffers, previous_buffer_index)
   local focused_buffer = vim_filter(function(buffer)
     return buffer.is_focused
   end, buffers)[1]
 
   return
     focused_buffer
-    or buffers[gl_mut_current_buffer_index]
+    or buffers[previous_buffer_index]
     or buffers[#buffers]
 end
 
@@ -153,37 +154,51 @@ end
 ---@param visible_buffers  Buffer[]
 ---@return string
 local render = function(visible_buffers)
-  local current_buffer = find_current_buffer(visible_buffers)
+  -- Workflow in pseudo F# syntax is:
+  -- get_available_space
+  -- >> check_if_sidebar_offsets_need_to_be_displayed
+  -- >> find_current_buffer
+  -- >> check_if_current_buffer_alone_fits
+  -- >> render_all_buffers_{left,right}_of_current
+  -- >> get_available_space_{left,right}_of_current_buffer
+  -- >> check_if_buffers_{left,right}_of_current_need_to_be_trimmed
+  -- >> render_components
+
+  local available_space = vim_opt.columns._value
+
+  local offset_components = {}
+  -- if gl_settings.offsets then
+  --   offset_components = rq_offset.get_sidebar_components(gl_settings.offsets)
+  --   available_space =
+  --     available_space - get_width_of_components(offset_components)
+  -- end
+
+  local current_buffer =
+    find_current_buffer(visible_buffers, gl_mut_current_buffer_index)
   gl_mut_current_buffer_index = current_buffer.index
 
   local components_of_current, width_of_current =
     buffer_to_components(current_buffer)
 
-  local columns = vim_opt.columns._value
-
-  if width_of_current >= columns then
+  if width_of_current >= available_space then
     if current_buffer.index > 1 then
       components_of_current =
-        trim_components(components_of_current, columns, 'left')
+        trim_components(components_of_current, available_space, 'left')
     end
     if current_buffer.index < #visible_buffers then
       components_of_current =
-        trim_components(components_of_current, columns, 'right')
+        trim_components(components_of_current, available_space, 'right')
     end
     return rq_components.render_components(components_of_current)
   end
 
-  local buffers_left_of_current =
-    {tbl_unpack(visible_buffers, 1, current_buffer.index - 1)}
-
-  local buffers_right_of_current =
-    {tbl_unpack(visible_buffers, current_buffer.index + 1, #visible_buffers)}
-
   local components_left_of_current, width_left_of_current =
-    buffers_to_components(buffers_left_of_current)
+    buffers_to_components({
+      tbl_unpack(visible_buffers, 1, current_buffer.index - 1)})
 
   local components_right_of_current, width_right_of_current =
-    buffers_to_components(buffers_right_of_current)
+    buffers_to_components({
+      tbl_unpack(visible_buffers, current_buffer.index + 1, #visible_buffers)})
 
   local components = vim_list_extend(
     vim_list_extend(components_left_of_current, components_of_current),
@@ -191,7 +206,7 @@ local render = function(visible_buffers)
   )
 
   local available_space_left, available_space_right = gl_settings.slider(
-    columns - width_of_current,
+    available_space - width_of_current,
     width_left_of_current,
     width_right_of_current
   )
@@ -205,10 +220,11 @@ local render = function(visible_buffers)
   end
 
   if width_right_of_current > available_space_right then
-    components = trim_components(components, columns, 'right')
+    components = trim_components(components, available_space, 'right')
   end
 
-  return rq_components.render_components(components)
+  return rq_components.render_components(
+    vim_list_extend(offset_components, components))
 end
 
 ---@param settings  table

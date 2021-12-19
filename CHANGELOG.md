@@ -7,6 +7,23 @@ The format is based on [Keep a Changelog], and this project adheres to
 
 ## [Unreleased]
 
+### Added
+
+- Added ability to focus or close a buffer by typing its `pick_letter` after
+  triggering either `<Plug>(cokeline-pick-focus)` or
+  `<Plug>(cokeline-pick-close)`
+  ([#16](https://github.com/noib3/nvim-cokeline/issues/16)).
+
+### Fixed
+
+- Fixed an error when deleting a buffer with no buffers currently focused, e.g.
+  when using filetree plugins
+  ([#32](https://github.com/noib3/nvim-cokeline/issues/32)).
+
+- Now checking that a buffer's filename isn't `[No Name]` when assigning its
+  `pick_letter` ([#34](https://github.com/noib3/nvim-cokeline/issues/34)).
+
+
 ## [0.1.0] - 2021-12-07
 
 ### Added
