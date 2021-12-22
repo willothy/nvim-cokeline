@@ -100,17 +100,21 @@ end
 ---@param bufnr  bufnr
 ---@return string
 local get_pick_letter = function(filename, bufnr)
+  -- If the bufnr has already a letter associated to it return that.
   if gl_mut_taken_pick_letters[bufnr] then
     return gl_mut_taken_pick_letters[bufnr]
   end
 
+  -- If the initial letter of the filename is valid and it hasn't already been
+  -- assigned return that.
   local init_letter = filename:sub(1, 1)
-  if gl_mut_valid_pick_letters:find(init_letter) then
+  if gl_mut_valid_pick_letters:find(init_letter, nil, true) then
     gl_mut_valid_pick_letters = gl_mut_valid_pick_letters:gsub(init_letter, '')
     gl_mut_taken_pick_letters[bufnr] = init_letter
     return init_letter
   end
 
+  -- Return the first valid letter if there is one.
   if #gl_mut_valid_pick_letters > 0 then
     local first_valid = gl_mut_valid_pick_letters:sub(1, 1)
     gl_mut_valid_pick_letters = gl_mut_valid_pick_letters:sub(2)
@@ -118,6 +122,8 @@ local get_pick_letter = function(filename, bufnr)
     return first_valid
   end
 
+  -- Finally, just return a '?' (this is rarely reached, you'd need to have
+  -- opened 54 buffers in the same session).
   return '?'
 end
 
