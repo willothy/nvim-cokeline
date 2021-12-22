@@ -9,9 +9,9 @@ local vim_opt = vim.opt
 
 local gl_settings
 
----@param preferences  table
+---@param preferences  table | nil
 local setup = function(preferences)
-  gl_settings = rq_defaults.update(preferences)
+  gl_settings = rq_defaults.update(preferences or {})
   rq_augroups.setup()
   rq_buffers.setup(gl_settings.buffers)
   rq_mappings.setup(gl_settings.mappings)

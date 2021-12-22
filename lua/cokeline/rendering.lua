@@ -17,6 +17,7 @@ local gl_comps, gl_default_hls, gl_settings
 local gl_mut_current_buffer_index
 
 ---@param buffers  Buffer[]
+---@param previous_buffer_index  index
 ---@return Buffer
 local find_current_buffer = function(buffers, previous_buffer_index)
   local focused_buffer = vim_filter(function(buffer)
@@ -33,7 +34,7 @@ end
 ---@return number
 local get_width_of_components = function(components)
   local width_of_components = 0
-  for _, component in ipairs(components) do
+  for _, component in pairs(components) do
     width_of_components = width_of_components + component.width
   end
   return width_of_components
