@@ -69,6 +69,23 @@ The valid keys are:
       -- value.
       -- default: `999`.
       max_buffer_width = int,
+
+      -- Left and right sidebars to integrate nicely with file explorer
+      -- plugins. Each of these is a table containing a `filetype` key and a
+      -- list of `components` to be rendered in the sidebar.
+      -- The last component will be automatically space padded if necessary
+      -- to ensure the sidebar and the window below it have the same width.
+      -- NOTE: unlike the `components` config option described below, right now
+      -- these components don't allow any of their fields (text, hl, etc.) to
+      -- be defined as a function of `buffer`.
+      left_sidebar = {
+        filetype = '<filetype>',
+        components = {..},
+      },
+      right_sidebar = {
+        filetype = '<filetype>',
+        components = {..},
+      },
     },
 
     -- The default highlight group values for focused and unfocused buffers.

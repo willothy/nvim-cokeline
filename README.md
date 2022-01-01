@@ -305,6 +305,92 @@ require('cokeline').setup({
 <!-- TODO -->
 <!-- ### Maximum buffer widths -->
 
+### Sidebars
+
+You can add left and right sidebars to integrate nicely with file explorer
+plugins like
+[nvim-tree.lua](https://github.com/kyazdani42/nvim-tree.lua),
+[CHADTree](https://github.com/ms-jpq/chadtree) or
+[NERDTree](https://github.com/preservim/nerdtree).
+
+<details>
+<summary>Click to see configuration</summary>
+
+```lua
+local get_hex = require('cokeline/utils').get_hex
+
+local yellow = vim.g.terminal_color_3
+
+require('cokeline').setup({
+  default_hl = {
+    focused = {
+      fg = get_hex('Normal', 'fg'),
+      bg = get_hex('ColorColumn', 'bg'),
+    },
+    unfocused = {
+      fg = get_hex('Comment', 'fg'),
+      bg = get_hex('ColorColumn', 'bg'),
+    },
+  },
+
+  rendering = {
+    left_sidebar = {
+      filetype = 'NvimTree',
+      components = {
+        {
+          text = '  NvimTree',
+          hl = {
+            fg = yellow,
+            bg = get_hex('NvimTreeNormal', 'bg'),
+            style = 'bold'
+          }
+        },
+      }
+    },
+  },
+
+  components = {
+    {
+      text = function(buffer) return (buffer.index ~= 1) and '▏' or '' end,
+    },
+    {
+      text = '  ',
+    },
+    {
+      text = function(buffer)
+        return buffer.devicon.icon
+      end,
+      hl = {
+        fg = function(buffer)
+          return buffer.devicon.color
+        end,
+      },
+    },
+    {
+      text = ' ',
+    },
+    {
+      text = function(buffer) return buffer.filename .. '  ' end,
+      hl = {
+        style = function(buffer)
+          return buffer.is_focused and 'bold' or nil
+        end,
+      }
+    },
+    {
+      text = '',
+      delete_buffer_on_left_click = true,
+    },
+    {
+      text = '  ',
+    },
+  },
+})
+```
+</details>
+
+![sidebars](.github/images/sidebars.png)
+
 ### Unique buffer names
 
 When files with the same filename belonging to different directories are opened
@@ -424,6 +510,23 @@ require('cokeline').setup({
     -- value.
     -- default: `999`.
     max_buffer_width = int,
+
+    -- Left and right sidebars to integrate nicely with file explorer plugins.
+    -- Each of these is a table containing a `filetype` key and a list of
+    -- `components` to be rendered in the sidebar.
+    -- The last component will be automatically space padded if necessary
+    -- to ensure the sidebar and the window below it have the same width.
+    -- NOTE: unlike the `components` config option described below, right now
+    -- these components don't allow any of their fields (text, hl, etc.) to be
+    -- defined as a function of `buffer`.
+    left_sidebar = {
+      filetype = '<filetype>',
+      components = {..},
+    },
+    right_sidebar = {
+      filetype = '<filetype>',
+      components = {..},
+    },
   },
 
   -- The default highlight group values for focused and unfocused buffers.
@@ -459,7 +562,7 @@ require('cokeline').setup({
   -- A list of components to be rendered for each buffer. Check out the section
   -- below explaining what this value can be set to.
   -- default: see `/lua/cokeline/defaults.lua`
-  components = {},
+  components = {..},
 })
 ```
 

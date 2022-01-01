@@ -20,7 +20,8 @@ local defaults = {
   rendering = {
     max_buffer_width = 999,
     slider = rq_sliders.center_current_buffer,
-    offsets = false,
+    left_sidebar = false,
+    right_sidebar = false,
   },
 
   ---@type table<string, Hl>
@@ -88,7 +89,7 @@ update = function(settings, preferences, key)
       echoerr(('Configuration option "%s" does not exist!'):format(key_tree))
     else
       updated[k] =
-        (type(v) == 'table' and not vim_tbl_islist(v))
+        (type(v) == 'table' and not vim_tbl_islist(v) and not k:find('sidebar'))
         and update(settings[k], v, key_tree)
          or v
     end

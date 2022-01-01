@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog], and this project adheres to
 
 ## [Unreleased]
 
+## [0.2.0] - 2022-01-01
+
 ### Added
 
 - Added ability to focus or close a buffer by typing its `pick_letter` after
@@ -14,15 +16,25 @@ The format is based on [Keep a Changelog], and this project adheres to
   `<Plug>(cokeline-pick-close)`
   ([#16](https://github.com/noib3/nvim-cokeline/issues/16)).
 
+- Config options to configure left and right sidebars to integrate nicely with
+  file explorer plugins
+  ([#31](https://github.com/noib3/nvim-cokeline/issues/31)).
+
 ### Fixed
 
 - Fixed an error when deleting a buffer with no buffers currently focused, e.g.
   when using filetree plugins
   ([#32](https://github.com/noib3/nvim-cokeline/issues/32)).
 
-- Now checking that a buffer's filename isn't `[No Name]` when assigning its
+- Checking that a buffer's filename isn't `[No Name]` when assigning its
   `pick_letter` ([#34](https://github.com/noib3/nvim-cokeline/issues/34)).
 
+- Using `{}` as the `preferences` table when `nil` is passed to the `setup`
+  function ([#36](https://github.com/noib3/nvim-cokeline/issues/36)).
+
+- Using plain `string.find` when setting pick letters to work w/ filenames
+  with special characters
+  ([#37](https://github.com/noib3/nvim-cokeline/issues/37)).
 
 ## [0.1.0] - 2021-12-07
 
@@ -64,5 +76,6 @@ The format is based on [Keep a Changelog], and this project adheres to
 [Semantic Versioning]: https://semver.org/spec/v2.0.0.html
 [Keep a changelog]: https://keepachangelog.com/en/1.0.0/
 
-[unreleased]: https://github.com/noib3/nvim-cokeline/compare/v0.1.0...HEAD
+[unreleased]: https://github.com/noib3/nvim-cokeline/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/noib3/nvim-cokeline/releases/tag/v0.2.0
 [0.1.0]: https://github.com/noib3/nvim-cokeline/releases/tag/v0.1.0

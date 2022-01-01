@@ -1,5 +1,5 @@
 local rq_components = require('cokeline/components')
--- local rq_offset = require('cokeline/offset')
+local rq_sidebars = require('cokeline/sidebars')
 
 local tbl_insert = table.insert
 local tbl_remove = table.remove
@@ -87,9 +87,11 @@ local trim_components = function(components, available_space, direction)
     width_of_components = width_of_components - components[i].width
     last_removed_component = tbl_remove(components, i)
     i = next(i)
+    if #components == 0 then break end
   end
 
-  if continuation_fmt_width < available_space - width_of_components then
+  if (continuation_fmt_width < available_space - width_of_components)
+      or #components == 0 then
     tbl_insert(components, prev(i), rq_components.shorten_component(
       last_removed_component,
       available_space - width_of_components,
@@ -155,9 +157,9 @@ end
 ---@param visible_buffers  Buffer[]
 ---@return string
 local render = function(visible_buffers)
-  -- Workflow in pseudo F# syntax is:
-  -- get_available_space
-  -- >> check_if_sidebar_offsets_need_to_be_displayed
+  -- Pipeline in pseudo F# syntax is:
+  -- check_if_sidebars_need_to_be_displayed
+  -- >> get_available_space
   -- >> find_current_buffer
   -- >> check_if_current_buffer_alone_fits
   -- >> render_all_buffers_{left,right}_of_current
@@ -165,14 +167,22 @@ local render = function(visible_buffers)
   -- >> check_if_buffers_{left,right}_of_current_need_to_be_trimmed
   -- >> render_components
 
-  local available_space = vim_opt.columns._value
+  -- Get left and right sidebar components.
+  local left_sidebar_components, right_sidebar_components =
+    (gl_settings.left_sidebar or gl_settings.right_sidebar)
+    and rq_sidebars.get_left_right_sidebar_components(
+          gl_settings.left_sidebar,
+          gl_settings.right_sidebar,
+          gl_default_hls,
+          vim_fn.winlayout()
+        )
+     or {}, {}
 
-  local offset_components = {}
-  -- if gl_settings.offsets then
-  --   offset_components = rq_offset.get_sidebar_components(gl_settings.offsets)
-  --   available_space =
-  --     available_space - get_width_of_components(offset_components)
-  -- end
+  -- Compute available space for the buffer components.
+  local available_space =
+    vim_opt.columns._value
+    - get_width_of_components(left_sidebar_components)
+    - get_width_of_components(right_sidebar_components)
 
   local current_buffer =
     find_current_buffer(visible_buffers, gl_mut_current_buffer_index)
@@ -190,7 +200,10 @@ local render = function(visible_buffers)
       components_of_current =
         trim_components(components_of_current, available_space, 'right')
     end
-    return rq_components.render_components(components_of_current)
+    return
+      rq_components.render_components(left_sidebar_components)
+      .. rq_components.render_components(components_of_current)
+      .. rq_components.render_components(right_sidebar_components)
   end
 
   local components_left_of_current, width_left_of_current =
@@ -216,7 +229,7 @@ local render = function(visible_buffers)
     components = trim_components(
       components,
       available_space_left + width_of_current + width_right_of_current,
-     'left'
+      'left'
     )
   end
 
@@ -224,8 +237,10 @@ local render = function(visible_buffers)
     components = trim_components(components, available_space, 'right')
   end
 
-  return rq_components.render_components(
-    vim_list_extend(offset_components, components))
+  return
+    rq_components.render_components(left_sidebar_components)
+    .. rq_components.render_components(components)
+    .. rq_components.render_components(right_sidebar_components)
 end
 
 ---@param settings  table
@@ -238,6 +253,10 @@ local setup = function(settings, default_hl, comps)
 end
 
 return {
+  sort_by_decreasing_priority = sort_by_decreasing_priority,
+  sort_by_increasing_idx = sort_by_increasing_idx,
+  trim_components = trim_components,
+  get_width_of_components = get_width_of_components,
   render = render,
   setup = setup,
 }
