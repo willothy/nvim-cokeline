@@ -51,15 +51,15 @@ end
 ---@param goal  '"switch"' | '"focus"'
 ---@param index  index
 local by_index = function(goal, index)
-  local current = get_vidx_from_condition(
-    gl_mut_valid_buffers, function(buffer) return buffer.is_focused end)
-  if not current then return end
-
   local target = get_vidx_from_condition(
     gl_mut_visible_buffers, function(buffer) return buffer.index == index end)
   if not target then return end
 
   if goal == 'switch' then
+    local current = get_vidx_from_condition(
+      gl_mut_valid_buffers, function(buffer) return buffer.is_focused end)
+    if not current then return end
+
     require('cokeline/buffers').switch_bufnrs_order(current, target)
   elseif goal == 'focus' then
     vim_cmd('buffer ' .. gl_mut_valid_buffers[target].number)
