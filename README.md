@@ -490,6 +490,12 @@ require('cokeline').setup({
     -- default: `false`.
     filter_visible = function(buffer) -> true | false,
 
+    -- Which buffer to focus when a buffer is deleted, `prev` focuses the
+    -- buffer to the left of the deleted one while `next` focuses the one the
+    -- right. Turned off by default.
+    -- default: `false`
+    focus_on_delete = 'prev' | 'next',
+
     -- If set to `last` new buffers are added to the end of the bufferline,
     -- if `next` they are added next to the current buffer.
     -- default: 'last',

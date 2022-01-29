@@ -1,4 +1,5 @@
 local has_devicons, rq_devicons = pcall(require, 'nvim-web-devicons')
+local rq_augroups = require('cokeline/augroups')
 local rq_mappings = require('cokeline/mappings')
 
 local tbl_concat = table.concat
@@ -328,6 +329,7 @@ local get_valid_buffers = function()
     if buffer.is_focused then gl_mut_current_vidx = i end
   end
 
+  rq_augroups.set_valid_buffers(valid_buffers)
   rq_mappings.set_valid_buffers(valid_buffers)
 
   return valid_buffers

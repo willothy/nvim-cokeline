@@ -10,6 +10,7 @@ local defaults = {
   buffers = {
     filter_valid = false,
     filter_visible = false,
+    focus_on_delete = false,
     new_buffers_position = 'last',
   },
 

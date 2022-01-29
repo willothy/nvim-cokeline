@@ -12,7 +12,7 @@ local gl_settings
 ---@param preferences  table | nil
 local setup = function(preferences)
   gl_settings = rq_defaults.update(preferences or {})
-  rq_augroups.setup()
+  rq_augroups.setup({ focus_on_delete = gl_settings.buffers.focus_on_delete })
   rq_buffers.setup(gl_settings.buffers)
   rq_mappings.setup(gl_settings.mappings)
   local comps = rq_components.cmps_to_comps(gl_settings.components)
