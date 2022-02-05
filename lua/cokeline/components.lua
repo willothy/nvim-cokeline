@@ -8,8 +8,15 @@ local vim_fn = vim.fn
 local vim_map = vim.tbl_map
 
 local gl_continuation_fmts = {
-  edges = { left = ' …%s', right = '%s… ', },
-  buffers = { left = '…%s', right = '%s…', },
+  edges = {
+    left = ' …%s',
+    right = '%s… ',
+  },
+  buffers = {
+    left = '…%s',
+    middle = '%s…%s',
+    right = '%s…',
+  },
 }
 
 ---@diagnostic disable: duplicate-doc-class
@@ -50,7 +57,10 @@ local cmp_to_comp = function(cmp, idx)
     text = text,
     hl = hl,
     delete_buffer_on_left_click = delete_buffer_on_left_click,
-    truncation = { priority = priority, direction = direction, },
+    truncation = {
+      priority = priority,
+      direction = direction,
+    },
     idx = idx,
   }
 end
@@ -129,21 +139,38 @@ local shorten_component = function(component, available_space, direction)
     and gl_continuation_fmts.edges[direction]
      or gl_continuation_fmts.buffers[component.truncation.direction]
 
-  local net_available_space =
-    available_space - vim_fn.strwidth(continuation_fmt:format(''))
+  direction = direction or component.truncation.direction
+  local text
 
-  local start_char =
-    (direction or component.truncation.direction) == 'left'
-    and component.width - net_available_space
-     or 0
+  if direction ~= 'middle' then
+    local net_available_space =
+      available_space - vim_fn.strwidth(continuation_fmt:format(''))
 
-  local cut_text =
-    vim_fn.strcharpart(component.text, start_char, net_available_space)
+    local start_char =
+      (direction or component.truncation.direction) == 'left'
+      and component.width - net_available_space
+       or 0
 
-  local text =
-    vim_fn.strwidth(cut_text) == net_available_space
-    and continuation_fmt:format(cut_text)
-     or continuation_fmt:format(str_rep(' ', net_available_space))
+    local cut_text =
+      vim_fn.strcharpart(component.text, start_char, net_available_space)
+
+    text =
+      vim_fn.strwidth(cut_text) == net_available_space
+      and continuation_fmt:format(cut_text)
+       or continuation_fmt:format(str_rep(' ', net_available_space))
+  else
+    local net_available_space =
+      available_space - vim_fn.strwidth(continuation_fmt:format('', ''))
+
+    local space_left = math.floor(net_available_space / 2)
+    local space_right = space_left + net_available_space % 2
+
+    local text_left = vim_fn.strcharpart(component.text, 0, space_left)
+    local text_right = vim_fn.strcharpart(
+      component.text, component.width - space_right, space_right)
+
+    text = continuation_fmt:format(text_left, text_right)
+  end
 
   local width = vim_fn.strwidth(text)
 

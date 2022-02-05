@@ -67,7 +67,7 @@ local trim_components = function(components, available_space, direction)
 
   local continuation_fmt_width =
     vim_fn.strwidth(rq_components.gl_continuation_fmts[
-      direction and 'edges' or 'buffers'].left:format(''))
+      direction and 'edges' or 'buffers'].left:format('')) -- aka 1
 
   local next =
     direction == 'left'
@@ -181,8 +181,8 @@ local render = function(visible_buffers)
   -- Compute available space for the buffer components.
   local available_space =
     vim_opt.columns._value
-    - get_width_of_components(left_sidebar_components)
-    - get_width_of_components(right_sidebar_components)
+      - get_width_of_components(left_sidebar_components)
+      - get_width_of_components(right_sidebar_components)
 
   local current_buffer =
     find_current_buffer(visible_buffers, gl_mut_current_buffer_index)
@@ -192,6 +192,10 @@ local render = function(visible_buffers)
     buffer_to_components(current_buffer)
 
   if width_of_current >= available_space then
+    if #visible_buffers == 1 then
+      components_of_current =
+        trim_components(components_of_current, available_space)
+    end
     if current_buffer.index > 1 then
       components_of_current =
         trim_components(components_of_current, available_space, 'left')

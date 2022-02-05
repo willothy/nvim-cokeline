@@ -12,6 +12,8 @@ The format is based on [Keep a Changelog], and this project adheres to
 - `buffers.focus_on_delete` config option to choose which buffer to focus after
   a bufer is deleted.
 
+- component option `truncation.direction` can be set to `'middle'`.
+
 ## [0.2.0] - 2022-01-01
 
 ### Added

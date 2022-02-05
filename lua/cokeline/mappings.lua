@@ -36,12 +36,6 @@ end
 ---@param cmd  '"switch"' | '"focus"'
 ---@param step  '-1' | '1'
 local by_step = function(cmd, step)
-  -- TODO: do I need this?
-  -- if vim_opt.showtabline._value == 0 then
-  --   _G.cokeline.valid_buffers =
-  --     buffers.get_valid_buffers(_G.cokeline.valid_buffers)
-  -- end
-
   local current_buffer = vim_filter(
     function(buffer) return buffer.is_focused end,
     _G.cokeline.valid_buffers
@@ -49,7 +43,6 @@ local by_step = function(cmd, step)
   if not current_buffer then return end
 
   local target_valid_index = current_buffer._valid_index + step
-  -- TODO: does this work?
   local target_buffer =
     (_G.cokeline.valid_buffers[target_valid_index])
     or (gl_settings.cycle_prev_next and _G.cokeline.valid_buffers

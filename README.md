@@ -695,7 +695,7 @@ Every component passed to the `components` list has to be a table of the form:
     priority = int,
 
     -- default: `right`.
-    direction = 'left' | 'right',
+    direction = 'left' | 'middle' | 'right',
   },
 }
 ```
@@ -724,9 +724,9 @@ smaller integer value: a component with a priority of 5 will be dropped
 
 The `truncation.direction` key simply controls from which direction a component
 is shortened. For example, you might want to set the `truncation.direction` of
-a component displaying a filename to `'left'`, so that if the filename has to
-be shortened you'll still be able to see its extension, like in the following
-example:
+a component displaying a filename to `'middle'` or `'left'`, so that if
+the filename has to be shortened you'll still be able to see its extension,
+like in the following example (where it's set to `'left'`):
 
 ![buffer-truncation](.github/images/buffer-truncation.png)
 

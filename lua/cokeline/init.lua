@@ -8,9 +8,6 @@ local rendering = require('cokeline/rendering')
 local vim_opt = vim.opt
 
 _G.cokeline = {
-  --@type table
-  settings = {},
-
   ---@type Buffer[]
   valid_buffers = {},
 
