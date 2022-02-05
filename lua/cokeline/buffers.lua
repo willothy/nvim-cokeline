@@ -1,40 +1,37 @@
 local has_devicons, rq_devicons = pcall(require, 'nvim-web-devicons')
-local rq_augroups = require('cokeline/augroups')
-local rq_mappings = require('cokeline/mappings')
 
 local tbl_concat = table.concat
 local tbl_sort = table.sort
 
 local vim_bo = vim.bo
 local vim_cmd = vim.cmd
-local vim_contains = vim.tbl_contains
 local vim_diagnostics = vim.diagnostic or vim.lsp.diagnostic
 local vim_filter = vim.tbl_filter
 local vim_fn = vim.fn
 local vim_map = vim.tbl_map
 local vim_split = vim.split
 
-local gl_settings, gl_buffer_sorter
+local gl_settings, buffer_sorter
 
----@type bufnr[]
-local gl_mut_bufnrs = {}
+---@type table<bufnr, valid_index>
+local order = {}
 
 ---@type bufnr
-local gl_mut_current_vidx
+local current_valid_index
 
-local gl_mut_valid_pick_letters =
+local valid_pick_letters =
   'asdfjkl;ghnmxcvbziowerutyqpASDFJKLGHNMXCVBZIOWERUTYQP'
 
-local gl_mut_taken_pick_letters = {}
+local taken_pick_letters = {}
 
 ---@diagnostic disable: duplicate-doc-class
 
----@alias vidx  number
+---@alias valid_index  number
 ---@alias index  number
 ---@alias bufnr  number
 
 ---@class Buffer
----@field _vidx         vidx
+---@field _valid_index  valid_index
 ---@field index         index
 ---@field number        bufnr
 ---@field type          string
@@ -102,24 +99,24 @@ end
 ---@return string
 local get_pick_letter = function(filename, bufnr)
   -- If the bufnr has already a letter associated to it return that.
-  if gl_mut_taken_pick_letters[bufnr] then
-    return gl_mut_taken_pick_letters[bufnr]
+  if taken_pick_letters[bufnr] then
+    return taken_pick_letters[bufnr]
   end
 
   -- If the initial letter of the filename is valid and it hasn't already been
   -- assigned return that.
   local init_letter = filename:sub(1, 1)
-  if gl_mut_valid_pick_letters:find(init_letter, nil, true) then
-    gl_mut_valid_pick_letters = gl_mut_valid_pick_letters:gsub(init_letter, '')
-    gl_mut_taken_pick_letters[bufnr] = init_letter
+  if valid_pick_letters:find(init_letter, nil, true) then
+    valid_pick_letters = valid_pick_letters:gsub(init_letter, '')
+    taken_pick_letters[bufnr] = init_letter
     return init_letter
   end
 
   -- Return the first valid letter if there is one.
-  if #gl_mut_valid_pick_letters > 0 then
-    local first_valid = gl_mut_valid_pick_letters:sub(1, 1)
-    gl_mut_valid_pick_letters = gl_mut_valid_pick_letters:sub(2)
-    gl_mut_taken_pick_letters[bufnr] = first_valid
+  if #valid_pick_letters > 0 then
+    local first_valid = valid_pick_letters:sub(1, 1)
+    valid_pick_letters = valid_pick_letters:sub(2)
+    taken_pick_letters[bufnr] = first_valid
     return first_valid
   end
 
@@ -175,7 +172,7 @@ end
 local new_buffer = function(b)
   local opts = vim_bo[b.bufnr]
 
-  local _vidx = -1
+  local _valid_index = order[b.bufnr] or -1
   local index = -1
   local number = b.bufnr
   local type = opts.buftype
@@ -208,7 +205,7 @@ local new_buffer = function(b)
   local diagns = get_diagnostics(number)
 
   return {
-    _vidx = _vidx,
+    _valid_index = _valid_index,
     index = index,
     number = number,
     type = type,
@@ -228,141 +225,140 @@ end
 ---@param buffer  Buffer
 ---@return boolean
 local is_old = function(buffer)
-  return vim_contains(gl_mut_bufnrs, buffer.number)
+  for _, buf in pairs(_G.cokeline.valid_buffers) do
+    if buffer.number == buf.number then
+      return true
+    end
+  end
+  return false
 end
 
 ---@param buffer  Buffer
 ---@return boolean
 local is_new = function(buffer)
-  return not vim_contains(gl_mut_bufnrs, buffer.number)
+  return not is_old(buffer)
 end
 
 ---Sorter used to open new buffers at the end of the bufferline.
----@param vidxs  vidx[]
----@param current_vidx  vidx
----@return fun(buffer1: Buffer, buffer2: Buffer): boolean
-local sort_by_new_after_last = function(vidxs, current_vidx)
-  ---@param buffer1  Buffer
-  ---@param buffer2  Buffer
-  ---@return boolean
-  return function(buffer1, buffer2)
-    if is_old(buffer1) and is_old(buffer2) then
-      return vidxs[buffer1.number] < vidxs[buffer2.number]
+---@param buffer1  Buffer
+---@param buffer2  Buffer
+---@return boolean
+local sort_by_new_after_last = function(buffer1, buffer2)
+  if is_old(buffer1) and is_old(buffer2) then
+    return buffer1._valid_index < buffer2._valid_index
 
-    elseif is_old(buffer1) and is_new(buffer2) then
-      return true
+  elseif is_old(buffer1) and is_new(buffer2) then
+    return true
 
-    elseif is_new(buffer1) and is_old(buffer2) then
-      return false
+  elseif is_new(buffer1) and is_old(buffer2) then
+    return false
 
-    else
-      return buffer1.number < buffer2.number
-    end
+  else
+    return buffer1.number < buffer2.number
   end
 end
 
 ---Sorter used to open new buffers next to the current buffer.
----@param vidxs  vidx[]
----@param current_vidx  vidx
----@return fun(buffer1: Buffer, buffer2: Buffer): boolean
-local sort_by_new_after_current = function(vidxs, current_vidx)
-  ---@param buffer1  Buffer
-  ---@param buffer2  Buffer
-  ---@return boolean
-  return function(buffer1, buffer2)
-    if is_old(buffer1) and is_old(buffer2) then
-      -- If both buffers are either before or after (inclusive) the current
-      -- buffer then respect the current order.
-      if (vidxs[buffer1.number] - current_vidx)
-          * (vidxs[buffer2.number] - current_vidx) >= 0 then
-        return vidxs[buffer1.number] < vidxs[buffer2.number]
-      end
-      return vidxs[buffer1.number] < current_vidx
-
-    elseif is_old(buffer1) and is_new(buffer2) then
-      return vidxs[buffer1.number] <= current_vidx
-
-    elseif is_new(buffer1) and is_old(buffer2) then
-      return vidxs[buffer2.number] > current_vidx
-
-    else
-      return buffer1.number < buffer2.number
+---@param buffer1  Buffer
+---@param buffer2  Buffer
+---@return boolean
+local sort_by_new_after_current = function(buffer1, buffer2)
+  if is_old(buffer1) and is_old(buffer2) then
+    -- If both buffers are either before or after (inclusive) the current
+    -- buffer, respect the current order.
+    if (buffer1._valid_index - current_valid_index)
+        * (buffer2._valid_index - current_valid_index) >= 0 then
+      return buffer1._valid_index < buffer2._valid_index
     end
+    return buffer1._valid_index < current_valid_index
+
+  elseif is_old(buffer1) and is_new(buffer2) then
+    return buffer1._valid_index <= current_valid_index
+
+  elseif is_new(buffer1) and is_old(buffer2) then
+    return current_valid_index < buffer2._valid_index
+
+  else
+    return buffer1.number < buffer2.number
   end
 end
 
----@param vidx1  vidx
----@param vidx2  vidx
-local switch_bufnrs_order = function(vidx1, vidx2)
-  gl_mut_bufnrs[vidx1], gl_mut_bufnrs[vidx2] =
-    gl_mut_bufnrs[vidx2], gl_mut_bufnrs[vidx1]
+---@param buffer  Buffer
+---@param target_valid_index  valid_index
+local move_buffer = function(buffer, target_valid_index)
+  if buffer._valid_index == target_valid_index then return end
+
+  order[buffer.number] = target_valid_index
+
+  if buffer._valid_index < target_valid_index then
+    for index=(buffer._valid_index + 1),target_valid_index do
+      order[_G.cokeline.valid_buffers[index].number] = index - 1
+    end
+  else
+    for index=target_valid_index,(buffer._valid_index - 1) do
+      order[_G.cokeline.valid_buffers[index].number] = index + 1
+    end
+  end
+
   vim_cmd('redrawtabline')
 end
 
 ---@return Buffer[]
 local get_valid_buffers = function()
-  local buffers = vim_map(function(b)
-    return new_buffer(b)
-  end, vim_fn.getbufinfo({buflisted = 1}))
-
-  buffers = vim_filter(function(buffer)
-    return buffer.filetype ~= 'netrw'
-  end, buffers)
-
-  local valid_buffers = compute_unique_prefixes(
-    not gl_settings.filter_valid
-    and buffers
-     or vim_filter(gl_settings.filter_valid, buffers)
+  local buffers = vim_filter(
+    function(buffer) return buffer.filetype ~= 'netrw' end,
+    vim_map(
+      function(b) return new_buffer(b) end,
+      vim_fn.getbufinfo({ buflisted = 1 })
+    )
   )
 
-  local vidxs = {}
-  for i, bufnr in ipairs(gl_mut_bufnrs) do
-    vidxs[bufnr] = i
-  end
+  local valid_buffers = compute_unique_prefixes(
+    gl_settings.filter_valid
+    and vim_filter(gl_settings.filter_valid, buffers)
+     or buffers
+  )
 
-  tbl_sort(valid_buffers, gl_buffer_sorter(vidxs, gl_mut_current_vidx))
+  tbl_sort(valid_buffers, buffer_sorter)
 
-  gl_mut_bufnrs = {}
+  order = {}
   for i, buffer in ipairs(valid_buffers) do
-    buffer._vidx = i
-    gl_mut_bufnrs[i] = buffer.number
-    if buffer.is_focused then gl_mut_current_vidx = i end
+    buffer._valid_index = i
+    order[buffer.number] = buffer._valid_index
+    if buffer.is_focused then
+      current_valid_index = i
+    end
   end
-
-  rq_augroups.set_valid_buffers(valid_buffers)
-  rq_mappings.set_valid_buffers(valid_buffers)
 
   return valid_buffers
 end
 
 ---@return Buffer[]
 local get_visible_buffers = function()
-  local valid_buffers = get_valid_buffers()
+  _G.cokeline.valid_buffers = get_valid_buffers()
 
-  local visible_buffers =
-    not gl_settings.filter_visible
-    and valid_buffers
-     or vim_filter(gl_settings.filter_visible, valid_buffers)
+  _G.cokeline.visible_buffers =
+    gl_settings.filter_visible
+    and vim_filter(gl_settings.filter_visible, _G.cokeline.valid_buffers)
+     or _G.cokeline.valid_buffers
 
-  for i, buffer in ipairs(visible_buffers) do
+  for i, buffer in ipairs(_G.cokeline.visible_buffers) do
     buffer.index = i
   end
 
-  rq_mappings.set_visible_buffers(visible_buffers)
-
-  return visible_buffers
+  return _G.cokeline.visible_buffers
 end
 
 ---@param settings  table
 local setup = function(settings)
   gl_settings = settings
-  gl_buffer_sorter =
+  buffer_sorter =
     (settings.new_buffers_position == 'last' and sort_by_new_after_last)
      or (settings.new_buffers_position == 'next' and sort_by_new_after_current)
 end
 
 return {
-  switch_bufnrs_order = switch_bufnrs_order,
+  move_buffer = move_buffer,
   get_valid_buffers = get_valid_buffers,
   get_visible_buffers = get_visible_buffers,
   setup = setup,

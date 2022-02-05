@@ -299,12 +299,6 @@ require('cokeline').setup({
 
 ![buffer-pick](.github/images/buffer-pick.gif)
 
-<!-- TODO -->
-<!-- ### Buffer filtering -->
-
-<!-- TODO -->
-<!-- ### Maximum buffer widths -->
-
 ### Sidebars
 
 You can add left and right sidebars to integrate nicely with file explorer
