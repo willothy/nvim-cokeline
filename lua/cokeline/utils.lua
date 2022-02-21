@@ -8,7 +8,7 @@ local vim_fn = vim.fn
 local get_hex = function(hlgroup_name, attr)
   local hlgroup_ID = vim_fn.synIDtrans(vim_fn.hlID(hlgroup_name))
   local hex = vim_fn.synIDattr(hlgroup_ID, attr)
-  return hex ~= '' and hex or 'NONE'
+  return hex ~= "" and hex or "NONE"
 end
 
 return {

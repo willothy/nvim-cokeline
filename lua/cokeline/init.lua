@@ -1,9 +1,9 @@
-local augroups = require('cokeline/augroups')
-local buffers = require('cokeline/buffers')
-local components = require('cokeline/components')
-local defaults = require('cokeline/defaults')
-local mappings = require('cokeline/mappings')
-local rendering = require('cokeline/rendering')
+local augroups = require("cokeline/augroups")
+local buffers = require("cokeline/buffers")
+local components = require("cokeline/components")
+local defaults = require("cokeline/defaults")
+local mappings = require("cokeline/mappings")
+local rendering = require("cokeline/rendering")
 
 local vim_opt = vim.opt
 
@@ -29,7 +29,7 @@ local setup = function(preferences)
   local comps = components.cmps_to_comps(gl_settings.components)
   rendering.setup(gl_settings.rendering, gl_settings.default_hl, comps)
   vim_opt.showtabline = 2
-  vim_opt.tabline = '%!v:lua.cokeline.tabline()'
+  vim_opt.tabline = "%!v:lua.cokeline.tabline()"
 end
 
 ---@return string

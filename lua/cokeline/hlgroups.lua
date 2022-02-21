@@ -21,20 +21,20 @@ local vim_cmd = vim.cmd
 ---@param hlgroup  Hlgroup
 local hlgroup_exec = function(hlgroup)
   local gui_options = tbl_concat({
-    ('guifg=%s'):format(hlgroup.guifg),
-    ('guibg=%s'):format(hlgroup.guibg),
-    ('gui=%s'):format(hlgroup.gui),
-  }, ' ')
+    ("guifg=%s"):format(hlgroup.guifg),
+    ("guibg=%s"):format(hlgroup.guibg),
+    ("gui=%s"):format(hlgroup.gui),
+  }, " ")
   -- Clear the highlight group before (re)defining it.
-  vim_cmd(('highlight clear %s'):format(hlgroup.name))
-  vim_cmd(('highlight %s %s'):format(hlgroup.name, gui_options))
+  vim_cmd(("highlight clear %s"):format(hlgroup.name))
+  vim_cmd(("highlight %s %s"):format(hlgroup.name, gui_options))
 end
 
 ---@param hlgroup  Hlgroup
 ---@param str  string
 ---@return string
 local embed_in_hlgroup = function(hlgroup, str)
-  return ('%%#%s#%s%%*'):format(hlgroup.name, str)
+  return ("%%#%s#%s%%*"):format(hlgroup.name, str)
 end
 
 ---@param name  string
