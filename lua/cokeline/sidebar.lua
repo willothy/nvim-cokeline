@@ -14,6 +14,10 @@ local o = vim.o
 
 ---@return Component[]
 local get_components = function()
+  if not _G.cokeline.config.sidebar then
+    return {}
+  end
+
   local layout = fn.winlayout()
 
   -- If the first split level is not given by vertically split windows we

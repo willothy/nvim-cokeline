@@ -3,6 +3,7 @@ local buffers = require("cokeline/buffers")
 local cmd = vim.cmd
 local filter = vim.tbl_filter
 local keymap = vim.keymap
+local set_keymap = vim.api.nvim_set_keymap
 local fn = vim.fn
 
 local is_picking = {
@@ -86,47 +87,107 @@ local pick = function(goal)
 end
 
 local setup = function()
-  keymap.set("n", "<Plug>(cokeline-switch-prev)", function()
-    by_step("switch", -1)
-  end)
-
-  keymap.set("n", "<Plug>(cokeline-switch-next)", function()
-    by_step("switch", 1)
-  end)
-
-  keymap.set("n", "<Plug>(cokeline-focus-prev)", function()
-    by_step("focus", -1)
-  end)
-
-  keymap.set("n", "<Plug>(cokeline-focus-next)", function()
-    by_step("focus", 1)
-  end)
-
-  keymap.set("n", "<Plug>(cokeline-pick-focus)", function()
-    pick("focus")
-  end)
-
-  keymap.set("n", "<Plug>(cokeline-pick-focus)", function()
-    pick("close")
-  end)
-
-  for i = 1, 20 do
-    keymap.set("n", ("<Plug>(cokeline-switch-%s)"):format(i), function()
-      by_index("switch", i)
+  if keymap then
+    keymap.set("n", "<Plug>(cokeline-switch-prev)", function()
+      by_step("switch", -1)
     end)
 
-    keymap.set("n", ("<Plug>(cokeline-focus-%s)"):format(i), function()
-      by_index("focus", i)
+    keymap.set("n", "<Plug>(cokeline-switch-next)", function()
+      by_step("switch", 1)
     end)
+
+    keymap.set("n", "<Plug>(cokeline-focus-prev)", function()
+      by_step("focus", -1)
+    end)
+
+    keymap.set("n", "<Plug>(cokeline-focus-next)", function()
+      by_step("focus", 1)
+    end)
+
+    keymap.set("n", "<Plug>(cokeline-pick-focus)", function()
+      pick("focus")
+    end)
+
+    keymap.set("n", "<Plug>(cokeline-pick-focus)", function()
+      pick("close")
+    end)
+    for i = 1, 20 do
+      keymap.set("n", ("<Plug>(cokeline-switch-%s)"):format(i), function()
+        by_index("switch", i)
+      end, {})
+
+      keymap.set("n", ("<Plug>(cokeline-focus-%s)"):format(i), function()
+        by_index("focus", i)
+      end, {})
+    end
+  else
+    set_keymap(
+      "n",
+      "<Plug>(cokeline-switch-prev)",
+      '<Cmd>lua require"cokeline/mappings".by_step("switch", -1)<CR>',
+      {}
+    )
+    set_keymap(
+      "n",
+      "<Plug>(cokeline-switch-next)",
+      '<Cmd>lua require"cokeline/mappings".by_step("switch", 1)<CR>',
+      {}
+    )
+    set_keymap(
+      "n",
+      "<Plug>(cokeline-focus-prev)",
+      '<Cmd>lua require"cokeline/mappings".by_step("focus", -1)<CR>',
+      {}
+    )
+    set_keymap(
+      "n",
+      "<Plug>(cokeline-focus-next)",
+      '<Cmd>lua require"cokeline/mappings".by_step("focus", 1)<CR>',
+      {}
+    )
+    set_keymap(
+      "n",
+      "<Plug>(cokeline-pick-focus)",
+      '<Cmd>lua require"cokeline/mappings".pick("focus")<CR>',
+      {}
+    )
+    set_keymap(
+      "n",
+      "<Plug>(cokeline-pick-close)",
+      '<Cmd>lua require"cokeline/mappings".pick("close")<CR>',
+      {}
+    )
+    for i = 1, 20 do
+      set_keymap(
+        "n",
+        ("<Plug>(cokeline-focus-%s)"):format(i),
+        ('<Cmd>lua require"cokeline/mappings".by_index("switch", %s)<CR>'):format(
+          i
+        ),
+        {}
+      )
+
+      set_keymap(
+        "n",
+        ("<Plug>(cokeline-focus-%s)"):format(i),
+        ('<Cmd>lua require"cokeline/mappings".by_index("focus", %s)<CR>'):format(
+          i
+        ),
+        {}
+      )
+    end
   end
 end
 
 return {
+  by_index = by_index,
+  by_step = by_step,
   is_picking_focus = function()
     return is_picking.focus
   end,
   is_picking_close = function()
     return is_picking.close
   end,
+  pick = pick,
   setup = setup,
 }
