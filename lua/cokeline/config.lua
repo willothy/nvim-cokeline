@@ -112,6 +112,7 @@ end
 
 local get = function(preferences)
   local config = update(defaults, preferences)
+  _G.cokeline.components = {}
   for i, component in ipairs(config.components) do
     insert(
       _G.cokeline.components,
