@@ -1,59 +1,44 @@
-local tbl_concat = table.concat
-
-local vim_cmd = vim.cmd
-
----@diagnostic disable: duplicate-doc-class
-
----@alias hexcolor  string
----@alias attr  string
-
----@class Hl
----@field fg  hexcolor | fun(buffer: Buffer): hexcolor | nil
----@field bg  hexcolor | fun(buffer: Buffer): hexcolor | nil
----@field style  attr | fun(buffer: Buffer): attr | nil
+local cmd = vim.cmd
 
 ---@class Hlgroup
 ---@field name  string
----@field guifg  hexcolor
----@field guibg  hexcolor
----@field gui  attr
+---@field gui   string
+---@field guifg string
+---@field guibg string
+local Hlgroup = {}
+Hlgroup.__index = Hlgroup
 
----@param hlgroup  Hlgroup
-local hlgroup_exec = function(hlgroup)
-  local gui_options = tbl_concat({
-    ("guifg=%s"):format(hlgroup.guifg),
-    ("guibg=%s"):format(hlgroup.guibg),
-    ("gui=%s"):format(hlgroup.gui),
-  }, " ")
-  -- Clear the highlight group before (re)defining it.
-  vim_cmd(("highlight clear %s"):format(hlgroup.name))
-  vim_cmd(("highlight %s %s"):format(hlgroup.name, gui_options))
-end
-
----@param hlgroup  Hlgroup
----@param str  string
----@return string
-local embed_in_hlgroup = function(hlgroup, str)
-  return ("%%#%s#%s%%*"):format(hlgroup.name, str)
-end
-
+---Sets the highlight group, then returns a new `Hlgroup` table.
 ---@param name  string
----@param guifg  hexcolor
----@param guibg  hexcolor
----@param gui  attr
+---@param gui   string
+---@param guifg string
+---@param guibg string
 ---@return Hlgroup
-local new_hlgroup = function(name, guifg, guibg, gui)
+Hlgroup.new = function(name, gui, guifg, guibg)
+  -- Clear the highlight group before (re)defining it.
+  cmd(("highlight clear %s"):format(name))
+  cmd(
+    ("highlight %s gui=%s guifg=%s guibg=%s"):format(name, gui, guifg, guibg)
+  )
+
   local hlgroup = {
     name = name,
+    gui = gui,
     guifg = guifg,
     guibg = guibg,
-    gui = gui,
   }
-  hlgroup_exec(hlgroup)
+  setmetatable(hlgroup, Hlgroup)
   return hlgroup
 end
 
+---Embeds some text in a highlight group.
+---@param self Hlgroup
+---@param text string
+---@return string
+Hlgroup.embed = function(self, text)
+  return ("%%#%s#%s%%*"):format(self.name, text)
+end
+
 return {
-  embed_in_hlgroup = embed_in_hlgroup,
-  new_hlgroup = new_hlgroup,
+  Hlgroup = Hlgroup,
 }

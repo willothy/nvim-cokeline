@@ -45,29 +45,29 @@ local get_hex = require('cokeline/utils').get_hex
 
 require('cokeline').setup({
   default_hl = {
-    focused = {
-      fg = get_hex('ColorColumn', 'bg'),
-      bg = get_hex('Normal', 'fg'),
-    },
-    unfocused = {
-      fg = get_hex('Normal', 'fg'),
-      bg = get_hex('ColorColumn', 'bg'),
-    },
+    fg = function(buffer)
+      return
+        buffer.is_focused
+        and get_hex('ColorColumn', 'bg')
+         or get_hex('Normal', 'fg')
+    end,
+    bg = function(buffer)
+      return
+        buffer.is_focused
+        and get_hex('Normal', 'fg')
+         or get_hex('ColorColumn', 'bg')
+    end,
   },
 
   components = {
     {
       text = function(buffer) return ' ' .. buffer.devicon.icon end,
-      hl = {
-        fg = function(buffer) return buffer.devicon.color end,
-      },
+      fg = function(buffer) return buffer.devicon.color end,
     },
     {
       text = function(buffer) return buffer.unique_prefix end,
-      hl = {
-        fg = get_hex('Comment', 'fg'),
-        style = 'italic',
-      },
+      fg = get_hex('Comment', 'fg'),
+      style = 'italic',
     },
     {
       text = function(buffer) return buffer.filename .. ' ' end,
@@ -97,47 +97,38 @@ local yellow = vim.g.terminal_color_3
 
 require('cokeline').setup({
   default_hl = {
-    focused = {
-      fg = get_hex('Normal', 'fg'),
-      bg = get_hex('ColorColumn', 'bg'),
-    },
-    unfocused = {
-      fg = get_hex('Comment', 'fg'),
-      bg = get_hex('ColorColumn', 'bg'),
-    },
+    fg = function(buffer)
+      return
+        buffer.is_focused
+        and get_hex('Normal', 'fg')
+         or get_hex('Comment', 'fg')
+    end,
+    bg = get_hex('ColorColumn', 'bg'),
   },
 
   components = {
     {
       text = '｜',
-      hl = {
-        fg = function(buffer)
-          return
-            buffer.is_modified and yellow or green
-        end
-      },
+      fg = function(buffer)
+        return
+          buffer.is_modified and yellow or green
+      end
     },
     {
       text = function(buffer) return buffer.devicon.icon .. ' ' end,
-      hl = {
-        fg = function(buffer) return buffer.devicon.color end,
-      },
+      fg = function(buffer) return buffer.devicon.color end,
     },
     {
       text = function(buffer) return buffer.index .. ': ' end,
     },
     {
       text = function(buffer) return buffer.unique_prefix end,
-      hl = {
-        fg = get_hex('Comment', 'fg'),
-        style = 'italic',
-      },
+      fg = get_hex('Comment', 'fg'),
+      style = 'italic',
     },
     {
       text = function(buffer) return buffer.filename .. ' ' end,
-      hl = {
-        style = function(buffer) return buffer.is_focused and 'bold' or nil end,
-      },
+      style = function(buffer) return buffer.is_focused and 'bold' or nil end,
     },
     {
       text = ' ',
@@ -157,34 +148,27 @@ local get_hex = require('cokeline/utils').get_hex
 
 require('cokeline').setup({
   default_hl = {
-    focused = {
-      fg = get_hex('Normal', 'fg'),
-      bg = 'NONE',
-    },
-    unfocused = {
-      fg = get_hex('Comment', 'fg'),
-      bg = 'NONE',
-    },
+    fg = function(buffer)
+      return
+        buffer.is_focused
+        and get_hex('Normal', 'fg')
+         or get_hex('Comment', 'fg')
+    end,
+    bg = 'NONE',
   },
 
   components = {
     {
       text = function(buffer) return (buffer.index ~= 1) and '▏' or '' end,
-      hl = {
-        fg = get_hex('Normal', 'fg')
-      },
+      fg = get_hex('Normal', 'fg')
     },
     {
       text = function(buffer) return '    ' .. buffer.devicon.icon end,
-      hl = {
-        fg = function(buffer) return buffer.devicon.color end,
-      },
+      fg = function(buffer) return buffer.devicon.color end,
     },
     {
       text = function(buffer) return buffer.filename .. '    ' end,
-      hl = {
-        style = function(buffer) return buffer.is_focused and 'bold' or nil end,
-      }
+      style = function(buffer) return buffer.is_focused and 'bold' or nil end,
     },
     {
       text = '',
@@ -237,14 +221,13 @@ local yellow = vim.g.terminal_color_3
 
 require('cokeline').setup({
   default_hl = {
-    focused = {
-      fg = get_hex('Normal', 'fg'),
-      bg = get_hex('ColorColumn', 'bg'),
-    },
-    unfocused = {
-      fg = get_hex('Comment', 'fg'),
-      bg = get_hex('ColorColumn', 'bg'),
-    },
+    focused = function(buffer)
+      return
+        buffer.is_focused
+        and get_hex('Normal', 'fg')
+         or get_hex('Comment', 'fg')
+    end,
+    bg = get_hex('ColorColumn', 'bg'),
   },
 
   components = {
@@ -261,29 +244,25 @@ require('cokeline').setup({
           and buffer.pick_letter .. ' '
            or buffer.devicon.icon
       end,
-      hl = {
-        fg = function(buffer)
-          return
-            (is_picking_focus() and yellow)
-            or (is_picking_close() and red)
-            or buffer.devicon.color
-        end,
-        style = function(_)
-          return
-            (is_picking_focus() or is_picking_close())
-            and 'italic,bold'
-             or nil
-        end,
-      },
+      fg = function(buffer)
+        return
+          (is_picking_focus() and yellow)
+          or (is_picking_close() and red)
+          or buffer.devicon.color
+      end,
+      style = function(_)
+        return
+          (is_picking_focus() or is_picking_close())
+          and 'italic,bold'
+           or nil
+      end,
     },
     {
       text = ' ',
     },
     {
       text = function(buffer) return buffer.filename .. '  ' end,
-      hl = {
-        style = function(buffer) return buffer.is_focused and 'bold' or nil end,
-      }
+      style = function(buffer) return buffer.is_focused and 'bold' or nil end,
     },
     {
       text = '',
@@ -301,8 +280,7 @@ require('cokeline').setup({
 
 ### Sidebars
 
-You can add left and right sidebars to integrate nicely with file explorer
-plugins like
+You can add a left sidebar to integrate nicely with file explorer plugins like
 [nvim-tree.lua](https://github.com/kyazdani42/nvim-tree.lua),
 [CHADTree](https://github.com/ms-jpq/chadtree) or
 [NERDTree](https://github.com/preservim/nerdtree).
@@ -317,30 +295,27 @@ local yellow = vim.g.terminal_color_3
 
 require('cokeline').setup({
   default_hl = {
-    focused = {
-      fg = get_hex('Normal', 'fg'),
-      bg = get_hex('ColorColumn', 'bg'),
-    },
-    unfocused = {
-      fg = get_hex('Comment', 'fg'),
-      bg = get_hex('ColorColumn', 'bg'),
-    },
+    focused = function(buffer)
+      return
+        buffer.is_focused
+        and get_hex('Normal', 'fg')
+         or get_hex('Comment', 'fg')
+    end,
+    bg = get_hex('ColorColumn', 'bg'),
   },
 
-  rendering = {
-    left_sidebar = {
-      filetype = 'NvimTree',
-      components = {
-        {
-          text = '  NvimTree',
-          hl = {
-            fg = yellow,
-            bg = get_hex('NvimTreeNormal', 'bg'),
-            style = 'bold'
-          }
-        },
-      }
-    },
+  sidebar = {
+    filetype = 'NvimTree',
+    components = {
+      {
+        text = '  NvimTree',
+        hl = {
+          fg = yellow,
+          bg = get_hex('NvimTreeNormal', 'bg'),
+          style = 'bold'
+        }
+      },
+    }
   },
 
   components = {
@@ -354,22 +329,18 @@ require('cokeline').setup({
       text = function(buffer)
         return buffer.devicon.icon
       end,
-      hl = {
-        fg = function(buffer)
-          return buffer.devicon.color
-        end,
-      },
+      fg = function(buffer)
+        return buffer.devicon.color
+      end,
     },
     {
       text = ' ',
     },
     {
       text = function(buffer) return buffer.filename .. '  ' end,
-      hl = {
-        style = function(buffer)
-          return buffer.is_focused and 'bold' or nil
-        end,
-      }
+      style = function(buffer)
+        return buffer.is_focused and 'bold' or nil
+      end,
     },
     {
       text = '',
@@ -510,59 +481,42 @@ require('cokeline').setup({
     -- value.
     -- default: `999`.
     max_buffer_width = int,
-
-    -- Left and right sidebars to integrate nicely with file explorer plugins.
-    -- Each of these is a table containing a `filetype` key and a list of
-    -- `components` to be rendered in the sidebar.
-    -- The last component will be automatically space padded if necessary
-    -- to ensure the sidebar and the window below it have the same width.
-    -- NOTE: unlike the `components` config option described below, right now
-    -- these components don't allow any of their fields (text, hl, etc.) to be
-    -- defined as a function of `buffer`.
-    left_sidebar = {
-      filetype = '<filetype>',
-      components = {..},
-    },
-    right_sidebar = {
-      filetype = '<filetype>',
-      components = {..},
-    },
   },
 
-  -- The default highlight group values for focused and unfocused buffers.
+  -- The default highlight group values.
   -- The `fg` and `bg` keys are either colors in hexadecimal format or
   -- functions taking a `buffer` parameter and returning a color in
   -- hexadecimal format. Similarly, the `style` key is either a string
   -- containing a comma separated list of items in `:h attr-list` or a
   -- function returning one.
   default_hl = {
-    focused = {
-      -- default: `ColorColumn`'s background color.
-      fg = '#rrggbb' | function(buffer) -> '#rrggbb',
+    -- default: `ColorColumn`'s background color for focused buffers,
+    -- `Normal`'s foreground color for unfocused ones.
+    fg = '#rrggbb' | function(buffer) -> '#rrggbb',
 
-      -- default: `Normal`'s foreground color.
-      bg = '#rrggbb' | function(buffer) -> '#rrggbb',
+    -- default: `Normal`'s foreground color for focused buffers,
+    -- `ColorColumn`'s background color for unfocused ones.
+    -- default: `Normal`'s foreground color.
+    bg = '#rrggbb' | function(buffer) -> '#rrggbb',
 
-      -- default: `'NONE'`.
-      style = 'attr1,attr2,...' | function(buffer) -> 'attr1,attr2,...',
-    },
-
-    unfocused = {
-      -- default: `Normal`'s foreground color.
-      fg = '#rrggbb' | function(buffer) -> '#rrggbb',
-
-      -- default: `ColorColumn`'s background color.
-      bg = '#rrggbb' | function(buffer) -> '#rrggbb',
-
-      -- default: `'NONE'`.
-      style = 'attr1,attr2,...' | function(buffer) -> 'attr1,attr2,...',
-    },
+    -- default: `'NONE'`.
+    style = 'attr1,attr2,...' | function(buffer) -> 'attr1,attr2,...',
   },
 
   -- A list of components to be rendered for each buffer. Check out the section
   -- below explaining what this value can be set to.
   -- default: see `/lua/cokeline/defaults.lua`
   components = {..},
+
+  -- Left sidebar to integrate nicely with file explorer plugins.
+  -- This is a table containing a `filetype` key and a list of `components` to
+  -- be rendered in the sidebar.
+  -- The last component will be automatically space padded if necessary
+  -- to ensure the sidebar and the window below it have the same width.
+  sidebar = {
+    filetype = '<filetype>',
+    components = {..},
+  },
 })
 ```
 
@@ -679,14 +633,12 @@ Every component passed to the `components` list has to be a table of the form:
 
   -- The foreground, backgrond and style of the component. `style` is a
   -- comma-separated string of values defined in `:h attr-list`.
-  hl = {
-    fg = '#rrggbb' | function(buffer) -> '#rrggbb',
-    bg = '#rrggbb' | function(buffer) -> '#rrggbb',
-    style = 'attr1,attr2,...' | function(buffer) -> 'attr1,attr2,...',
-  },
+  fg = '#rrggbb' | function(buffer) -> '#rrggbb',
+  bg = '#rrggbb' | function(buffer) -> '#rrggbb',
+  style = 'attr1,attr2,...' | function(buffer) -> 'attr1,attr2,...',
 
   -- If `true` the buffer will be deleted when this component is
-  -- left-clicked (useful to implement close buttons).
+  -- left-clicked (usually used to implement close buttons).
   delete_buffer_on_left_click = true | false,
 
   truncation = {
@@ -820,20 +772,18 @@ local components = {
           and buffer.pick_letter .. ' '
            or buffer.devicon.icon
     end,
-    hl = {
-      fg = function(buffer)
-        return
-          (mappings.is_picking_focus() and yellow)
-          or (mappings.is_picking_close() and red)
-          or buffer.devicon.color
-      end,
-      style = function(_)
-        return
-          (mappings.is_picking_focus() or mappings.is_picking_close())
-          and 'italic,bold'
-           or nil
-      end,
-    },
+    fg = function(buffer)
+      return
+        (mappings.is_picking_focus() and yellow)
+        or (mappings.is_picking_close() and red)
+        or buffer.devicon.color
+    end,
+    style = function(_)
+      return
+        (mappings.is_picking_focus() or mappings.is_picking_close())
+        and 'italic,bold'
+         or nil
+    end,
     truncation = { priority = 1 }
   },
 
@@ -848,10 +798,8 @@ local components = {
     text = function(buffer)
       return buffer.unique_prefix
     end,
-    hl = {
-      fg = comments_fg,
-      style = 'italic',
-    },
+    fg = comments_fg,
+    style = 'italic',
     truncation = {
       priority = 3,
       direction = 'left',
@@ -862,16 +810,14 @@ local components = {
     text = function(buffer)
       return buffer.filename
     end,
-    hl = {
-      style = function(buffer)
-        return
-          ((buffer.is_focused and buffer.diagnostics.errors ~= 0)
-            and 'bold,underline')
-          or (buffer.is_focused and 'bold')
-          or (buffer.diagnostics.errors ~= 0 and 'underline')
-          or nil
-      end
-    },
+    style = function(buffer)
+      return
+        ((buffer.is_focused and buffer.diagnostics.errors ~= 0)
+          and 'bold,underline')
+        or (buffer.is_focused and 'bold')
+        or (buffer.diagnostics.errors ~= 0 and 'underline')
+        or nil
+    end
     truncation = {
       priority = 2,
       direction = 'left',
@@ -885,14 +831,12 @@ local components = {
         or (buffer.diagnostics.warnings ~= 0 and '  ' .. buffer.diagnostics.warnings)
         or ''
     end,
-    hl = {
-      fg = function(buffer)
-        return
-          (buffer.diagnostics.errors ~= 0 and errors_fg)
-          or (buffer.diagnostics.warnings ~= 0 and warnings_fg)
-          or nil
-      end,
-    },
+    fg = function(buffer)
+      return
+        (buffer.diagnostics.errors ~= 0 and errors_fg)
+        or (buffer.diagnostics.warnings ~= 0 and warnings_fg)
+        or nil
+    end,
     truncation = { priority = 1 },
   },
 
@@ -900,11 +844,9 @@ local components = {
     text = function(buffer)
       return buffer.is_modified and '●' or ''
     end,
-    hl = {
-      fg = function(buffer)
-        return buffer.is_modified and green or nil
-      end
-    },
+    fg = function(buffer)
+      return buffer.is_modified and green or nil
+    end
     delete_buffer_on_left_click = true,
     truncation = { priority = 1 },
   },
@@ -924,14 +866,13 @@ require('cokeline').setup({
   },
 
   default_hl = {
-    focused = {
-      fg = get_hex('Normal', 'fg'),
-      bg = get_hex('ColorColumn', 'bg'),
-    },
-    unfocused = {
-      fg = get_hex('Comment', 'fg'),
-      bg = get_hex('ColorColumn', 'bg'),
-    },
+    fg = function(buffer)
+      return
+        buffer.is_focused
+        and get_hex('Normal', 'fg')
+         or get_hex('Comment', 'fg')
+    end,
+    bg = get_hex('ColorColumn', 'bg'),
   },
 
   components = {
@@ -962,50 +903,41 @@ local get_hex = require('cokeline/utils').get_hex
 
 require('cokeline').setup({
   default_hl = {
-    focused = {
-      fg = get_hex('Normal', 'fg'),
-      bg = get_hex('ColorColumn', 'bg'),
-    },
-    unfocused = {
-      fg = get_hex('Comment', 'fg'),
-      bg = get_hex('ColorColumn', 'bg'),
-    },
+    fg = function(buffer)
+      return
+        buffer.is_focused
+        and get_hex('Normal', 'fg')
+         or get_hex('Comment', 'fg')
+    end,
+    bg = get_hex('ColorColumn', 'bg'),
   },
 
   components = {
     {
       text = ' ',
-      hl = {
-        bg = get_hex('Normal', 'bg'),
-      },
+      bg = get_hex('Normal', 'bg'),
     },
     {
       text = '',
-      hl = {
-        fg = get_hex('ColorColumn', 'bg'),
-        bg = get_hex('Normal', 'bg'),
-      },
+      fg = get_hex('ColorColumn', 'bg'),
+      bg = get_hex('Normal', 'bg'),
     },
     {
       text = function(buffer)
         return buffer.devicon.icon
       end,
-      hl = {
-        fg = function(buffer)
-          return buffer.devicon.color
-        end,
-      },
+      fg = function(buffer)
+        return buffer.devicon.color
+      end,
     },
     {
       text = ' ',
     },
     {
       text = function(buffer) return buffer.filename .. '  ' end,
-      hl = {
-        style = function(buffer)
-          return buffer.is_focused and 'bold' or nil
-        end,
-      }
+      style = function(buffer)
+        return buffer.is_focused and 'bold' or nil
+      end,
     },
     {
       text = '',
@@ -1013,10 +945,8 @@ require('cokeline').setup({
     },
     {
       text = '',
-      hl = {
-        fg = get_hex('ColorColumn', 'bg'),
-        bg = get_hex('Normal', 'bg'),
-      },
+      fg = get_hex('ColorColumn', 'bg'),
+      bg = get_hex('Normal', 'bg'),
     },
   },
 })
@@ -1050,7 +980,7 @@ local min_buffer_width = 23
 local components = {
   separator = {
     text = ' ',
-    hl = { bg = get_hex('Normal', 'bg') },
+    bg = get_hex('Normal', 'bg'),
     truncation = { priority = 1 },
   },
 
@@ -1061,19 +991,15 @@ local components = {
 
   left_half_circle = {
     text = '',
-    hl = {
-      fg = get_hex('ColorColumn', 'bg'),
-      bg = get_hex('Normal', 'bg'),
-    },
+    fg = get_hex('ColorColumn', 'bg'),
+    bg = get_hex('Normal', 'bg'),
     truncation = { priority = 1 },
   },
 
   right_half_circle = {
     text = '',
-    hl = {
-      fg = get_hex('ColorColumn', 'bg'),
-      bg = get_hex('Normal', 'bg'),
-    },
+    fg = get_hex('ColorColumn', 'bg'),
+    bg = get_hex('Normal', 'bg'),
     truncation = { priority = 1 },
   },
 
@@ -1081,12 +1007,9 @@ local components = {
     text = function(buffer)
       return buffer.devicon.icon
     end,
-    hl = {
-      fg = function(buffer)
-        return buffer.devicon.color
-      end,
-      end,
-    },
+    fg = function(buffer)
+      return buffer.devicon.color
+    end,
     truncation = { priority = 1 },
   },
 
@@ -1094,14 +1017,12 @@ local components = {
     text = function(buffer)
       return buffer.index .. ': '
     end,
-    hl = {
-      fg = function(buffer)
-        return
-          (buffer.diagnostics.errors ~= 0 and errors_fg)
-          or (buffer.diagnostics.warnings ~= 0 and warnings_fg)
-          or nil
-      end,
-    },
+    fg = function(buffer)
+      return
+        (buffer.diagnostics.errors ~= 0 and errors_fg)
+        or (buffer.diagnostics.warnings ~= 0 and warnings_fg)
+        or nil
+    end,
     truncation = { priority = 1 },
   },
 
@@ -1109,10 +1030,8 @@ local components = {
     text = function(buffer)
       return buffer.unique_prefix
     end,
-    hl = {
-      fg = comments_fg,
-      style = 'italic',
-    },
+    fg = comments_fg,
+    style = 'italic',
     truncation = {
       priority = 3,
       direction = 'left',
@@ -1123,22 +1042,20 @@ local components = {
     text = function(buffer)
       return buffer.filename
     end,
-    hl = {
-      fg = function(buffer)
-        return
-          (buffer.diagnostics.errors ~= 0 and errors_fg)
-          or (buffer.diagnostics.warnings ~= 0 and warnings_fg)
-          or nil
-      end,
-      style = function(buffer)
-        return
-          ((buffer.is_focused and buffer.diagnostics.errors ~= 0)
-            and 'bold,underline')
-          or (buffer.is_focused and 'bold')
-          or (buffer.diagnostics.errors ~= 0 and 'underline')
-          or nil
-      end
-    },
+    fg = function(buffer)
+      return
+        (buffer.diagnostics.errors ~= 0 and errors_fg)
+        or (buffer.diagnostics.warnings ~= 0 and warnings_fg)
+        or nil
+    end,
+    style = function(buffer)
+      return
+        ((buffer.is_focused and buffer.diagnostics.errors ~= 0)
+          and 'bold,underline')
+        or (buffer.is_focused and 'bold')
+        or (buffer.diagnostics.errors ~= 0 and 'underline')
+        or nil
+    end
     truncation = {
       priority = 2,
       direction = 'left',
@@ -1149,11 +1066,9 @@ local components = {
     text = function(buffer)
       return buffer.is_modified and '●' or ''
     end,
-    hl = {
-      fg = function(buffer)
-        return buffer.is_modified and green or nil
-      end
-    },
+    fg = function(buffer)
+      return buffer.is_modified and green or nil
+    end
     delete_buffer_on_left_click = true,
     truncation = { priority = 1 },
   },
@@ -1196,30 +1111,30 @@ require('cokeline').setup({
 
   rendering = {
     max_buffer_width = 23,
-    left_sidebar = {
-      filetype = 'NvimTree',
-      components = {
-        {
-          text = '  NvimTree',
-          hl = {
-            fg = yellow,
-            bg = get_hex('NvimTreeNormal', 'bg'),
-            style = 'bold'
-          }
-        },
-      }
-    },
   },
 
   default_hl = {
-    focused = {
-      fg = get_hex('Normal', 'fg'),
-      bg = get_hex('ColorColumn', 'bg'),
-    },
-    unfocused = {
-      fg = get_hex('Comment', 'fg'),
-      bg = get_hex('ColorColumn', 'bg'),
-    },
+    fg = function(buffer)
+      return
+        buffer.is_focused
+        and get_hex('Normal', 'fg')
+         or get_hex('Comment', 'fg')
+    end,
+    bg = get_hex('ColorColumn', 'bg'),
+  },
+
+  sidebar = {
+    filetype = 'NvimTree',
+    components = {
+      {
+        text = '  NvimTree',
+        hl = {
+          fg = yellow,
+          bg = get_hex('NvimTreeNormal', 'bg'),
+          style = 'bold'
+        }
+      },
+    }
   },
 
   components = {
@@ -1267,15 +1182,13 @@ function M.setup()
     },
 
     default_hl = {
-      focused = {
-        fg = colors.purple,
-        bg = "NONE",
-        style = "bold",
-      },
-      unfocused = {
-        fg = colors.gray,
-        bg = "NONE",
-      },
+      fg = function(buffer)
+        return buffer.is_focused and colors.purple or colors.gray
+      end,
+      bg = "NONE",
+      style = function(buffer)
+        return buffer.is_focused and "bold" or nil
+      end,
     },
 
     components = {
@@ -1288,42 +1201,34 @@ function M.setup()
         text = function(buffer)
           return buffer.index .. ": "
         end,
-        hl = {
-          style = function(buffer)
-            return buffer.is_focused and "bold" or nil
-          end,
-        },
+        style = function(buffer)
+          return buffer.is_focused and "bold" or nil
+        end,
       },
       {
         text = function(buffer)
           return buffer.unique_prefix
         end,
-        hl = {
-          fg = function(buffer)
-            return buffer.is_focused and colors.purple or colors.gray
-          end,
-          style = "italic",
-        },
+        fg = function(buffer)
+          return buffer.is_focused and colors.purple or colors.gray
+        end,
+        style = "italic",
       },
       {
         text = function(buffer)
           return buffer.filename .. " "
         end,
-        hl = {
-          style = function(buffer)
-            return buffer.is_focused and "bold" or nil
-          end,
-        },
+        style = function(buffer)
+          return buffer.is_focused and "bold" or nil
+        end,
       },
       {
         text = function(buffer)
           return buffer.is_modified and " ●"
         end,
-        hl = {
-          fg = function(buffer)
-            return buffer.is_focused and colors.red
-          end,
-        },
+        fg = function(buffer)
+          return buffer.is_focused and colors.red
+        end,
       },
       {
         text = "  ",
@@ -1354,13 +1259,11 @@ return function()
               cycle_prev_next = true,
             },
             default_hl = {
-                focused = {
-                    bg = "none"
-                },
-                unfocused = {
-                    fg = get_hex("Comment", "fg"),
-                    bg = "none"
-                }
+              fg = function(buffer)
+                return
+                  buffer.is_focused and nil or get_hex("Comment", "fg")
+              end,
+              bg = "none",
             },
             components = {
                 space,
@@ -1368,35 +1271,31 @@ return function()
                     text = function(buffer)
                         return buffer.devicon.icon
                     end,
-                    hl = {
-                        fg = function(buffer)
-                            return buffer.devicon.color
-                        end
-                    }
+                    fg = function(buffer)
+                        return buffer.devicon.color
+                    end
                 },
                 {
                     text = function(buffer)
                         return buffer.filename
                     end,
-                    hl = {
-                        fg = function(buffer)
-                            if buffer.is_focused then
-                                return "#78dce8"
-                            end
-                            if buffer.is_modified then
-                                return "#e5c463"
-                            end
-                            if buffer.lsp.errors ~= 0 then
-                                return "#fc5d7c"
-                            end
-                        end,
-                        style = function(buffer)
-                            if buffer.is_focused then
-                                return "underline"
-                            end
-                            return nil
+                    fg = function(buffer)
+                        if buffer.is_focused then
+                            return "#78dce8"
                         end
-                    }
+                        if buffer.is_modified then
+                            return "#e5c463"
+                        end
+                        if buffer.lsp.errors ~= 0 then
+                            return "#fc5d7c"
+                        end
+                    end,
+                    style = function(buffer)
+                        if buffer.is_focused then
+                            return "underline"
+                        end
+                        return nil
+                    end
                 },
                 {
                     text = function(buffer)

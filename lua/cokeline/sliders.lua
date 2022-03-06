@@ -1,6 +1,6 @@
 -- local math_abs = math.abs
-local math_floor = math.floor
-local math_max = math.max
+local floor = math.floor
+local max = math.max
 
 ---@type table
 -- local gl_mut_prev_state
@@ -13,14 +13,14 @@ local math_max = math.max
 ---@return number, number
 local center_current_buffer =
   function(available_space, width_left_of_current, width_right_of_current)
-    local available_space_left = math_floor(available_space / 2)
+    local available_space_left = floor(available_space / 2)
     local available_space_right = available_space_left + available_space % 2
 
-    local unused_space_left = math_max(
+    local unused_space_left = max(
       available_space_left - width_left_of_current,
       0
     )
-    local unused_space_right = math_max(
+    local unused_space_right = max(
       available_space_right - width_right_of_current,
       0
     )

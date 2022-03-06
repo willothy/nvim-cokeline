@@ -1,218 +1,225 @@
-local rq_hlgroups = require("cokeline/hlgroups")
+local Hlgroup = require("cokeline/hlgroups").Hlgroup
 
-local str_rep = string.rep
-local tbl_concat = table.concat
-local tbl_insert = table.insert
+local rep = string.rep
+local concat = table.concat
+local insert = table.insert
+local remove = table.remove
 
-local vim_fn = vim.fn
-local vim_map = vim.tbl_map
-
-local gl_continuation_fmts = {
-  edges = {
-    left = " …%s",
-    right = "%s… ",
-  },
-  buffers = {
-    left = "…%s",
-    middle = "%s…%s",
-    right = "%s…",
-  },
-}
-
----@diagnostic disable: duplicate-doc-class
-
----@class Cmp
----@field text  string | fun(buffer: Buffer): string
----@field hl  Hl | nil
----@field delete_buffer_on_left_click  boolean | nil
----@field truncation  table | nil
-
----@class Comp
----@field text  string | fun(buffer: Buffer): string
----@field hl  Hl | nil
----@field delete_buffer_on_left_click  boolean
----@field truncation  table
----@field idx  number
+local fn = vim.fn
+local map = vim.tbl_map
 
 ---@class Component
----@field text  string
----@field hlgroup  Hlgroup
+---@field index  number
+---@field text  string|fun(buffer: Buffer): string
+---@field style  string|fun(buffer:Buffer): string
+---@field fg  string|fun(buffer:Buffer): string
+---@field bg  string|fun(buffer:Buffer): string
 ---@field delete_buffer_on_left_click  boolean
 ---@field truncation  table
 ---@field idx  number
 ---@field bufnr  bufnr
 ---@field width  number
+---@field hlgroup  Hlgroup
+local Component = {}
+Component.__index = Component
 
----@param cmp  Cmp
----@param idx  number
----@return Comp
-local cmp_to_comp = function(cmp, idx)
-  local text = cmp.text
-  local hl = cmp.hl
-  local delete_buffer_on_left_click = cmp.delete_buffer_on_left_click or false
-  local priority = cmp.truncation and cmp.truncation.priority or idx
-  local direction = cmp.truncation and cmp.truncation.direction or "right"
-
-  return {
-    text = text,
-    hl = hl,
-    delete_buffer_on_left_click = delete_buffer_on_left_click,
-    truncation = {
-      priority = priority,
-      direction = direction,
-    },
-    idx = idx,
-  }
-end
-
----@param cmps  Cmp[]
----@return Comp[]
-local cmps_to_comps = function(cmps)
-  local comps = {}
-  for i, cmp in ipairs(cmps) do
-    tbl_insert(comps, cmp_to_comp(cmp, i))
-  end
-  return comps
-end
-
----@param comp  Comp
----@param default_hl  Hl
----@param buffer  Buffer
+---@param c table
+---@param i number
 ---@return Component
-local comp_to_component = function(comp, default_hl, buffer)
-  ---@param field  string | hexcolor | attr | fun()
-  ---@return string | hexcolor | attr
-  local evaluate_field = function(field)
+Component.new = function(c, i, default_hl)
+  -- `default_hl` is `nil` when called by `components.lua#63`
+  default_hl = default_hl or _G.cokeline.config.default_hl
+  local component = {
+    index = i,
+    text = c.text,
+    fg = c.fg or default_hl.fg or "NONE",
+    bg = c.bg or default_hl.bg or "NONE",
+    style = c.style or default_hl.style or "NONE",
+    delete_buffer_on_left_click = c.delete_buffer_on_left_click or false,
+    truncation = {
+      priority = c.truncation and c.truncation.priority or i,
+      direction = c.truncation and c.truncation.direction or "right",
+    },
+    -- These values aren't ready yet, they will be once the component gets
+    -- rendered for a specific buffer.
+    width = nil,
+    bufnr = nil,
+    hlgroup = nil,
+  }
+  setmetatable(component, Component)
+  return component
+end
+
+-- Renders a component for a specific buffer.
+---@param self   Component
+---@param buffer Buffer
+---@return Component
+Component.render = function(self, buffer)
+  local evaluate = function(field)
     return (type(field) == "string" and field)
       or (type(field) == "function" and field(buffer))
   end
 
-  local text = evaluate_field(comp.text)
+  local component = vim.deepcopy(self)
+  component.text = evaluate(self.text)
+  component.width = fn.strwidth(component.text)
+  component.bufnr = buffer.number
 
-  local width = vim_fn.strwidth(text)
+  -- `evaluate(self.hl.*)` might return `nil`, in that case we fallback to the
+  -- default highlight first and to NONE if that's `nil` too.
+  local style = evaluate(self.style)
+    or evaluate(_G.cokeline.config.default_hl.style)
+    or "NONE"
+  local fg = evaluate(self.fg)
+    or evaluate(_G.cokeline.config.default_hl.fg)
+    or "NONE"
+  local bg = evaluate(self.bg)
+    or evaluate(_G.cokeline.config.default_hl.bg)
+    or "NONE"
 
-  local bufnr = buffer.number
-
-  local hlgroup_name = ("cokeline_buffer_%s_component_%s"):format(
-    bufnr,
-    comp.idx
+  component.hlgroup = Hlgroup.new(
+    ("Cokeline_%s_%s"):format(buffer.number, self.index),
+    style,
+    fg,
+    bg
   )
 
-  local guifg = comp.hl and comp.hl.fg and evaluate_field(comp.hl.fg)
-    or evaluate_field(default_hl.fg)
-
-  local guibg = comp.hl and comp.hl.bg and evaluate_field(comp.hl.bg)
-    or evaluate_field(default_hl.bg)
-
-  local gui = comp.hl and comp.hl.style and evaluate_field(comp.hl.style)
-    or evaluate_field(default_hl.style)
-
-  local hlgroup = rq_hlgroups.new_hlgroup(hlgroup_name, guifg, guibg, gui)
-
-  return {
-    text = text,
-    hlgroup = hlgroup,
-    delete_buffer_on_left_click = comp.delete_buffer_on_left_click,
-    truncation = comp.truncation,
-    idx = comp.idx,
-    bufnr = bufnr,
-    width = width,
-  }
+  return component
 end
 
----Takes in a `component`, returns a new component given by shortening the
----`component`'s text to `available_space` characters in the given
----`direction`. If a direction is not given it uses the
----`component.truncation.direction` field instead.
----@param component  Component
----@param available_space  number
----@param direction  '"left"' | '"right"' | nil
----@return Component
-local shorten_component = function(component, available_space, direction)
-  local continuation_fmt = direction and gl_continuation_fmts.edges[direction]
-    or gl_continuation_fmts.buffers[component.truncation.direction]
-
-  direction = direction or component.truncation.direction
-  local text
-
-  if direction ~= "middle" then
-    local net_available_space = available_space
-      - vim_fn.strwidth(continuation_fmt:format(""))
-
-    local start_char = (direction or component.truncation.direction) == "left"
-        and component.width - net_available_space
-      or 0
-
-    local cut_text = vim_fn.strcharpart(
-      component.text,
-      start_char,
-      net_available_space
+---@param self      Component
+---@param to_width  number
+---@param direction '"left"' | '"right"' | nil
+Component.shorten = function(self, to_width, direction)
+  -- If a direction is given that means we're cutting off a component that's
+  -- at the edge of the bufferline (either the left or the right one). In this
+  -- case we either prepend or append a space to the ellipses.
+  --
+  -- If a direction isn't given we're shortening a component within a buffer.
+  -- Here we use that component's `truncation.direction`, and we don't add any
+  -- additional spaces.
+  if direction then
+    local available_width = to_width - 2
+    local start = direction == "left" and self.width - available_width or 0
+    self.text = (direction == "left" and " …%s" or "%s… "):format(
+      fn.strcharpart(self.text, start, available_width)
     )
-
-    text = vim_fn.strwidth(cut_text) == net_available_space
-        and continuation_fmt:format(cut_text)
-      or continuation_fmt:format(str_rep(" ", net_available_space))
+  elseif self.truncation.direction == "middle" then
+    local available_width = to_width - 1
+    local width_left = math.floor(available_width / 2)
+    local width_right = width_left + available_width % 2
+    self.text = ("%s…%s"):format(
+      fn.strcharpart(self.text, 0, width_left),
+      fn.strcharpart(self.text, self.width - width_right, width_right)
+    )
   else
-    local net_available_space = available_space
-      - vim_fn.strwidth(continuation_fmt:format("", ""))
-
-    local space_left = math.floor(net_available_space / 2)
-    local space_right = space_left + net_available_space % 2
-
-    local text_left = vim_fn.strcharpart(component.text, 0, space_left)
-    local text_right = vim_fn.strcharpart(
-      component.text,
-      component.width - space_right,
-      space_right
+    direction = self.truncation.direction
+    local available_width = to_width - 1
+    local start = direction == "left" and self.width - available_width or 0
+    self.text = (direction == "left" and "…%s" or "%s…"):format(
+      fn.strcharpart(self.text, start, available_width)
     )
-
-    text = continuation_fmt:format(text_left, text_right)
   end
 
-  local width = vim_fn.strwidth(text)
-
-  return {
-    text = text,
-    hlgroup = component.hlgroup,
-    delete_buffer_on_left_click = component.delete_buffer_on_left_click,
-    truncation = component.truncation,
-    width = width,
-    bufnr = component.bufnr,
-    idx = component.idx,
-  }
-end
-
----Takes in a component, returns its rendered string.
----@param component  Component
----@return string
-local render_component = function(component)
-  local text = rq_hlgroups.embed_in_hlgroup(component.hlgroup, component.text)
-  if not vim_fn.has("tablineat") then
-    return text
+  -- `fn.strcharpart` can fail with wide characters. For example,
+  -- `fn.strcharpart("｜", 0, 1)` will still return "｜" since that character
+  -- takes up two columns. This is to handle such cases.
+  if not fn.strwidth(self.text) == to_width then
+    local fmt = (direction == "left" and "%s…")
+      or (direction == "right" and "…%s")
+      or "%s "
+    self.text = fmt:format(rep(" "), to_width - 1)
   end
-  local bufnr = component.bufnr
-  return component.delete_buffer_on_left_click
-      and ("%%%s@cokeline#handle_close_button_click@%s%%X"):format(
-        bufnr,
-        text
-      )
-    or ("%%%s@cokeline#handle_click@%s%%X"):format(bufnr, text)
+
+  self.width = fn.strwidth(self.text)
 end
 
----Takes in a list of components, returns the concatnation of their rendered
----strings.
+-- Takes a list of components, returns a new list of components `to_width` wide
+-- obtained by trimming the original `components` in the given `direction`.
+---@param components Component[]
+---@param to_width   number
+---@param direction  '"left"' | '"right"' | nil
+---@return Component[]
+local shorten_components = function(components, to_width, direction)
+  local current_width = 0
+  for _, component in pairs(components) do
+    current_width = current_width + component.width
+  end
+
+  -- `extra` is the width of the extra characters that are appended when a
+  -- component is shortened, an ellipses if we're shortening within a buffer
+  -- (in which case the `direction` is `nil`), or an ellipses and a space if
+  -- we're cutting off a component at the edge of the bufferline (where
+  -- `direction` is either `"left"` or `"right"`).
+  local extra = direction and 2 or 1
+  local i = direction == "left" and 1 or #components
+  -- We start from the full list of components and remove components as
+  -- necessary. We could start from an empty list and add until there's space,
+  -- but I think there's usually more components to keep than to throw away, so
+  -- this should be faster in most cases.
+  local last_removed_component
+  while
+    (current_width > to_width)
+    or (current_width - components[i].width + extra > to_width)
+  do
+    last_removed_component = remove(components, i)
+    current_width = current_width - last_removed_component.width
+    i = direction == "left" and 1 or i - 1
+    if #components == 0 then
+      break
+    end
+  end
+
+  if to_width - current_width > extra or #components == 0 then
+    i = direction == "left" and 1 or i + 1
+    last_removed_component:shorten(to_width - current_width, direction)
+    insert(components, i, last_removed_component)
+  else
+    -- Here we "shorten" a component to more than its current width.
+    components[i]:shorten(
+      components[i].width + to_width - current_width,
+      direction
+    )
+  end
+
+  return components
+end
+
+-- Takes in a list of components, returns the concatenation of their rendered
+-- strings.
 ---@param components  Component[]
 ---@return string
 local render_components = function(components)
-  return tbl_concat(vim_map(function(component)
-    return render_component(component)
+  local embed = function(component)
+    local text = component.hlgroup:embed(component.text)
+    if not fn.has("tablineat") then
+      return text
+    else
+      local on_click = component.delete_buffer_on_left_click
+          and "CokelineHandleCloseButtonClick"
+        or "CokelineHandleClick"
+      return ("%%%s@%s@%s%%X"):format(component.bufnr, on_click, text)
+    end
+  end
+
+  return concat(map(function(component)
+    return embed(component)
   end, components))
 end
 
+---@param components  Component[]
+---@return number
+local width_of_components = function(components)
+  local width = 0
+  for _, component in pairs(components) do
+    width = width + component.width
+  end
+  return width
+end
+
 return {
-  gl_continuation_fmts = gl_continuation_fmts,
-  cmps_to_comps = cmps_to_comps,
-  comp_to_component = comp_to_component,
-  shorten_component = shorten_component,
-  render_components = render_components,
+  Component = Component,
+  render = render_components,
+  shorten = shorten_components,
+  width = width_of_components,
 }

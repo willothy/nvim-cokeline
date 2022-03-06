@@ -1,13 +1,11 @@
 local buffers = require("cokeline/buffers")
 
-local vim_cmd = vim.cmd
-local vim_filter = vim.tbl_filter
-local vim_fn = vim.fn
-local vim_keymap = vim.api.nvim_set_keymap
+local cmd = vim.cmd
+local filter = vim.tbl_filter
+local keymap = vim.keymap
+local fn = vim.fn
 
-local gl_settings
-
-local gl_mut_is_picking = {
+local is_picking = {
   focus = false,
   close = false,
 }
@@ -15,134 +13,120 @@ local gl_mut_is_picking = {
 ---@param goal  '"switch"' | '"focus"'
 ---@param index  index
 local by_index = function(goal, index)
-  local target_buffer = vim_filter(function(buffer)
+  local target_buffer = filter(function(buffer)
     return buffer.index == index
   end, _G.cokeline.visible_buffers)[1]
+
   if not target_buffer then
     return
   end
 
   if goal == "switch" then
-    local current_buffer = vim_filter(function(buffer)
+    local focused_buffer = filter(function(buffer)
       return buffer.is_focused
     end, _G.cokeline.valid_buffers)[1]
-    if not current_buffer then
+
+    if not focused_buffer then
       return
     end
-    buffers.move_buffer(current_buffer, target_buffer._valid_index)
+
+    buffers.move_buffer(focused_buffer, target_buffer._valid_index)
   elseif goal == "focus" then
-    vim_cmd("b" .. target_buffer.number)
+    cmd("b" .. target_buffer.number)
   end
 end
 
----@param cmd  '"switch"' | '"focus"'
+---@param goal  '"switch"' | '"focus"'
 ---@param step  '-1' | '1'
-local by_step = function(cmd, step)
-  local current_buffer = vim_filter(function(buffer)
+local by_step = function(goal, step)
+  local focused_buffer = filter(function(buffer)
     return buffer.is_focused
   end, _G.cokeline.valid_buffers)[1]
-  if not current_buffer then
+
+  if not focused_buffer then
     return
   end
 
-  local target_valid_index = current_buffer._valid_index + step
-  local target_buffer = _G.cokeline.valid_buffers[target_valid_index]
-    or (gl_settings.cycle_prev_next and _G.cokeline.valid_buffers[(target_valid_index - 1) % #_G.cokeline.valid_buffers + 1])
-    or nil
-  if not target_buffer then
-    return
+  local target_index = focused_buffer._valid_index + step
+  if target_index < 1 or target_index > #_G.cokeline.valid_buffers then
+    if not _G.cokeline.config.mappings.cycle_prev_next then
+      return
+    end
+    target_index = (target_index - 1) % #_G.cokeline.valid_buffers + 1
   end
 
-  local _ = (
-      cmd == "switch"
-      and buffers.move_buffer(current_buffer, target_buffer._valid_index)
-    ) or (cmd == "focus" and vim_cmd("b" .. target_buffer.number))
+  if goal == "switch" then
+    buffers.move_buffer(focused_buffer, target_index)
+  elseif goal == "focus" then
+    cmd("b" .. _G.cokeline.valid_buffers[target_index].number)
+  end
 end
 
----@param cmd  '"focus"' | '"close"'
-local pick = function(cmd)
-  gl_mut_is_picking[cmd] = true
-  vim_cmd("redrawtabline")
-  gl_mut_is_picking[cmd] = false
+---@param goal  '"focus"' | '"close"'
+local pick = function(goal)
+  is_picking[goal] = true
+  cmd("redrawtabline")
+  is_picking[goal] = false
 
-  local letter = vim_fn.nr2char(vim_fn.getchar())
-  local target_buffer = vim_filter(function(buffer)
+  local letter = fn.nr2char(fn.getchar())
+  local target_buffer = filter(function(buffer)
     return buffer.pick_letter == letter
   end, _G.cokeline.visible_buffers)[1]
 
-  if not target_buffer or (cmd == "focus" and target_buffer.is_focused) then
-    vim_cmd("redrawtabline")
+  if not target_buffer or (goal == "focus" and target_buffer.is_focused) then
+    cmd("redrawtabline")
     return
   end
 
-  local _ = (cmd == "focus" and vim_cmd("b" .. target_buffer.number))
-    or (
-      cmd == "close"
-      and vim_cmd(("bd%s | redrawtabline"):format(target_buffer.number))
-    )
+  if goal == "focus" then
+    cmd("b" .. target_buffer.number)
+  elseif goal == "close" then
+    cmd(("bd%s | redrawtabline"):format(target_buffer.number))
+  end
 end
 
----@param settings  table
-local setup = function(settings)
-  gl_settings = settings
+local setup = function()
+  keymap.set("n", "<Plug>(cokeline-switch-prev)", function()
+    by_step("switch", -1)
+  end)
 
-  ---@param lhs  string
-  ---@param rhs  string
-  local plugmap = function(lhs, rhs)
-    vim_keymap("n", lhs, rhs, { noremap = true, silent = true })
-  end
+  keymap.set("n", "<Plug>(cokeline-switch-next)", function()
+    by_step("switch", 1)
+  end)
+
+  keymap.set("n", "<Plug>(cokeline-focus-prev)", function()
+    by_step("focus", -1)
+  end)
+
+  keymap.set("n", "<Plug>(cokeline-focus-next)", function()
+    by_step("focus", 1)
+  end)
+
+  keymap.set("n", "<Plug>(cokeline-pick-focus)", function()
+    pick("focus")
+  end)
+
+  keymap.set("n", "<Plug>(cokeline-pick-focus)", function()
+    pick("close")
+  end)
 
   for i = 1, 20 do
-    plugmap(
-      ("<Plug>(cokeline-switch-%s)"):format(i),
-      ('<Cmd>lua require"cokeline/mappings".by_index("switch", %s)<CR>'):format(
-        i
-      )
-    )
-    plugmap(
-      ("<Plug>(cokeline-focus-%s)"):format(i),
-      ('<Cmd>lua require"cokeline/mappings".by_index("focus", %s)<CR>'):format(
-        i
-      )
-    )
+    keymap.set("n", ("<Plug>(cokeline-switch-%s)"):format(i), function()
+      by_index("switch", i)
+    end)
+
+    keymap.set("n", ("<Plug>(cokeline-focus-%s)"):format(i), function()
+      by_index("focus", i)
+    end)
   end
-
-  plugmap(
-    "<Plug>(cokeline-switch-prev)",
-    '<Cmd>lua require"cokeline/mappings".by_step("switch", -1)<CR>'
-  )
-  plugmap(
-    "<Plug>(cokeline-switch-next)",
-    '<Cmd>lua require"cokeline/mappings".by_step("switch", 1)<CR>'
-  )
-  plugmap(
-    "<Plug>(cokeline-focus-prev)",
-    '<Cmd>lua require"cokeline/mappings".by_step("focus", -1)<CR>'
-  )
-  plugmap(
-    "<Plug>(cokeline-focus-next)",
-    '<Cmd>lua require"cokeline/mappings".by_step("focus", 1)<CR>'
-  )
-
-  plugmap(
-    "<Plug>(cokeline-pick-focus)",
-    '<Cmd>lua require"cokeline/mappings".pick("focus")<CR>'
-  )
-  plugmap(
-    "<Plug>(cokeline-pick-close)",
-    '<Cmd>lua require"cokeline/mappings".pick("close")<CR>'
-  )
 end
 
 return {
-  by_index = by_index,
-  by_step = by_step,
   is_picking_focus = function()
-    return gl_mut_is_picking.focus
+    return is_picking.focus
   end,
   is_picking_close = function()
-    return gl_mut_is_picking.close
+    return is_picking.close
   end,
-  pick = pick,
   setup = setup,
 }

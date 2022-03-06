@@ -1,17 +1,15 @@
 local has_devicons, rq_devicons = pcall(require, "nvim-web-devicons")
 
-local tbl_concat = table.concat
-local tbl_sort = table.sort
+local concat = table.concat
+local sort = table.sort
 
-local vim_bo = vim.bo
-local vim_cmd = vim.cmd
-local vim_diagnostics = vim.diagnostic or vim.lsp.diagnostic
-local vim_filter = vim.tbl_filter
-local vim_fn = vim.fn
-local vim_map = vim.tbl_map
-local vim_split = vim.split
-
-local gl_settings, buffer_sorter
+local bo = vim.bo
+local cmd = vim.cmd
+local diagnostic = vim.diagnostic or vim.lsp.diagnostic
+local filter = vim.tbl_filter
+local fn = vim.fn
+local map = vim.tbl_map
+local split = vim.split
 
 ---@type table<bufnr, valid_index>
 local order = {}
@@ -45,16 +43,18 @@ local taken_pick_letters = {}
 ---@field pick_letter   string
 ---@field devicon       table<string, string>
 ---@field diagnostics   table<string, number>
+local Buffer = {}
+Buffer.__index = Buffer
 
 ---@param buffers  Buffer[]
 ---@return Buffer[]
 local compute_unique_prefixes = function(buffers)
-  local is_windows = not vim_fn.has("win32") == 0
+  local is_windows = not fn.has("win32") == 0
 
   -- FIXME: it appears in windows sometimes directories are separated by '/'
   -- instead of '\\'??
   if is_windows then
-    buffers = vim_map(function(buffer)
+    buffers = map(function(buffer)
       buffer.path = buffer.path:gsub("/", "\\")
       return buffer
     end, buffers)
@@ -62,11 +62,11 @@ local compute_unique_prefixes = function(buffers)
 
   local path_separator = not is_windows and "/" or "\\"
 
-  local paths = vim_map(function(buffer)
-    return vim_fn.reverse(vim_split(buffer.path, path_separator))
+  local paths = map(function(buffer)
+    return fn.reverse(split(buffer.path, path_separator))
   end, buffers)
 
-  local prefixes = vim_map(function()
+  local prefixes = map(function()
     return {}
   end, buffers)
 
@@ -86,9 +86,9 @@ local compute_unique_prefixes = function(buffers)
   end
 
   for i, buffer in ipairs(buffers) do
-    buffer.unique_prefix = tbl_concat({
+    buffer.unique_prefix = concat({
       #prefixes[i] == #paths[i] and path_separator or "",
-      vim_fn.join(vim_fn.reverse(prefixes[i]), path_separator),
+      fn.join(fn.reverse(prefixes[i]), path_separator),
       #prefixes[i] > 0 and path_separator or "",
     })
   end
@@ -133,7 +133,7 @@ end
 ---@return table<string, string>
 local get_devicon = function(path, filename, type)
   local name = (type == "terminal") and "terminal" or filename
-  local extn = vim_fn.fnamemodify(path, ":e")
+  local extn = fn.fnamemodify(path, ":e")
   local icon, color = rq_devicons.get_icon_color(
     name,
     extn,
@@ -155,14 +155,14 @@ local get_diagnostics = function(bufnr)
     hints = 0,
   }
 
-  for _, diagnostic in ipairs(vim_diagnostics.get(bufnr)) do
-    if diagnostic.severity == 1 then
+  for _, d in ipairs(diagnostic.get(bufnr)) do
+    if d.severity == 1 then
       diagnostics.errors = diagnostics.errors + 1
-    elseif diagnostic.severity == 2 then
+    elseif d.severity == 2 then
       diagnostics.warnings = diagnostics.warnings + 1
-    elseif diagnostic.severity == 3 then
+    elseif d.severity == 3 then
       diagnostics.infos = diagnostics.infos + 1
-    elseif diagnostic.severity == 4 then
+    elseif d.severity == 4 then
       diagnostics.hints = diagnostics.hints + 1
     end
   end
@@ -172,21 +172,15 @@ end
 
 ---@param b  table
 ---@return Buffer
-local new_buffer = function(b)
-  local opts = vim_bo[b.bufnr]
+Buffer.new = function(b)
+  local opts = bo[b.bufnr]
 
-  local _valid_index = order[b.bufnr] or -1
-  local index = -1
   local number = b.bufnr
   local type = opts.buftype
-  local is_focused = (number == vim_fn.bufnr("%"))
-  local is_modified = opts.modified
-  local is_readonly = opts.readonly
   local path = b.name
-  local unique_prefix = ""
 
   local filename = (type == "quickfix" and "quickfix")
-    or (#path > 0 and vim_fn.fnamemodify(path, ":t"))
+    or (#path > 0 and fn.fnamemodify(path, ":t"))
     or "[No Name]"
 
   local filetype = not (b.variables and b.variables.netrw_browser_active)
@@ -200,23 +194,21 @@ local new_buffer = function(b)
   local devicon = has_devicons and get_devicon(path, filename, type)
     or { icon = "", color = "" }
 
-  local diagns = get_diagnostics(number)
-
   return {
-    _valid_index = _valid_index,
-    index = index,
-    number = number,
-    type = type,
-    is_focused = is_focused,
-    is_modified = is_modified,
-    is_readonly = is_readonly,
-    path = path,
-    unique_prefix = unique_prefix,
+    _valid_index = order[b.bufnr] or -1,
+    index = -1,
+    number = b.bufnr,
+    type = opts.buftype,
+    is_focused = (b.bufnr == fn.bufnr("%")),
+    is_modified = opts.modified,
+    is_readonly = opts.readonly,
+    path = b.name,
+    unique_prefix = "",
     filename = filename,
     filetype = filetype,
     pick_letter = pick_letter,
     devicon = devicon,
-    diagnostics = diagns,
+    diagnostics = get_diagnostics(number),
   }
 end
 
@@ -297,29 +289,33 @@ local move_buffer = function(buffer, target_valid_index)
     end
   end
 
-  vim_cmd("redrawtabline")
+  cmd("redrawtabline")
 end
 
 ---@return Buffer[]
 local get_valid_buffers = function()
-  local buffers = vim_filter(
-    function(buffer)
-      return buffer.filetype ~= "netrw"
-    end,
-    vim_map(function(b)
-      return new_buffer(b)
-    end, vim_fn.getbufinfo({ buflisted = 1 }))
-  )
+  local buffers = map(function(b)
+    return Buffer.new(b)
+  end, fn.getbufinfo({ buflisted = 1 }))
 
-  local valid_buffers = compute_unique_prefixes(
-    gl_settings.filter_valid and vim_filter(gl_settings.filter_valid, buffers)
-      or buffers
-  )
+  buffers = filter(function(buffer)
+    return buffer.filetype ~= "netrw"
+  end, buffers)
 
-  tbl_sort(valid_buffers, buffer_sorter)
+  if _G.cokeline.config.buffers.filter_valid then
+    buffers = filter(_G.cokeline.config.buffers.filter_valid, buffers)
+  end
+
+  buffers = compute_unique_prefixes(buffers)
+
+  if _G.cokeline.config.buffers.new_buffers_position == "last" then
+    sort(buffers, sort_by_new_after_last)
+  elseif _G.cokeline.config.buffers.new_buffers_position == "next" then
+    sort(buffers, sort_by_new_after_current)
+  end
 
   order = {}
-  for i, buffer in ipairs(valid_buffers) do
+  for i, buffer in ipairs(buffers) do
     buffer._valid_index = i
     order[buffer.number] = buffer._valid_index
     if buffer.is_focused then
@@ -327,19 +323,19 @@ local get_valid_buffers = function()
     end
   end
 
-  return valid_buffers
+  return buffers
 end
 
 ---@return Buffer[]
 local get_visible_buffers = function()
   _G.cokeline.valid_buffers = get_valid_buffers()
 
-  _G.cokeline.visible_buffers = gl_settings.filter_visible
-      and vim_filter(
-        gl_settings.filter_visible,
-        _G.cokeline.valid_buffers
-      )
-    or _G.cokeline.valid_buffers
+  _G.cokeline.visible_buffers = not _G.cokeline.config.buffers.filter_visible
+      and _G.cokeline.valid_buffers
+    or filter(
+      _G.cokeline.config.buffers.filter_visible,
+      _G.cokeline.valid_buffers
+    )
 
   for i, buffer in ipairs(_G.cokeline.visible_buffers) do
     buffer.index = i
@@ -348,18 +344,8 @@ local get_visible_buffers = function()
   return _G.cokeline.visible_buffers
 end
 
----@param settings  table
-local setup = function(settings)
-  gl_settings = settings
-  buffer_sorter = (
-      settings.new_buffers_position == "last" and sort_by_new_after_last
-    )
-    or (settings.new_buffers_position == "next" and sort_by_new_after_current)
-end
-
 return {
+  Buffer = Buffer,
+  get_visible = get_visible_buffers,
   move_buffer = move_buffer,
-  get_valid_buffers = get_valid_buffers,
-  get_visible_buffers = get_visible_buffers,
-  setup = setup,
 }

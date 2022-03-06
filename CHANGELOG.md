@@ -7,12 +7,51 @@ The format is based on [Keep a Changelog], and this project adheres to
 
 ## [Unreleased]
 
+## [0.3.0] - 2022-03-06
+
 ### Added
 
 - `buffers.focus_on_delete` config option to choose which buffer to focus after
-  a bufer is deleted.
+  a buffer is deleted.
 
 - component option `truncation.direction` can be set to `'middle'`.
+
+- sidebar components now allow all of their fields to be defined as a function
+  of the buffer they're being rendered for.
+
+### Changed
+
+- the component's `hl` subtable has been removed, i.e. from
+```lua
+{
+  text = ..,
+  hl = {
+    fg = ..,
+    bg = ..,
+    style = ..,
+  },
+}
+```
+to
+```lua
+{
+  text = ..,
+  fg = ..,
+  bg = ..,
+  style = ..,
+}
+```
+
+- `default_hl` is configured with a single table instead of having two separate
+  subtables for `focused` and `unfocused` buffers. The `buffer.is_focused`
+  option can be used instead if necessary;
+
+- the `rendering.left_sidebar` config option has been moved to `sidebar`.
+
+### Removed
+
+- `rendering.right_sidebar` config option, only left sidebars are supported
+  now.
 
 ## [0.2.0] - 2022-01-01
 
@@ -83,6 +122,7 @@ The format is based on [Keep a Changelog], and this project adheres to
 [Semantic Versioning]: https://semver.org/spec/v2.0.0.html
 [Keep a changelog]: https://keepachangelog.com/en/1.0.0/
 
-[unreleased]: https://github.com/noib3/nvim-cokeline/compare/v0.2.0...HEAD
+[unreleased]: https://github.com/noib3/nvim-cokeline/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/noib3/nvim-cokeline/releases/tag/v0.3.0
 [0.2.0]: https://github.com/noib3/nvim-cokeline/releases/tag/v0.2.0
 [0.1.0]: https://github.com/noib3/nvim-cokeline/releases/tag/v0.1.0

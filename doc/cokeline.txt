@@ -75,60 +75,44 @@ The valid keys are:
       -- value.
       -- default: `999`.
       max_buffer_width = int,
-
-      -- Left and right sidebars to integrate nicely with file explorer
-      -- plugins. Each of these is a table containing a `filetype` key and a
-      -- list of `components` to be rendered in the sidebar.
-      -- The last component will be automatically space padded if necessary
-      -- to ensure the sidebar and the window below it have the same width.
-      -- NOTE: unlike the `components` config option described below, right now
-      -- these components don't allow any of their fields (text, hl, etc.) to
-      -- be defined as a function of `buffer`.
-      left_sidebar = {
-        filetype = '<filetype>',
-        components = {..},
-      },
-      right_sidebar = {
-        filetype = '<filetype>',
-        components = {..},
-      },
     },
 
-    -- The default highlight group values for focused and unfocused buffers.
+    -- The default highlight group values.
     -- The `fg` and `bg` keys are either colors in hexadecimal format or
     -- functions taking a `buffer` parameter and returning a color in
     -- hexadecimal format. Similarly, the `style` key is either a string
     -- containing a comma separated list of items in `:h attr-list` or a
     -- function returning one.
     default_hl = {
-      focused = {
-        -- default: `ColorColumn`'s background color.
-        fg = '#rrggbb' | function(buffer) -> '#rrggbb',
+      -- default: `ColorColumn`'s background color for focused buffers,
+      -- `Normal`'s foreground color for unfocused ones.
+      fg = '#rrggbb' | function(buffer) -> '#rrggbb',
 
-        -- default: `Normal`'s foreground color.
-        bg = '#rrggbb' | function(buffer) -> '#rrggbb',
+      -- default: `Normal`'s foreground color for focused buffers,
+      -- `ColorColumn`'s background color for unfocused ones.
+      -- default: `Normal`'s foreground color.
+      bg = '#rrggbb' | function(buffer) -> '#rrggbb',
 
-        -- default: `'NONE'`.
-        style = 'NONE' | 'bold' | 'italic',
-      },
-
-      unfocused = {
-        -- default: `Normal`'s foreground color.
-        fg = '#rrggbb' | function(buffer) -> '#rrggbb',
-
-        -- default: `ColorColumn`'s background color.
-        bg = '#rrggbb' | function(buffer) -> '#rrggbb',
-
-        -- default: `'NONE'`.
-        style = 'NONE' | 'bold' | 'italic',
-      },
+      -- default: `'NONE'`.
+      style = 'attr1,attr2,...' | function(buffer) -> 'attr1,attr2,...',
     },
+
 
     -- A list of components to be rendered for each buffer (see
     -- |cokeline-components|).
     -- default: see
     -- https://github.com/noib3/nvim-cokeline/blob/master/lua/cokeline/defaults.lua
     components = {},
+
+    -- Left sidebar to integrate nicely with file explorer plugins.
+    -- This is a table containing a `filetype` key and a list of `components` to
+    -- be rendered in the sidebar.
+    -- The last component will be automatically space padded if necessary
+    -- to ensure the sidebar and the window below it have the same width.
+    sidebar = {
+      filetype = '<filetype>',
+      components = {..},
+    },
   })
 <
 
@@ -247,11 +231,9 @@ Every component passed to the `components` list has to be a table of the form:
 
     -- The foreground, backgrond and style of the component. `style` is a
     -- comma-separated string of values defined in `:h attr-list`.
-    hl = {
-      fg = '#rrggbb' | function(buffer) -> '#rrggbb' | nil,
-      bg = '#rrggbb' | function(buffer) -> '#rrggbb' | nil,
-      style = 'string' | nil,
-    },
+    fg = '#rrggbb' | function(buffer) -> '#rrggbb' | nil,
+    bg = '#rrggbb' | function(buffer) -> '#rrggbb' | nil,
+    style = 'string' | nil,
 
     -- If `true` the buffer will be deleted when this component is
     -- left-clicked (useful to implement close buttons).

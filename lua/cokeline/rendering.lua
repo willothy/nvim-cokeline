@@ -1,167 +1,79 @@
-local rq_components = require("cokeline/components")
-local rq_sidebars = require("cokeline/sidebars")
+local components = require("cokeline/components")
+local sidebar = require("cokeline/sidebar")
 
-local tbl_insert = table.insert
-local tbl_remove = table.remove
-local tbl_sort = table.sort
-local tbl_unpack = unpack or table.unpack
+local insert = table.insert
+local sort = table.sort
+local unpack = unpack or table.unpack
 
-local vim_filter = vim.tbl_filter
-local vim_fn = vim.fn
-local vim_list_extend = vim.list_extend
-local vim_opt = vim.opt
-
-local gl_comps, gl_default_hls, gl_settings
+local extend = vim.list_extend
+local filter = vim.tbl_filter
+local o = vim.o
 
 ---@type index
-local gl_mut_current_buffer_index
+local current_index
 
 ---@param buffers  Buffer[]
 ---@param previous_buffer_index  index
 ---@return Buffer
 local find_current_buffer = function(buffers, previous_buffer_index)
-  local focused_buffer = vim_filter(function(buffer)
+  local focused_buffer = filter(function(buffer)
     return buffer.is_focused
   end, buffers)[1]
 
   return focused_buffer or buffers[previous_buffer_index] or buffers[#buffers]
 end
 
----@param components  Component[]
----@return number
-local get_width_of_components = function(components)
-  local width_of_components = 0
-  for _, component in pairs(components) do
-    width_of_components = width_of_components + component.width
-  end
-  return width_of_components
-end
-
----@param comp1  Comp
----@param comp2  Comp
+---@param c1  Component
+---@param c2  Component
 ---@return boolean
-local sort_by_decreasing_priority = function(comp1, comp2)
-  return comp1.truncation.priority < comp2.truncation.priority
+local by_decreasing_priority = function(c1, c2)
+  return c1.truncation.priority < c2.truncation.priority
 end
 
----@param comp1  Comp
----@param comp2  Comp
+---@param c1  Component
+---@param c2  Component
 ---@return boolean
-local sort_by_increasing_idx = function(comp1, comp2)
-  return comp1.idx < comp2.idx
+local by_increasing_index = function(c1, c2)
+  return c1.index < c2.index
 end
 
----Takes in a list of components, a number of characters given by
----`available_space` and an optional 'left' or 'right' `direction`, returns a
----new list of components `available_space` wide obtained by trimming
----the original `components` in the given direction.
----@param components  Component[]
----@param available_space  number
----@param direction  '"left"' | '"right"' | nil
----@return Component[]
-local trim_components = function(components, available_space, direction)
-  local width_of_components = get_width_of_components(components)
-
-  local continuation_fmt_width = vim_fn.strwidth(
-    rq_components.gl_continuation_fmts[direction and "edges" or "buffers"].left:format(
-      ""
-    )
-  ) -- aka 1
-
-  local next = direction == "left" and function(_)
-    return 1
-  end or function(i)
-    return i - 1
-  end
-
-  local prev = direction == "left" and function(_)
-    return 1
-  end or function(i)
-    return i + 1
-  end
-
-  local i = direction == "left" and 1 or #components
-  local last_removed_component
-  while
-    (width_of_components > available_space)
-    or (
-      components[i].width + available_space - width_of_components
-      < continuation_fmt_width
-    )
-  do
-    width_of_components = width_of_components - components[i].width
-    last_removed_component = tbl_remove(components, i)
-    i = next(i)
-    if #components == 0 then
-      break
+-- Takes in either a single buffer or a list of buffers, and it returns a list
+-- of all the rendered components together with their total combined width.
+---@param buffers Buffer|Buffer[]
+---@return Component, number
+local function to_components(buffers)
+  -- A simple heuristic to check if we're dealing with single buffer or a list
+  -- of them is to just check if one of they keys is defined.
+  if buffers.number then
+    local cs = {}
+    for _, c in ipairs(_G.cokeline.components) do
+      local rendered = c:render(buffers)
+      if rendered.width > 0 then
+        insert(cs, rendered)
+      end
     end
-  end
 
-  if
-    (continuation_fmt_width < available_space - width_of_components)
-    or #components == 0
-  then
-    tbl_insert(
-      components,
-      prev(i),
-      rq_components.shorten_component(
-        last_removed_component,
-        available_space - width_of_components,
-        direction
-      )
-    )
+    local width = components.width(cs)
+    if width <= _G.cokeline.config.rendering.max_buffer_width then
+      return cs, width
+    else
+      sort(cs, by_decreasing_priority)
+      components.shorten(cs, _G.cokeline.config.rendering.max_buffer_width)
+      sort(cs, by_increasing_index)
+      return cs, _G.cokeline.config.rendering.max_buffer_width
+    end
   else
-    components[i] = rq_components.shorten_component(
-      components[i],
-      components[i].width + available_space - width_of_components,
-      direction
-    )
-  end
-
-  return components
-end
-
----Takes in a buffer and returns a list of all its components plus their total
----combined width.
----@param buffer  Buffer
----@return Component[], number
-local buffer_to_components = function(buffer)
-  local hl = gl_default_hls[buffer.is_focused and "focused" or "unfocused"]
-  local components = {}
-  for _, comp in ipairs(gl_comps) do
-    local component = rq_components.comp_to_component(comp, hl, buffer)
-    if component.width > 0 then
-      tbl_insert(components, component)
+    local cs = {}
+    local width = 0
+    for _, buffer in ipairs(buffers) do
+      local buf_components, buf_width = to_components(buffer)
+      width = width + buf_width
+      for _, component in pairs(buf_components) do
+        insert(cs, component)
+      end
     end
+    return cs, width
   end
-
-  local width_of_components = get_width_of_components(components)
-
-  if width_of_components <= gl_settings.max_buffer_width then
-    return components, width_of_components
-  else
-    tbl_sort(components, sort_by_decreasing_priority)
-    components = trim_components(components, gl_settings.max_buffer_width)
-    tbl_sort(components, sort_by_increasing_idx)
-    return components, gl_settings.max_buffer_width
-  end
-end
-
----Takes in a list of buffers and returns a list of all their components plus
----their total combined width.
----@param buffers  Buffer[]
----@return Component[], number
-local buffers_to_components = function(buffers)
-  local components = {}
-  local width_of_components = 0
-  for _, buffer in ipairs(buffers) do
-    local buffer_components, width = buffer_to_components(buffer)
-    width_of_components = width_of_components + width
-    for _, component in ipairs(buffer_components) do
-      tbl_insert(components, component)
-    end
-  end
-  return components, width_of_components
 end
 
 ---This is the main function responsible for rendering the bufferline. It takes
@@ -170,121 +82,74 @@ end
 ---@param visible_buffers  Buffer[]
 ---@return string
 local render = function(visible_buffers)
-  -- Pipeline in pseudo F# syntax is:
-  -- check_if_sidebars_need_to_be_displayed
-  -- >> get_available_space
-  -- >> find_current_buffer
-  -- >> check_if_current_buffer_alone_fits
-  -- >> render_all_buffers_{left,right}_of_current
-  -- >> get_available_space_{left,right}_of_current_buffer
-  -- >> check_if_buffers_{left,right}_of_current_need_to_be_trimmed
-  -- >> render_components
-
-  -- Get left and right sidebar components.
-  local left_sidebar_components, right_sidebar_components =
-    (gl_settings.left_sidebar or gl_settings.right_sidebar)
-        and rq_sidebars.get_left_right_sidebar_components(
-          gl_settings.left_sidebar,
-          gl_settings.right_sidebar,
-          gl_default_hls,
-          vim_fn.winlayout()
-        )
-      or {},
-    {}
-
-  -- Compute available space for the buffer components.
-  local available_space = vim_opt.columns._value
-    - get_width_of_components(left_sidebar_components)
-    - get_width_of_components(right_sidebar_components)
-
-  local current_buffer = find_current_buffer(
-    visible_buffers,
-    gl_mut_current_buffer_index
-  )
-  gl_mut_current_buffer_index = current_buffer.index
-
-  local components_of_current, width_of_current = buffer_to_components(
-    current_buffer
-  )
-
-  if width_of_current >= available_space then
-    if #visible_buffers == 1 then
-      components_of_current = trim_components(
-        components_of_current,
-        available_space
-      )
-    end
-    if current_buffer.index > 1 then
-      components_of_current = trim_components(
-        components_of_current,
-        available_space,
-        "left"
-      )
-    end
-    if current_buffer.index < #visible_buffers then
-      components_of_current = trim_components(
-        components_of_current,
-        available_space,
-        "right"
-      )
-    end
-    return rq_components.render_components(left_sidebar_components)
-      .. rq_components.render_components(components_of_current)
-      .. rq_components.render_components(right_sidebar_components)
+  local sidebar_components = sidebar.get_components()
+  local available_width = o.columns - components.width(sidebar_components)
+  if available_width == 0 then
+    return components.render(sidebar_components)
   end
 
-  local components_left_of_current, width_left_of_current =
-    buffers_to_components({
-      tbl_unpack(visible_buffers, 1, current_buffer.index - 1),
-    })
+  local current_buffer = find_current_buffer(visible_buffers, current_index)
+  current_index = current_buffer.index
 
-  local components_right_of_current, width_right_of_current =
-    buffers_to_components({
-      tbl_unpack(visible_buffers, current_buffer.index + 1, #visible_buffers),
-    })
+  local current_components, current_width = to_components(current_buffer)
+  if current_width >= available_width then
+    sort(current_components, by_decreasing_priority)
+    components.shorten(current_components, available_width)
+    sort(current_components, by_increasing_index)
+    if current_buffer.index > 1 then
+      components.shorten(current_components, available_width, "left")
+    end
+    if current_buffer.index < #visible_buffers then
+      components.shorten(current_components, available_width, "right")
+    end
+    return components.render(sidebar_components)
+      .. components.render(current_components)
+  end
 
-  local components = vim_list_extend(
-    vim_list_extend(components_left_of_current, components_of_current),
-    components_right_of_current
+  local left_components, left_width = to_components({
+    unpack(visible_buffers, 1, current_buffer.index - 1),
+  })
+
+  local right_components, right_width = to_components({
+    unpack(visible_buffers, current_buffer.index + 1, #visible_buffers),
+  })
+
+  local available_width_left, available_width_right =
+    _G.cokeline.config.rendering.slider(
+      available_width - current_width,
+      left_width,
+      right_width
+    )
+
+  -- If we handled left, current and right components separately we might have
+  -- to shorten the left or right components with a `to_width` parameter of 1,
+  -- in which case the correct behaviour would be to "shorten" the current
+  -- buffer components instead.
+  --
+  -- To avoid this, we join all the buffer components together *before*
+  -- checking if they need to be shortened.
+  local buffer_components = extend(
+    extend(left_components, current_components),
+    right_components
   )
 
-  local available_space_left, available_space_right = gl_settings.slider(
-    available_space - width_of_current,
-    width_left_of_current,
-    width_right_of_current
-  )
-
-  if width_left_of_current > available_space_left then
-    components = trim_components(
-      components,
-      available_space_left + width_of_current + width_right_of_current,
+  if left_width > available_width_left then
+    components.shorten(
+      buffer_components,
+      available_width_left + current_width + right_width,
       "left"
     )
   end
-
-  if width_right_of_current > available_space_right then
-    components = trim_components(components, available_space, "right")
+  if right_width > available_width_right then
+    components.shorten(buffer_components, available_width, "right")
   end
 
-  return rq_components.render_components(left_sidebar_components)
-    .. rq_components.render_components(components)
-    .. rq_components.render_components(right_sidebar_components)
-end
-
----@param settings  table
----@param default_hl  table
----@param comps  Comp[]
-local setup = function(settings, default_hl, comps)
-  gl_settings = settings
-  gl_default_hls = default_hl
-  gl_comps = comps
+  return components.render(sidebar_components)
+    .. components.render(buffer_components)
 end
 
 return {
-  sort_by_decreasing_priority = sort_by_decreasing_priority,
-  sort_by_increasing_idx = sort_by_increasing_idx,
-  trim_components = trim_components,
-  get_width_of_components = get_width_of_components,
+  by_decreasing_priority = by_decreasing_priority,
+  by_increasing_index = by_increasing_index,
   render = render,
-  setup = setup,
 }
