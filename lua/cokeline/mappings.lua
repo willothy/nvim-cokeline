@@ -160,7 +160,7 @@ local setup = function()
     for i = 1, 20 do
       set_keymap(
         "n",
-        ("<Plug>(cokeline-focus-%s)"):format(i),
+        ("<Plug>(cokeline-switch-%s)"):format(i),
         ('<Cmd>lua require"cokeline/mappings".by_index("switch", %s)<CR>'):format(
           i
         ),
