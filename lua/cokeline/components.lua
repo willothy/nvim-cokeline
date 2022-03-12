@@ -57,7 +57,7 @@ end
 Component.render = function(self, buffer)
   local evaluate = function(field)
     return (type(field) == "string" and field)
-      or (type(field) == "function" and field(buffer))
+      or (type(field) == "function" and field(buffer, _G.cokeline.valid_buffers))
   end
 
   local component = vim.deepcopy(self)
