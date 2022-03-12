@@ -309,11 +309,9 @@ require('cokeline').setup({
     components = {
       {
         text = '  NvimTree',
-        hl = {
-          fg = yellow,
-          bg = get_hex('NvimTreeNormal', 'bg'),
-          style = 'bold'
-        }
+        fg = yellow,
+        bg = get_hex('NvimTreeNormal', 'bg'),
+        style = 'bold',
       },
     }
   },
@@ -571,7 +569,7 @@ buffer = {
     icon = 'string',
 
     -- The colors of the devicon in hexadecimal format (useful to be passed
-    -- to a component's `hl.fg` field (see the `Components` section).
+    -- to a component's `fg` field (see the `Components` section).
     color = '#rrggbb',
   },
 
@@ -1128,11 +1126,9 @@ require('cokeline').setup({
     components = {
       {
         text = '  NvimTree',
-        hl = {
-          fg = yellow,
-          bg = get_hex('NvimTreeNormal', 'bg'),
-          style = 'bold'
-        }
+        fg = yellow,
+        bg = get_hex('NvimTreeNormal', 'bg'),
+        style = 'bold',
       },
     }
   },

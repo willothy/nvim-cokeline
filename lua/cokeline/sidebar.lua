@@ -65,7 +65,9 @@ local get_components = function()
   local width = 0
   for i, c in ipairs(_G.cokeline.config.sidebar.components) do
     local component = Component.new(c, i):render(buffer)
-    if component.width > 0 then
+    -- We need at least one component, otherwise we can't add padding to the
+    -- last component if needed.
+    if component.width > 0 or #sidebar_components == 0 then
       insert(sidebar_components, component)
       width = width + component.width
     end
