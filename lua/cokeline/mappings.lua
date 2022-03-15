@@ -108,7 +108,7 @@ local setup = function()
       pick("focus")
     end)
 
-    keymap.set("n", "<Plug>(cokeline-pick-focus)", function()
+    keymap.set("n", "<Plug>(cokeline-pick-close)", function()
       pick("close")
     end)
     for i = 1, 20 do
