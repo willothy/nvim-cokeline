@@ -380,10 +380,7 @@ them with a right click:
 
 ## :electric_plug: Requirements
 
-The two main requirements are Neovim 0.5+ and the `termguicolors` option to be
-set. If you want to display devicons in your bufferline you'll also need the
-[kyazdani42/nvim-web-devicons](https://github.com/kyazdani42/nvim-web-devicons)
-plugin and a patched font (see [Nerd Fonts](https://www.nerdfonts.com/)).
+The three main requirements are Neovim 0.5+, `bufdelete.nvim` to properly handle closing tabs, and the `termguicolors` option to be set. If you want to display devicons in your bufferline you'll also need the [kyazdani42/nvim-web-devicons](https://github.com/kyazdani42/nvim-web-devicons) plugin and a patched font (see [Nerd Fonts](https://www.nerdfonts.com/)).
 
 
 ## :package: Installation
