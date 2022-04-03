@@ -403,6 +403,7 @@ require('packer').startup(function()
     requires = {
       'kyazdani42/nvim-web-devicons', -- Optional: If you want devicons
       'famiu/bufdelete.nvim'
+    }
   })
   -- ...
 end)
