@@ -397,10 +397,12 @@ require('packer').startup(function()
   -- ...
   use({
     'noib3/nvim-cokeline',
-    requires = 'kyazdani42/nvim-web-devicons', -- If you want devicons
     config = function()
       require('cokeline').setup()
-    end
+    end,
+    requires = {
+      'kyazdani42/nvim-web-devicons', -- Optional: If you want devicons
+      'famiu/bufdelete.nvim'
   })
   -- ...
 end)
