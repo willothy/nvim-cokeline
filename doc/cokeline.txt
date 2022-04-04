@@ -112,6 +112,10 @@ The valid keys are:
     sidebar = {
       filetype = '<filetype>',
       components = {..},
+
+      -- Add additional padding to the component.
+      -- default: `0`
+      padding = int,
     },
   })
 <

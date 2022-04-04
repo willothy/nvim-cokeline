@@ -514,6 +514,10 @@ require('cokeline').setup({
   sidebar = {
     filetype = '<filetype>',
     components = {..},
+
+    -- Add additional padding to the component.
+    -- default: `0`
+    padding = int,
   },
 })
 ```

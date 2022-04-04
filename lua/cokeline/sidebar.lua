@@ -81,7 +81,8 @@ local get_components = function()
     components.shorten(sidebar_components, sidebar_width)
     sort(sidebar_components, rendering.by_decreasing_index)
   elseif width < sidebar_width then
-    local space_left = sidebar_width - width
+    local padding = _G.cokeline.config.sidebar.padding or 0
+    local space_left = sidebar_width - width + padding
     local last = #sidebar_components
     sidebar_components[last].text = sidebar_components[last].text
       .. rep(" ", space_left)
