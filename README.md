@@ -1,10 +1,10 @@
 <h1 align="center">
-  &#128067; nvim-cokeline
+  &#128067; nvim-bufferline
 </h1>
 
-<p align="center">
-<i>A Neovim bufferline for people with addictive personalities</i>
-</p>
+<!-- <p align="center"> -->
+<!-- <i>A Neovim bufferline for people with addictive personalities</i> -->
+<!-- </p> -->
 
 The goal of this plugin is not to be an opinionated bufferline with (more or
 less) limited customization options. Rather, it tries to provide a general
@@ -28,7 +28,7 @@ might look like.
 
 ### Endlessly customizable
 
-`nvim-cokeline` aims to be the most customizable bufferline plugin around. If
+`nvim-bufferline` aims to be the most customizable bufferline plugin around. If
 you have an idea in mind of what your bufferline should look like, you should
 be able to make it look that way. If you can't, open an issue and we'll try to
 make it happen!
@@ -187,7 +187,7 @@ require('cokeline').setup({
 ### Dynamic rendering
 <!-- ### Dynamic rendering (with sliders) -->
 
-Even when you have a lot of buffers open, `nvim-cokeline` is rendered to always
+Even when you have a lot of buffers open, `nvim-bufferline` is rendered to always
 keep the focused buffer visible and in the middle of the bufferline. Also, if a
 buffer doesn't fit entirely we still try to include as much of it as possible
 before cutting off the rest.
