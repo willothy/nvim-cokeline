@@ -49,7 +49,7 @@ Buffer.__index = Buffer
 ---@param buffers  Buffer[]
 ---@return Buffer[]
 local compute_unique_prefixes = function(buffers)
-  local is_windows = not fn.has("win32") == 0
+  local is_windows = fn.has("win32") == 1
 
   -- FIXME: it appears in windows sometimes directories are separated by '/'
   -- instead of '\\'??
