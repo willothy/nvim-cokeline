@@ -541,6 +541,12 @@ buffer = {
 
   is_readonly = true | false,
 
+  -- The buffer is the first visible buffer in the tab bar
+  is_first    = true | false,
+  
+  -- The buffer is the last visible buffer in the tab bar
+  is_last     = true | false,
+
   -- The buffer's type as reported by `:echo &buftype`.
   type = 'string',
 
