@@ -200,6 +200,8 @@ Buffer.new = function(b)
     number = b.bufnr,
     type = opts.buftype,
     is_focused = (b.bufnr == fn.bufnr("%")),
+    is_first = false,
+    is_last = false,
     is_modified = opts.modified,
     is_readonly = opts.readonly,
     path = b.name,
@@ -336,6 +338,11 @@ local get_visible_buffers = function()
       _G.cokeline.config.buffers.filter_visible,
       _G.cokeline.valid_buffers
     )
+
+  if #_G.cokeline.visible_buffers > 0 then
+    _G.cokeline.visible_buffers[1].is_first = true
+    _G.cokeline.visible_buffers[#_G.cokeline.visible_buffers].is_last = true
+  end
 
   for i, buffer in ipairs(_G.cokeline.visible_buffers) do
     buffer.index = i
