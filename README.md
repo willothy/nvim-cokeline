@@ -821,7 +821,7 @@ local components = {
         or (buffer.is_focused and 'bold')
         or (buffer.diagnostics.errors ~= 0 and 'underline')
         or nil
-    end
+    end,
     truncation = {
       priority = 2,
       direction = 'left',
@@ -850,7 +850,7 @@ local components = {
     end,
     fg = function(buffer)
       return buffer.is_modified and green or nil
-    end
+    end,
     delete_buffer_on_left_click = true,
     truncation = { priority = 1 },
   },
