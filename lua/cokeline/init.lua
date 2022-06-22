@@ -34,8 +34,8 @@ local setup = function(preferences)
   if fn.has("tablineat") then
     vim.cmd([[
     function! CokelineHandleClick(minwid, clicks, button, modifiers)
-      let l:command = (a:button =~ 'l') ? 'buffer' : 'bdelete'
-      execute printf('%s %s', l:command, a:minwid)
+      if a:button != 'l' | return | endif
+      execute printf('buffer %s', a:minwid)
     endfunction
 
     function! CokelineHandleCloseButtonClick(minwid, clicks, button, modifiers)
