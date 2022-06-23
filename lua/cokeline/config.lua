@@ -14,9 +14,15 @@ local defaults = {
   ---@param click string left "l" or right "r" click
   ---@param clicks number number of clicks
   handler_click = function(buffer, click, clicks)
+    local cmd = click == "l" and "buffer" or "bdelete"
+    vim.cmd(cmd .. " " .. buffer.number)
+  end,
+
+  ---@param buffer Buffer
+  ---@param click string left "l" or right "r" click
+  ---@param clicks number number of clicks
+  handler_component_click = function(buffer, click, clicks)
     if click == "l" then
-      vim.cmd("buffer " .. buffer.number)
-    else
       vim.cmd("bdelete " .. buffer.number)
     end
   end,

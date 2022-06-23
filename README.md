@@ -515,6 +515,26 @@ require('cokeline').setup({
     filetype = '<filetype>',
     components = {..},
   },
+
+  ---Function to handler with click
+  ---@param buffer Buffer
+  ---@param click string left "l" or right "r" click
+  ---@param clicks number number of clicks
+  handler_click = function(buffer, click, clicks)
+    local cmd = click == "l" and "buffer" or "bdelete"
+    vim.cmd(cmd .. " " .. buffer.number)
+  end,
+
+  ---Function to handler with component with `delete_buffer_on_left_click` option
+  ---@param buffer Buffer
+  ---@param click string left "l" or right "r" click
+  ---@param clicks number number of clicks
+  handler_component_click = function(buffer, click, clicks)
+    -- Left click
+    if click == "l" then
+      vim.cmd("bdelete " .. buffer.number)
+    end
+  end,
 })
 ```
 

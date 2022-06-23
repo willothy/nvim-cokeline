@@ -36,6 +36,10 @@ local setup = function(preferences)
       function! CokelineHandleClick(minwid, clicks, button, modifiers)
         execute printf('lua require("cokeline.utils").wrapper_handler_click(%s, "%s", %d)', a:minwid, a:button, a:clicks)
       endfunction
+
+      function! CokelineHandleClickComponent(minwid, clicks, button, modifiers)
+        execute printf('lua require("cokeline.utils").wrapper_handler_click_component(%s, "%s", %d)', a:minwid, a:button, a:clicks)
+      endfunction
     ]])
   end
 

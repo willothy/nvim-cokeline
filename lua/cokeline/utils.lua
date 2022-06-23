@@ -20,7 +20,16 @@ local wrapper_handler_click = function (bufnr, clicks, click)
   _G.cokeline.config.handler_click(buffers.get_buffer(bufnr), clicks, click)
 end
 
+---Wrapper handler component click
+---@param bufnr number
+---@param clicks number
+---@param click string
+local wrapper_handler_click_component = function (bufnr, clicks, click)
+  _G.cokeline.config.handler_component_click(buffers.get_buffer(bufnr), clicks, click)
+end
+
 return {
   get_hex = get_hex,
-  wrapper_handler_click = wrapper_handler_click
+  wrapper_handler_click = wrapper_handler_click,
+  wrapper_handler_click_component = wrapper_handler_click_component
 }
