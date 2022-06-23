@@ -525,7 +525,7 @@ require('cokeline').setup({
     vim.cmd(cmd .. " " .. buffer.number)
   end,
 
-  ---Function to handler with component with `delete_buffer_on_left_click` option
+  ---Function to handler with component click when `delete_buffer_on_left_click` is enabled
   ---@param buffer Buffer
   ---@param click string left "l" or right "r" click
   ---@param clicks number number of clicks
