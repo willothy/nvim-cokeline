@@ -10,6 +10,17 @@ local islist = vim.tbl_islist
 local defaults = {
   show_if_buffers_are_at_least = 1,
 
+  ---@param buffer Buffer
+  ---@param click string left "l" or right "r" click
+  ---@param clicks number number of clicks
+  handler_click = function(buffer, click, clicks)
+    if click == "l" then
+      vim.cmd("buffer " .. buffer.number)
+    else
+      vim.cmd("bdelete " .. buffer.number)
+    end
+  end,
+
   buffers = {
     filter_valid = false,
     filter_visible = false,

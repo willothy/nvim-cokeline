@@ -33,16 +33,10 @@ local setup = function(preferences)
 
   if fn.has("tablineat") then
     vim.cmd([[
-    function! CokelineHandleClick(minwid, clicks, button, modifiers)
-      if a:button != 'l' | return | endif
-      execute printf('buffer %s', a:minwid)
-    endfunction
-
-    function! CokelineHandleCloseButtonClick(minwid, clicks, button, modifiers)
-      if a:button != 'l' | return | endif
-      execute printf('bdelete %s', a:minwid)
-    endfunction
-  ]])
+      function! CokelineHandleClick(minwid, clicks, button, modifiers)
+        execute printf('lua require("cokeline.utils").wrapper_handler_click(%s, "%s", %d)', a:minwid, a:button, a:clicks)
+      endfunction
+    ]])
   end
 
   opt.showtabline = 2

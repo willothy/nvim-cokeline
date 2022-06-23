@@ -192,14 +192,14 @@ end
 local render_components = function(components)
   local embed = function(component)
     local text = component.hlgroup:embed(component.text)
-    if not fn.has("tablineat") then
-      return text
-    else
-      local on_click = component.delete_buffer_on_left_click
-          and "CokelineHandleCloseButtonClick"
-        or "CokelineHandleClick"
-      return ("%%%s@%s@%s%%X"):format(component.bufnr, on_click, text)
-    end
+    -- if not fn.has("tablineat") then
+    --   return text
+    -- else
+      -- local on_click = component.delete_buffer_on_left_click
+      --     and "CokelineHandleCloseButtonClick"
+      --   or "CokelineHandleClick"
+    return ("%%%s@%s@%s%%X"):format(component.bufnr, "CokelineHandleClick", text)
+    -- end
   end
 
   return concat(map(function(component)

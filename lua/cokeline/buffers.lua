@@ -351,8 +351,16 @@ local get_visible_buffers = function()
   return _G.cokeline.visible_buffers
 end
 
+---Get Buffer
+---@param bufnr number
+---@return Buffer|nil
+local get_buffer = function (bufnr)
+  return vim.tbl_filter(function(buffer) return buffer.number == bufnr end, get_visible_buffers())[1] or nil
+end
+
 return {
   Buffer = Buffer,
   get_visible = get_visible_buffers,
   move_buffer = move_buffer,
+  get_buffer = get_buffer
 }
