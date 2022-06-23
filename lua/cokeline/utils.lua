@@ -17,7 +17,11 @@ end
 ---@param clicks number
 ---@param click string
 local wrapper_handler_click = function (bufnr, clicks, click)
-  _G.cokeline.config.handler_click(buffers.get_buffer(bufnr), clicks, click)
+  local buffer = buffers.get_buffer(bufnr)
+
+  if buffer then
+    _G.cokeline.config.handler_click(buffer, clicks, click)
+  end
 end
 
 ---Wrapper handler component click
@@ -25,7 +29,11 @@ end
 ---@param clicks number
 ---@param click string
 local wrapper_handler_click_component = function (bufnr, clicks, click)
-  _G.cokeline.config.handler_component_click(buffers.get_buffer(bufnr), clicks, click)
+  local buffer = buffers.get_buffer(bufnr)
+
+  if buffer then
+    _G.cokeline.config.handler_component_click(buffer, clicks, click)
+  end
 end
 
 return {
