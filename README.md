@@ -516,7 +516,7 @@ require('cokeline').setup({
     components = {..},
   },
 
-  ---Function to handler with click
+  ---Function to handle with click
   ---@param buffer Buffer
   ---@param click string left "l" or right "r" click
   ---@param clicks number number of clicks
@@ -529,7 +529,7 @@ require('cokeline').setup({
   ---@param buffer Buffer
   ---@param click string left "l" or right "r" click
   ---@param clicks number number of clicks
-  handle_component_click = function(buffer, click, clicks)
+  handle_click_component = function(buffer, click, clicks)
     -- Left click
     if click == "l" then
       vim.cmd("bdelete " .. buffer.number)
@@ -661,8 +661,8 @@ Every component passed to the `components` list has to be a table of the form:
   bg = '#rrggbb' | function(buffer) -> '#rrggbb',
   style = 'attr1,attr2,...' | function(buffer) -> 'attr1,attr2,...',
 
-  -- If `true` the buffer will be deleted when this component is
-  -- left-clicked (usually used to implement close buttons).
+  -- If `true` the `handle_click_component` function will be trigged
+  -- (usually used to implement close buttons).
   click = true | false,
 
   truncation = {
