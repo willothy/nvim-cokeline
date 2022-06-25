@@ -32,7 +32,7 @@ local wrapper_handle_click_component = function (bufnr, clicks, click)
   local buffer = buffers.get_buffer(bufnr)
 
   if buffer then
-    _G.cokeline.config.handle_component_click(buffer, clicks, click)
+    _G.cokeline.config.handle_click_component(buffer, clicks, click)
   end
 end
 
