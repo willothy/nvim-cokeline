@@ -14,7 +14,7 @@ local map = vim.tbl_map
 ---@field style  string|fun(buffer:Buffer): string
 ---@field fg  string|fun(buffer:Buffer): string
 ---@field bg  string|fun(buffer:Buffer): string
----@field delete_buffer_on_left_click  boolean
+---@field click boolean
 ---@field truncation  table
 ---@field idx  number
 ---@field bufnr  bufnr
@@ -35,7 +35,7 @@ Component.new = function(c, i, default_hl)
     fg = c.fg or default_hl.fg or "NONE",
     bg = c.bg or default_hl.bg or "NONE",
     style = c.style or default_hl.style or "NONE",
-    delete_buffer_on_left_click = c.delete_buffer_on_left_click or false,
+    click = c.click or false,
     truncation = {
       priority = c.truncation and c.truncation.priority or i,
       direction = c.truncation and c.truncation.direction or "right",
@@ -195,7 +195,7 @@ local render_components = function(components)
     if not fn.has("tablineat") then
       return text
     else
-      local on_click = component.delete_buffer_on_left_click
+      local on_click = component.click
           and "CokelineHandleCloseButtonClick"
         or "CokelineHandleClick"
       return ("%%%s@%s@%s%%X"):format(component.bufnr, on_click, text)

@@ -16,11 +16,11 @@ end
 ---@param bufnr number
 ---@param clicks number
 ---@param click string
-local wrapper_handler_click = function (bufnr, clicks, click)
+local wrapper_handle_click = function (bufnr, clicks, click)
   local buffer = buffers.get_buffer(bufnr)
 
   if buffer then
-    _G.cokeline.config.handler_click(buffer, clicks, click)
+    _G.cokeline.config.handle_click(buffer, clicks, click)
   end
 end
 
@@ -28,16 +28,16 @@ end
 ---@param bufnr number
 ---@param clicks number
 ---@param click string
-local wrapper_handler_click_component = function (bufnr, clicks, click)
+local wrapper_handle_click_component = function (bufnr, clicks, click)
   local buffer = buffers.get_buffer(bufnr)
 
   if buffer then
-    _G.cokeline.config.handler_component_click(buffer, clicks, click)
+    _G.cokeline.config.handle_component_click(buffer, clicks, click)
   end
 end
 
 return {
   get_hex = get_hex,
-  wrapper_handler_click = wrapper_handler_click,
-  wrapper_handler_click_component = wrapper_handler_click_component
+  wrapper_handle_click = wrapper_handle_click,
+  wrapper_handle_click_component = wrapper_handle_click_component
 }

@@ -74,7 +74,7 @@ require('cokeline').setup({
     },
     {
       text = '',
-      delete_buffer_on_left_click = true,
+      click = true,
     },
     {
       text = ' ',
@@ -172,7 +172,7 @@ require('cokeline').setup({
     },
     {
       text = '',
-      delete_buffer_on_left_click = true,
+      click = true,
     },
     {
       text = '  ',
@@ -266,7 +266,7 @@ require('cokeline').setup({
     },
     {
       text = '',
-      delete_buffer_on_left_click = true,
+      click = true,
     },
     {
       text = '  ',
@@ -342,7 +342,7 @@ require('cokeline').setup({
     },
     {
       text = '',
-      delete_buffer_on_left_click = true,
+      click = true,
     },
     {
       text = '  ',
@@ -520,16 +520,16 @@ require('cokeline').setup({
   ---@param buffer Buffer
   ---@param click string left "l" or right "r" click
   ---@param clicks number number of clicks
-  handler_click = function(buffer, click, clicks)
+  handle_click = function(buffer, click, clicks)
     local cmd = click == "l" and "buffer" or "bdelete"
     vim.cmd(cmd .. " " .. buffer.number)
   end,
 
-  ---Function to handler with component click when `delete_buffer_on_left_click` is enabled
+  ---Function to handle with component click when `click` is enabled
   ---@param buffer Buffer
   ---@param click string left "l" or right "r" click
   ---@param clicks number number of clicks
-  handler_component_click = function(buffer, click, clicks)
+  handle_component_click = function(buffer, click, clicks)
     -- Left click
     if click == "l" then
       vim.cmd("bdelete " .. buffer.number)
@@ -633,7 +633,7 @@ require('cokeline').setup({
     },
     {
       text = '',
-      delete_buffer_on_left_click = true,
+      click = true,
     },
     {
       text = ' ',
@@ -663,7 +663,7 @@ Every component passed to the `components` list has to be a table of the form:
 
   -- If `true` the buffer will be deleted when this component is
   -- left-clicked (usually used to implement close buttons).
-  delete_buffer_on_left_click = true | false,
+  click = true | false,
 
   truncation = {
     -- default: index of the component in the `components` table (1 for the
@@ -871,7 +871,7 @@ local components = {
     fg = function(buffer)
       return buffer.is_modified and green or nil
     end,
-    delete_buffer_on_left_click = true,
+    click = true,
     truncation = { priority = 1 },
   },
 }
@@ -965,7 +965,7 @@ require('cokeline').setup({
     },
     {
       text = '',
-      delete_buffer_on_left_click = true,
+      click = true,
     },
     {
       text = '',
@@ -1093,7 +1093,7 @@ local components = {
     fg = function(buffer)
       return buffer.is_modified and green or nil
     end
-    delete_buffer_on_left_click = true,
+    click = true,
     truncation = { priority = 1 },
   },
 }
@@ -1558,7 +1558,7 @@ require('cokeline').setup({
           },
           {
               text = '',
-              delete_buffer_on_left_click = true
+              click = true
           },
           {
             text = function(buffer)
