@@ -543,7 +543,7 @@ buffer = {
 
   -- The buffer is the first visible buffer in the tab bar
   is_first    = true | false,
-  
+
   -- The buffer is the last visible buffer in the tab bar
   is_last     = true | false,
 
@@ -1575,4 +1575,3 @@ require('cokeline').setup({
 </details>
 
 ![cokeline-miversen33](https://user-images.githubusercontent.com/2640668/174489433-2faa0eea-4921-42ea-a877-1e143e44bc14.png)
-
