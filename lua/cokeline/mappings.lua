@@ -69,7 +69,11 @@ local pick = function(goal)
   cmd("redrawtabline")
   is_picking[goal] = false
 
-  local letter = fn.nr2char(fn.getchar())
+  local valid_char, char = pcall(fn.getchar)
+  -- bail out on keyboard interrupt
+  if not valid_char then char = 0 end
+
+  local letter = fn.nr2char(char)
   local target_buffer = filter(function(buffer)
     return buffer.pick_letter == letter
   end, _G.cokeline.visible_buffers)[1]
