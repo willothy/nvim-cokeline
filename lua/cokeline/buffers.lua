@@ -17,8 +17,7 @@ local order = {}
 ---@type bufnr
 local current_valid_index
 
-local valid_pick_letters =
-  "asdfjkl;ghnmxcvbziowerutyqpASDFJKLGHNMXCVBZIOWERUTYQP"
+local valid_pick_letters = false
 
 local taken_pick_letters = {}
 
@@ -100,18 +99,25 @@ end
 ---@param bufnr  bufnr
 ---@return string
 local get_pick_letter = function(filename, bufnr)
+  -- Initialize the valid letters string, if not already initialized
+  if not valid_pick_letters then
+    valid_pick_letters = _G.cokeline.config.pick.letters
+  end
+
   -- If the bufnr has already a letter associated to it return that.
   if taken_pick_letters[bufnr] then
     return taken_pick_letters[bufnr]
   end
 
-  -- If the initial letter of the filename is valid and it hasn't already been
-  -- assigned return that.
-  local init_letter = filename:sub(1, 1)
-  if valid_pick_letters:find(init_letter, nil, true) then
-    valid_pick_letters = valid_pick_letters:gsub(init_letter, "")
-    taken_pick_letters[bufnr] = init_letter
-    return init_letter
+  -- If the config option pick.use_filename is true, and the initial letter
+  -- of the filename is valid and it hasn't already been assigned return that.
+  if _G.cokeline.config.pick.use_filename then
+    local init_letter = filename:sub(1, 1)
+    if valid_pick_letters:find(init_letter, nil, true) then
+      valid_pick_letters = valid_pick_letters:gsub(init_letter, "")
+      taken_pick_letters[bufnr] = init_letter
+      return init_letter
+    end
   end
 
   -- Return the first valid letter if there is one.

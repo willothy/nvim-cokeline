@@ -26,6 +26,11 @@ local defaults = {
     slider = sliders.center_current_buffer,
   },
 
+  pick = {
+    use_filename = true,
+    letters = "asdfjkl;ghnmxcvbziowerutyqpASDFJKLGHNMXCVBZIOWERUTYQP",
+  },
+
   ---@type table<string, any>
   default_hl = {
     fg = function(buffer)
