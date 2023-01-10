@@ -61,6 +61,19 @@ The valid keys are:
       new_buffers_position = 'last' | 'next',
     },
 
+    pick = {
+      -- Whether to use the filename's first letter first before
+      -- picking a letter from the valid letters list in order.
+      -- default: `true`
+      use_filename = true | false,
+
+      -- The list of letters that are valid as pick letters. Sorted by
+      -- keyboard reachability by default, but may require tweaking for
+      -- non-QWERTY keyboard layouts.
+      -- default: `'asdfjkl;ghnmxcvbziowerutyqpASDFJKLGHNMXCVBZIOWERTYQP'`
+      letters = 'string',
+    },
+
     mappings = {
       -- Controls what happens when the first (last) buffer is focused and you
       -- try to focus/switch the previous (next) buffer. If `true` the last

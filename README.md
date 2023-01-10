@@ -481,6 +481,19 @@ require('cokeline').setup({
     max_buffer_width = int,
   },
 
+  pick = {
+    -- Whether to use the filename's first letter first before
+    -- picking a letter from the valid letters list in order.
+    -- default: `true`
+    use_filename = true | false,
+
+    -- The list of letters that are valid as pick letters. Sorted by
+    -- keyboard reachability by default, but may require tweaking for
+    -- non-QWERTY keyboard layouts.
+    -- default: `'asdfjkl;ghnmxcvbziowerutyqpASDFJKLGHNMXCVBZIOWERTYQP'`
+    letters = 'string',
+  },
+
   -- The default highlight group values.
   -- The `fg` and `bg` keys are either colors in hexadecimal format or
   -- functions taking a `buffer` parameter and returning a color in
