@@ -17,6 +17,7 @@ might look like.
 ## :book: Table of Contents
 
 - [Features](#sparkles-features)
+- [Plans](#mountain-plans-and-ideas)
 - [Requirements](#electric_plug-requirements)
 - [Installation](#package-installation)
 - [Configuration](#wrench-configuration)
@@ -376,6 +377,17 @@ them with a right click:
 ### Close icons
 
 ![close-icons](.github/images/close-icons.gif)
+
+
+## :mountain: Plans and Ideas
+
+- Statusline and Winbar
+- Nested components
+- Non-buffer custom components
+  - Right-side tabline components
+  - Center tabline components
+  
+If you have an idea or feature request, don't hesitate to open an issue!
 
 
 ## :electric_plug: Requirements
