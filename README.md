@@ -8,21 +8,20 @@
 
 The goal of this plugin is not to be an opinionated bufferline with (more or
 less) limited customization options. Rather, it tries to provide a general
-framework allowing you to build ***your*** ideal bufferline, whatever that
+framework allowing you to build **_your_** ideal bufferline, whatever that
 might look like.
 
-![preview](./.github/images/preview.png)
-
+![preview](https://user-images.githubusercontent.com/38540736/226447816-c696153f-ccee-4e4a-8b6a-55e53ee737f8.png)
 
 ## :book: Table of Contents
 
 - [Features](#sparkles-features)
+- [Plans](#mountain-plans-and-ideas)
 - [Requirements](#electric_plug-requirements)
 - [Installation](#package-installation)
 - [Configuration](#wrench-configuration)
 - [Mappings](#musical_keyboard-mappings)
 - [Example configs](#nail_care-example-configs)
-
 
 ## :sparkles: Features
 
@@ -82,9 +81,10 @@ require('cokeline').setup({
   },
 })
 ```
+
 </details>
 
-![cokeline-default](.github/images/cokeline-default.png)
+![cokeline-default](https://user-images.githubusercontent.com/38540736/226447806-0d4be251-788e-495c-abf7-ae5041dcc702.png)
 
 <details>
 <summary>Click to see configuration</summary>
@@ -136,9 +136,10 @@ require('cokeline').setup({
   },
 })
 ```
+
 </details>
 
-![cokeline-noib3](.github/images/cokeline-noib3.png)
+![cokeline-noib3](https://user-images.githubusercontent.com/38540736/226447808-fc834732-efd1-4fd1-a0de-65ebea213d3f.png)
 
 <details>
 <summary>Click to see configuration</summary>
@@ -180,11 +181,13 @@ require('cokeline').setup({
   },
 })
 ```
+
 </details>
 
-![cokeline-bufferline](.github/images/cokeline-bufferline-lua.png)
+![cokeline-bufferline-lua](https://user-images.githubusercontent.com/38540736/226447803-13f3d3ee-454f-42be-81b4-9254f95503e4.png)
 
 ### Dynamic rendering
+
 <!-- ### Dynamic rendering (with sliders) -->
 
 Even when you have a lot of buffers open, `nvim-cokeline` is rendered to always
@@ -192,7 +195,7 @@ keep the focused buffer visible and in the middle of the bufferline. Also, if a
 buffer doesn't fit entirely we still try to include as much of it as possible
 before cutting off the rest.
 
-![rendering](./.github/images/rendering.gif)
+![rendering](https://user-images.githubusercontent.com/38540736/226447817-4f3679c8-a10a-48ad-8329-b21c3ee54968.gif)
 
 ### LSP support
 
@@ -200,7 +203,7 @@ If a buffer has an LSP client attached to it, you can configure the style of a
 component to change based on how many errors, warnings, infos and hints are
 reported by the LSP.
 
-![lsp-styling](.github/images/lsp-styling.gif)
+![lsp-styling](https://user-images.githubusercontent.com/38540736/226447813-4ec42530-9e86-43f5-98ed-fd7b4012120b.gif)
 
 ### Buffer pick
 
@@ -274,9 +277,10 @@ require('cokeline').setup({
   },
 })
 ```
+
 </details>
 
-![buffer-pick](.github/images/buffer-pick.gif)
+![buffer-pick](https://user-images.githubusercontent.com/38540736/226447793-8e2341b3-e454-49dc-af84-72d3b56f40d3.gif)
 
 ### Sidebars
 
@@ -350,9 +354,10 @@ require('cokeline').setup({
   },
 })
 ```
+
 </details>
 
-![sidebars](.github/images/sidebars.png)
+![sidebars](https://user-images.githubusercontent.com/38540736/226447821-de543b87-909c-445f-ac6e-82f5f6bbf9aa.png)
 
 ### Unique buffer names
 
@@ -360,23 +365,32 @@ When files with the same filename belonging to different directories are opened
 simultaneously, you can include a unique filetree prefix to distinguish between
 them:
 
-![unique-prefix](.github/images/unique-prefix.gif)
+![unique-prefix](https://user-images.githubusercontent.com/38540736/226447822-3315ad2f-35c9-4fc3-a777-c01cd8f2fe46.gif)
 
 ### Clickable buffers
 
 You can switch focus between buffers with a left click and you can delete
 them with a right click:
 
-![clickable-buffers](.github/images/clickable-buffers.gif)
+![clickable-buffers](https://user-images.githubusercontent.com/38540736/226447799-e845d266-0658-44e3-bd89-f706577844bf.gif)
 
 ### Buffer re-ordering
 
-![reordering](.github/images/reordering.gif)
+![reordering](https://user-images.githubusercontent.com/38540736/226447818-bdf63d70-e153-4353-992d-d317a5764c09.gif)
 
 ### Close icons
 
-![close-icons](.github/images/close-icons.gif)
+![close-icons](https://user-images.githubusercontent.com/38540736/226447802-29b2919e-dd20-4789-8d6a-250d6d453c64.gif)
 
+## :mountain: Plans and Ideas
+
+- Statusline and Winbar
+- Nested components
+- Non-buffer custom components
+  - Right-side tabline components
+  - Center tabline components
+
+If you have an idea or feature request, don't hesitate to open an issue!
 
 ## :electric_plug: Requirements
 
@@ -385,7 +399,6 @@ set. If you want to display devicons in your bufferline you'll also need the
 [kyazdani42/nvim-web-devicons](https://github.com/kyazdani42/nvim-web-devicons)
 plugin and a patched font (see [Nerd Fonts](https://www.nerdfonts.com/)).
 
-
 ## :package: Installation
 
 #### Lua
@@ -393,13 +406,14 @@ plugin and a patched font (see [Nerd Fonts](https://www.nerdfonts.com/)).
 If you ported your Neovim config to Lua and use
 [packer.nvim](https://github.com/wbthomason/packer.nvim) as your plugin
 manager you can install this plugin with:
+
 ```lua
 vim.opt.termguicolors = true
 
 require('packer').startup(function()
   -- ...
   use({
-    'noib3/nvim-cokeline',
+    'willothy/nvim-cokeline',
     requires = 'kyazdani42/nvim-web-devicons', -- If you want devicons
     config = function()
       require('cokeline').setup()
@@ -413,11 +427,12 @@ end)
 
 If your config is still written in Vimscript and you use
 [vim-plug](https://github.com/junegunn/vim-plug):
+
 ```vim
 call plug#begin('~/.config/nvim/plugged')
   " ...
   Plug 'kyazdani42/nvim-web-devicons' " If you want devicons
-  Plug 'noib3/nvim-cokeline'
+  Plug 'willothy/nvim-cokeline'
   " ...
 call plug#end()
 
@@ -427,13 +442,13 @@ lua << EOF
 EOF
 ```
 
-
 ## :wrench: Configuration
 
 All the configuration is done by changing the contents of the Lua table passed to
 the `setup` function.
 
 The valid keys are:
+
 ```lua
 require('cokeline').setup({
   -- Only show the bufferline when there are at least this many visible buffers.
@@ -539,6 +554,7 @@ components dynamically based on the buffer that component is being rendered
 for.
 
 The `buffer` parameter is just a Lua table with the following keys:
+
 ```lua
 buffer = {
   -- The buffer's order in the bufferline (1 for the first buffer, 2 for the
@@ -613,6 +629,7 @@ where the only things we're displaying for each buffer are its index, its
 filename and a close button.
 
 Then in our `setup` function we'd have:
+
 ```lua
 require('cokeline').setup({
   -- ...
@@ -634,6 +651,7 @@ require('cokeline').setup({
   }
 }
 ```
+
 in this case every buffer would be composed of four components: the first
 displaying a space followed by the buffer index, the second one the filename
 padded by a space on each side, then a close button that allows us to
@@ -644,6 +662,7 @@ ability to define every component's text and color depending on some property
 of the buffer we're rendering, allows for great customizability.
 
 Every component passed to the `components` list has to be a table of the form:
+
 ```lua
 {
   text = 'string' | function(buffer) -> 'string',
@@ -668,6 +687,7 @@ Every component passed to the `components` list has to be a table of the form:
   },
 }
 ```
+
 the `text` key is the only one that has to be set, all the others are optional
 and can be omitted.
 
@@ -689,7 +709,7 @@ that's still not enough to bring the width of the buffer within the
 `rendering.max_buffer_width` limit, the component with the second lowest
 priority will be dropped, and so on. Note that a higher priority means a
 smaller integer value: a component with a priority of 5 will be dropped
-*after* a component with a priority of 6, even though 6 > 5.
+_after_ a component with a priority of 6, even though 6 > 5.
 
 The `truncation.direction` key simply controls from which direction a component
 is shortened. For example, you might want to set the `truncation.direction` of
@@ -697,7 +717,7 @@ a component displaying a filename to `'middle'` or `'left'`, so that if
 the filename has to be shortened you'll still be able to see its extension,
 like in the following example (where it's set to `'left'`):
 
-![buffer-truncation](.github/images/buffer-truncation.png)
+![buffer-truncation](https://user-images.githubusercontent.com/38540736/226447798-6aee2e0f-f957-42ab-96dd-3618e78ba4ba.png)
 
 ## :musical_keyboard: Mappings
 
@@ -741,7 +761,6 @@ for i = 1,9 do
   map('n', ('<Leader>%s'):format(i), ('<Plug>(cokeline-switch-%s)'):format(i), { silent = true })
 end
 ```
-
 
 ## :nail_care: Example configs
 
@@ -908,9 +927,10 @@ require('cokeline').setup({
   },
 })
 ```
+
 </details>
 
-![userconfig-noib3](.github/images/preview.png)
+![userconfig-noib3](https://user-images.githubusercontent.com/38540736/226447816-c696153f-ccee-4e4a-8b6a-55e53ee737f8.png)
 
 <details>
 <summary>This config shows how you configure buffers w/ rounded corners.</summary>
@@ -968,9 +988,10 @@ require('cokeline').setup({
   },
 })
 ```
+
 </details>
 
-![userconfig-noib3](.github/images/buffer-separators.png)
+![userconfig-noib3](https://user-images.githubusercontent.com/38540736/226447796-12200cca-9dec-4145-8f4a-d271512bdf8c.png)
 
 <details>
 <summary>
@@ -1168,9 +1189,10 @@ require('cokeline').setup({
 })
 
 ```
+
 </details>
 
-![userconfig-noib3](.github/images/equally-sized-buffers.png)
+![userconfig-noib3](https://user-images.githubusercontent.com/38540736/226447811-c35d930a-94d4-4715-889b-2b2e2fafe4bd.png)
 
 ### author: [@olimorris](https://github.com/olimorris/dotfiles)
 
@@ -1254,10 +1276,10 @@ end
 
 return M
 ```
+
 </details>
 
-![userconfig-olimorris](.github/images/userconfig-olimorris.gif)
-
+![userconfig-olimorris](https://user-images.githubusercontent.com/38540736/226447827-e2dc7705-b255-4108-9b1a-037adb64c71c.gif)
 
 ### author: [@alex-popov-tech](https://github.com/alex-popov-tech/.dotfiles)
 
@@ -1326,9 +1348,10 @@ return function()
     )
 end
 ```
+
 </details>
 
-![userconfig-alex-popov-tech](.github/images/userconfig-alex-popov-tech.png)
+![userconfig-alex-popov-tech](https://user-images.githubusercontent.com/38540736/226447825-7f314e18-472e-4148-982b-d569b1743a9b.png)
 
 ### author: [@danielnieto](https://github.com/danielnieto)
 
@@ -1430,6 +1453,7 @@ require("cokeline").setup(
     }
 )
 ```
+
 </details>
 
 ![cokeline-danielnieto89](https://user-images.githubusercontent.com/2120107/171753414-9d81c866-7f99-48f8-b6ff-0c28e8883aaa.gif)
@@ -1585,6 +1609,7 @@ require('cokeline').setup({
       },
   })
 ```
+
 </details>
 
 ![cokeline-miversen33](https://user-images.githubusercontent.com/2640668/174489433-2faa0eea-4921-42ea-a877-1e143e44bc14.png)
