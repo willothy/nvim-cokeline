@@ -411,7 +411,7 @@ vim.opt.termguicolors = true
 require('packer').startup(function()
   -- ...
   use({
-    'noib3/nvim-cokeline',
+    'willothy/nvim-cokeline',
     requires = 'kyazdani42/nvim-web-devicons', -- If you want devicons
     config = function()
       require('cokeline').setup()
@@ -429,7 +429,7 @@ If your config is still written in Vimscript and you use
 call plug#begin('~/.config/nvim/plugged')
   " ...
   Plug 'kyazdani42/nvim-web-devicons' " If you want devicons
-  Plug 'noib3/nvim-cokeline'
+  Plug 'willothy/nvim-cokeline'
   " ...
 call plug#end()
 
