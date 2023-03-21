@@ -144,6 +144,7 @@ local render = function(visible_buffers)
 
   return components.render(sidebar_components)
     .. components.render(buffer_components)
+    .. "%#TabLine#"
 end
 
 return {
