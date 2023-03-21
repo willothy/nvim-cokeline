@@ -140,11 +140,8 @@ end
 local get_devicon = function(path, filename, type)
   local name = (type == "terminal") and "terminal" or filename
   local extn = fn.fnamemodify(path, ":e")
-  local icon, color = rq_devicons.get_icon_color(
-    name,
-    extn,
-    { default = true }
-  )
+  local icon, color =
+    rq_devicons.get_icon_color(name, extn, { default = true })
   return {
     icon = icon .. " ",
     color = color,

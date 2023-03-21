@@ -128,10 +128,8 @@ local render = function(visible_buffers)
   --
   -- To avoid this, we join all the buffer components together *before*
   -- checking if they need to be shortened.
-  local buffer_components = extend(
-    extend(left_components, current_components),
-    right_components
-  )
+  local buffer_components =
+    extend(extend(left_components, current_components), right_components)
 
   if left_width > available_width_left then
     components.shorten(

@@ -104,10 +104,10 @@ local function update(settings, preferences, key)
       echoerr(key_tree)
     else
       updated[k] = (
-            type(v) == "table"
-            and not islist(v)
-            and not k:find("sidebar")
-          )
+        type(v) == "table"
+        and not islist(v)
+        and not k:find("sidebar")
+      )
           and update(settings[k], v, key_tree)
         or v
     end

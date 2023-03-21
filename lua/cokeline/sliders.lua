@@ -11,23 +11,22 @@ local max = math.max
 ---@param width_left_of_current  number
 ---@param width_right_of_current  number
 ---@return number, number
-local center_current_buffer =
-  function(available_space, width_left_of_current, width_right_of_current)
-    local available_space_left = floor(available_space / 2)
-    local available_space_right = available_space_left + available_space % 2
+local center_current_buffer = function(
+  available_space,
+  width_left_of_current,
+  width_right_of_current
+)
+  local available_space_left = floor(available_space / 2)
+  local available_space_right = available_space_left + available_space % 2
 
-    local unused_space_left = max(
-      available_space_left - width_left_of_current,
-      0
-    )
-    local unused_space_right = max(
-      available_space_right - width_right_of_current,
-      0
-    )
+  local unused_space_left =
+    max(available_space_left - width_left_of_current, 0)
+  local unused_space_right =
+    max(available_space_right - width_right_of_current, 0)
 
-    return available_space_left - unused_space_left + unused_space_right,
-      available_space_right - unused_space_right + unused_space_left
-  end
+  return available_space_left - unused_space_left + unused_space_right,
+    available_space_right - unused_space_right + unused_space_left
+end
 
 ---@param available_space  number
 ---@param width_left_of_current  number
