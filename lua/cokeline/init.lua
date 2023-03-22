@@ -12,6 +12,12 @@ _G.cokeline = {
   ---@type Component[]
   components = {},
 
+  ---@type { components: Component[], context: ((fun(): string) | string)[] }
+  rhs = {
+    components = {},
+    context = {},
+  },
+
   ---@type table
   config = {},
 

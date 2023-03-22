@@ -1,5 +1,6 @@
 local components = require("cokeline/components")
 local sidebar = require("cokeline/sidebar")
+local rhs = require("cokeline/rhs")
 
 local insert = table.insert
 local sort = table.sort
@@ -83,7 +84,9 @@ end
 ---@return string
 local render = function(visible_buffers)
   local sidebar_components = sidebar.get_components()
-  local available_width = o.columns - components.width(sidebar_components)
+  local available_width = o.columns
+    - components.width(sidebar_components)
+    - rhs.width()
   if available_width == 0 then
     return components.render(sidebar_components)
   end
@@ -102,8 +105,13 @@ local render = function(visible_buffers)
     if current_buffer.index < #visible_buffers then
       components.shorten(current_components, available_width, "right")
     end
+    local c_width = components.width(current_components)
     return components.render(sidebar_components)
       .. components.render(current_components)
+      .. "%#TabLine#"
+      .. string.rep(" ", available_width - c_width)
+      .. rhs.render()
+      .. "%#TabLine#"
   end
 
   local left_components, left_width = to_components({
@@ -142,8 +150,13 @@ local render = function(visible_buffers)
     components.shorten(buffer_components, available_width, "right")
   end
 
+  local c_width = components.width(buffer_components)
+
   return components.render(sidebar_components)
     .. components.render(buffer_components)
+    .. "%#TabLine#"
+    .. string.rep(" ", available_width - c_width)
+    .. rhs.render()
     .. "%#TabLine#"
 end
 

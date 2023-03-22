@@ -52,18 +52,18 @@ end
 
 -- Renders a component for a specific buffer.
 ---@param self   Component
----@param buffer Buffer
+---@param ctx Buffer | table
 ---@return Component
-Component.render = function(self, buffer)
+Component.render = function(self, ctx)
   local evaluate = function(field)
     return (type(field) == "string" and field)
-      or (type(field) == "function" and field(buffer))
+      or (type(field) == "function" and field(ctx))
   end
 
   local component = vim.deepcopy(self)
   component.text = evaluate(self.text)
   component.width = fn.strwidth(component.text)
-  component.bufnr = buffer.number
+  component.bufnr = ctx.number
 
   -- `evaluate(self.hl.*)` might return `nil`, in that case we fallback to the
   -- default highlight first and to NONE if that's `nil` too.
@@ -78,7 +78,7 @@ Component.render = function(self, buffer)
     or "NONE"
 
   component.hlgroup = Hlgroup.new(
-    ("Cokeline_%s_%s"):format(buffer.number, self.index),
+    ("Cokeline_%s_%s"):format(ctx.number, self.index),
     style,
     fg,
     bg

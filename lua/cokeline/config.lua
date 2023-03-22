@@ -44,6 +44,12 @@ local defaults = {
     style = "NONE",
   },
 
+  ---@type { components: Component[], context: (string|fun():string)[]}
+  rhs = {
+    components = {},
+    context = {},
+  },
+
   ---@type Component[]
   components = {
     {
@@ -121,6 +127,12 @@ local get = function(preferences)
   for i, component in ipairs(config.components) do
     insert(
       _G.cokeline.components,
+      Component.new(component, i, config.default_hl)
+    )
+  end
+  for i, component in ipairs(config.rhs.components) do
+    insert(
+      _G.cokeline.rhs.components,
       Component.new(component, i, config.default_hl)
     )
   end
