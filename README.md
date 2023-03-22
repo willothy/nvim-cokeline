@@ -385,10 +385,13 @@ them with a right click:
 ## :mountain: Plans and Ideas
 
 - Statusline and Winbar
-- Nested components
+- More mouse events
+  - Reorder with drag
+  - Hover events
+- Group buffers by tabpage
 - Non-buffer custom components
   - Right-side tabline components
-  - Center tabline components
+  - Component groups
 
 If you have an idea or feature request, don't hesitate to open an issue!
 
