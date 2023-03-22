@@ -479,8 +479,9 @@ require('cokeline').setup({
 
     -- If set to `last` new buffers are added to the end of the bufferline,
     -- if `next` they are added next to the current buffer.
+    -- if set to `directory` buffers are sorted by their full path.
     -- default: 'last',
-    new_buffers_position = 'last' | 'next',
+    new_buffers_position = 'last' | 'next' | 'directory',
   },
 
   mappings = {
