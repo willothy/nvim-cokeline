@@ -81,6 +81,7 @@ end
 ---the list of visible buffers, figures out which components to display and
 ---returns their rendered version.
 ---@param visible_buffers  Buffer[]
+---@diagnostic disable-next-line: incorrect_standard_library_use
 ---@return string
 local render = function(visible_buffers)
   local sidebar_components = sidebar.get_components()
