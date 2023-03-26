@@ -1,18 +1,35 @@
-name: 'Commit message check'
+name: "Commit message check"
 on: [ push, pull_request ]
 jobs:
-  # Taken from https://github.com/marketplace/actions/gs-commit-message-checker
   check-commit-message:
-    name: Commit message nicely formatted
-    runs-on: ubuntu-latest
+    name: Ensure messages conform to Conventional Commits standard
+    runs-on: ubuntu-22.04
     steps:
-      - uses: gsactions/commit-message-checker@v1
+      - uses: actions/checkout@v3
         with:
-          # pattern: '^((:bug: fix|:lipstick: refactor|:green_book: docs|:sparkles: feat|:broom: chore|:wrench: tooling|:rewind: revert|:zap: speed|:tada: release) | (fix|refactor|doc|docs|feat|chore|tooling|revert|)(\([^ ]+\))?): [^ ]+'
-          # pattern: '^((:bug: )?build|(:bug: )?chore|(:bug: )?ci|(:bug: )?docs|(:bug: )?feat|(:bug: )?fix|(:bug: )?perf|(:bug: )?refactor|(:bug: )?revert|(:bug: )?style|(:bug: )?test){1}(\([\w\-\.]+\))?(!)?: ([\w ])+([\s\S]*)'
-          pattern: '^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test){1}(\([\w\.\-\p{Extended_Pictographic}]+\))?(!)?: ([\w \p{Extended_Pictographic}])+([\s\S]*)'
-          error: 'Messages should be formatted as "<emoji> <type>: <description>"'
-          excludeDescription: 'true'
-          excludeTitle: 'true'
-          checkAllCommitMessages: 'true'
-          accessToken: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+      - name: Install required dependencies
+        run: |
+          apt update
+          apt install -y sudo
+          sudo apt install -y git curl
+          curl -sL https://deb.nodesource.com/setup_14.x | sudo -E bash -
+          sudo DEBIAN_FRONTEND=noninteractive apt install -y nodejs
+      - name: Print versions
+        run: |
+          git --version
+          node --version
+          npm --version
+          npx commitlint --version
+      - name: Install commitlint
+        run: |
+          npm install conventional-changelog-conventionalcommits
+          npm install commitlint@latest
+
+      - name: Validate current commit (last commit) with commitlint
+        if: github.event_name == 'push'
+        run: npx commitlint --from HEAD~1 --to HEAD --verbose
+
+      - name: Validate PR commits with commitlint
+        if: github.event_name == 'pull_request'
+        run: npx commitlint --from ${{ github.event.pull_request.head.sha }}~${{ github.event.pull_request.commits }} --to ${{ github.event.pull_request.head.sha }} --verbose

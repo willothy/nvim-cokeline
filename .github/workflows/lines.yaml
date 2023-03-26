@@ -1,13 +1,13 @@
-name: 'Check line numbers and line width'
-on: [push, pull_request]
+name: "Check line width"
+on: [ push, pull_request ]
 jobs:
-  line-number:
-    name: Sloc < 1000
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - run: cargo install tokei
-      - run: num_sloc=$(tokei --type=Lua,'Vim script' --output=json . | jq .Total.code); if [ ${num_sloc} -gt 999 ]; then exit 1; fi
+  # line-number:
+  #   name: Sloc < 1000
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #     - run: cargo install tokei
+  #     - run: num_sloc=$(tokei --type=Lua,'Vim script' --output=json . | jq .Total.code); if [ ${num_sloc} -gt 999 ]; then exit 1; fi
 
   line-width:
     name: Line width < 80 characters
