@@ -13,8 +13,9 @@ local defaults = {
   buffers = {
     filter_valid = false,
     filter_visible = false,
-    focus_on_delete = false,
+    focus_on_delete = "next",
     new_buffers_position = "last",
+    delete_on_right_click = true,
   },
 
   mappings = {

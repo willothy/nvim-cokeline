@@ -3,6 +3,7 @@ local buffers = require("cokeline/buffers")
 local config = require("cokeline/config")
 local mappings = require("cokeline/mappings")
 local rendering = require("cokeline/rendering")
+local utils = require("cokeline/utils")
 
 local fn = vim.fn
 local opt = vim.opt
@@ -32,17 +33,29 @@ local setup = function(preferences)
   mappings.setup()
 
   if fn.has("tablineat") then
-    vim.cmd([[
-    function! CokelineHandleClick(minwid, clicks, button, modifiers)
-      let l:command = (a:button =~ 'l') ? 'buffer' : 'bdelete'
-      execute printf('%s %s', l:command, a:minwid)
-    endfunction
+    function _G.cokeline.handle_click(minwid, _clicks, button, _modifiers)
+      if button == "l" then
+        -- switch to the selected buffer
+        vim.api.nvim_set_current_buf(minwid)
+      elseif
+        button == "r" and _G.cokeline.config.buffers.delete_on_right_click
+      then
+        -- delete the selected buffer
+        utils.buf_delete(minwid, _G.cokeline.buffers.focus_on_delete)
+      end
+    end
 
-    function! CokelineHandleCloseButtonClick(minwid, clicks, button, modifiers)
-      if a:button != 'l' | return | endif
-      execute printf('bdelete %s', a:minwid)
-    endfunction
-  ]])
+    _G.cokeline.handle_close_click = function(
+      minwid,
+      _clicks,
+      button,
+      _modifiers
+    )
+      if button ~= "l" then
+        return
+      end
+      utils.buf_delete(minwid, _G.cokeline.config.buffers.focus_on_delete)
+    end
   end
 
   opt.showtabline = 2

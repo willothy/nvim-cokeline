@@ -60,10 +60,13 @@ Component.render = function(self, buffer)
       or (type(field) == "function" and field(buffer))
   end
 
+  -- set the buffer for the actual component object
+  -- so that bufnr can be accessed in click events
+  self.bufnr = buffer.number
+
   local component = vim.deepcopy(self)
   component.text = evaluate(self.text)
   component.width = fn.strwidth(component.text)
-  component.bufnr = buffer.number
 
   -- `evaluate(self.hl.*)` might return `nil`, in that case we fallback to the
   -- default highlight first and to NONE if that's `nil` too.
@@ -196,8 +199,8 @@ local render_components = function(components)
       return text
     else
       local on_click = component.delete_buffer_on_left_click
-          and "CokelineHandleCloseButtonClick"
-        or "CokelineHandleClick"
+          and "v:lua.cokeline.handle_close_click"
+        or "v:lua.cokeline.handle_click"
       return ("%%%s@%s@%s%%X"):format(component.bufnr, on_click, text)
     end
   end
