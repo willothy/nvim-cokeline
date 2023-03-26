@@ -283,6 +283,14 @@ local sort_by_directory = function(buffer1, buffer2)
   return buffer1.path < buffer2.path
 end
 
+---Sorted used to order buffers by number, as in the default tabline.
+---@param buffer1  Buffer
+---@param buffer2  Buffer
+---@return boolean
+local sort_by_number = function(buffer1, buffer2)
+  return buffer1.number < buffer2.number
+end
+
 ---@param buffer  Buffer
 ---@param target_valid_index  valid_index
 local move_buffer = function(buffer, target_valid_index)
@@ -327,6 +335,8 @@ local get_valid_buffers = function()
     sort(buffers, sort_by_new_after_current)
   elseif _G.cokeline.config.buffers.new_buffers_position == "directory" then
     sort(buffers, sort_by_directory)
+  elseif _G.cokeline.config.buffers.new_buffers_position == "number" then
+    sort(buffers, sort_by_number)
   end
 
   order = {}

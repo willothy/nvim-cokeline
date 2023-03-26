@@ -58,8 +58,9 @@ The valid keys are:
       -- If set to `last` new buffers are added to the end of the bufferline,
       -- if `next` they are added next to the current buffer,
       -- if set to `directory` buffers are sorted by their full path.
+      -- if set to `number` buffers are sorted by bufnr, as in default Neovim
       -- default: 'last',
-      new_buffers_position = 'last' | 'next' | 'directory',
+      new_buffers_position = 'last' | 'next' | 'directory' | 'number',
     },
 
     pick = {
