@@ -60,13 +60,10 @@ Component.render = function(self, buffer)
       or (type(field) == "function" and field(buffer))
   end
 
-  -- set the buffer for the actual component object
-  -- so that bufnr can be accessed in click events
-  self.bufnr = buffer.number
-
   local component = vim.deepcopy(self)
   component.text = evaluate(self.text)
   component.width = fn.strwidth(component.text)
+  component.bufnr = buffer.number
 
   -- `evaluate(self.hl.*)` might return `nil`, in that case we fallback to the
   -- default highlight first and to NONE if that's `nil` too.
