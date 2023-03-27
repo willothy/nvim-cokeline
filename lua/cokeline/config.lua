@@ -32,7 +32,6 @@ local defaults = {
     letters = "asdfjkl;ghnmxcvbziowerutyqpASDFJKLGHNMXCVBZIOWERUTYQP",
   },
 
-  ---@type table<string, any>
   default_hl = {
     fg = function(buffer)
       return buffer.is_focused and utils.get_hex("ColorColumn", "bg")
@@ -120,10 +119,11 @@ local get = function(preferences)
   local config = update(defaults, preferences)
   _G.cokeline.components = {}
   for i, component in ipairs(config.components) do
-    insert(
-      _G.cokeline.components,
-      Component.new(component, i, config.default_hl)
-    )
+    local new_component = Component.new(component, i, config.default_hl)
+    insert(_G.cokeline.components, new_component)
+    if new_component.on_click ~= nil then
+      require("cokeline/handlers").click:register(i, new_component.on_click)
+    end
   end
   return config
 end
