@@ -196,8 +196,8 @@ local render_components = function(components)
       return text
     else
       local on_click = component.delete_buffer_on_left_click
-          and "CokelineHandleCloseButtonClick"
-        or "CokelineHandleClick"
+          and "v:lua.cokeline.handle_close_click"
+        or "v:lua.cokeline.handle_click"
       return ("%%%s@%s@%s%%X"):format(component.bufnr, on_click, text)
     end
   end

@@ -57,30 +57,6 @@ local setup = function()
     autocmd VimEnter,BufAdd * lua require('cokeline/augroups').toggle()
   augroup END
   ]])
-
-  if _G.cokeline.config.buffers.focus_on_delete then
-    -- We use two different events here: on `BufUnload` we check if the buffer
-    -- closed was a valid one, and if it was we save its number in
-    -- `bufnr_to_close`. Then, on `BufDelete` we check if `bufnr_to_close` has
-    -- a value. If it does we focus the buffer with that number, and set its
-    -- value back to `nil`.
-    --
-    -- Focusing buffers directly on `BufUnload` seems to cause all kind of
-    -- weird behaviour like #44, while only using `BufDelete` causes the
-    -- focused buffer to change everytime a `vim-floaterm` is closed (and
-    -- probably other issues too, that's the only one I've personally
-    -- experienced).
-    cmd([[
-    augroup cokeline_focus
-      autocmd BufUnload *
-        \ exe printf(
-        \   'lua require("cokeline/augroups").remember_bufnr(%s)',
-        \   expand('<abuf>')
-        \ )
-      autocmd BufDelete * lua require("cokeline/augroups").close_bufnr()
-    augroup END
-    ]])
-  end
 end
 
 return {
