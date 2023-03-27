@@ -12,7 +12,7 @@ local is_picking = {
   close = false,
 }
 
----@param goal  '"switch"' | '"focus"'
+---@param goal  '"switch"' | '"focus"' | '"close"'
 ---@param index  index
 local by_index = function(goal, index)
   local target_buffer = filter(function(buffer)
@@ -35,10 +35,13 @@ local by_index = function(goal, index)
     buffers.move_buffer(focused_buffer, target_buffer._valid_index)
   elseif goal == "focus" then
     cmd("b" .. target_buffer.number)
+  elseif goal == "close" then
+    utils.buf_delete(target_buffer.number)
+    vim.cmd.redrawtabline()
   end
 end
 
----@param goal  '"switch"' | '"focus"'
+---@param goal  '"switch"' | '"focus"' |'"close"'
 ---@param step  '-1' | '1'
 local by_step = function(goal, step)
   local focused_buffer = filter(function(buffer)
@@ -57,10 +60,15 @@ local by_step = function(goal, step)
     target_index = (target_index - 1) % #_G.cokeline.valid_buffers + 1
   end
 
+  local target_buf = _G.cokeline.valid_buffers[target_index].number
+
   if goal == "switch" then
     buffers.move_buffer(focused_buffer, target_index)
   elseif goal == "focus" then
-    cmd("b" .. _G.cokeline.valid_buffers[target_index].number)
+    cmd("b" .. target_buf)
+  elseif goal == "close" then
+    utils.buf_delete(target_buf)
+    vim.cmd.redrawtabline()
   end
 end
 

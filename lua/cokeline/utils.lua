@@ -55,38 +55,40 @@ local function buf_delete(bufnr, focus, wipeout)
 
   local win = vim.fn.bufwinid(bufnr)
 
-  -- Get a list of buffers that are valid switch targets
-  local switchable = vim.tbl_filter(function(buf)
-    return vim.api.nvim_buf_is_valid(buf)
-      and vim.bo[buf].buflisted
-      and buf ~= bufnr
-  end, vim.api.nvim_list_bufs())
+  if win ~= -1 then
+    -- Get a list of buffers that are valid switch targets
+    local switchable = vim.tbl_filter(function(buf)
+      return vim.api.nvim_buf_is_valid(buf)
+        and vim.bo[buf].buflisted
+        and buf ~= bufnr
+    end, vim.api.nvim_list_bufs())
 
-  local switch_target
-  if #switchable > 0 then
-    for _, switch_nr in ipairs(switchable) do
-      -- If we're looking for a buffer after the current one, break here
-      if switch_nr < bufnr then
-        -- Keep looping to find the previous buffer
-        -- This also serves as a fallback if there's no
-        -- next buffer, and `focus_next` is true
-        switch_target = switch_nr
+    local switch_target
+    if #switchable > 0 then
+      for _, switch_nr in ipairs(switchable) do
+        -- If we're looking for a buffer after the current one, break here
+        if switch_nr < bufnr then
+          -- Keep looping to find the previous buffer
+          -- This also serves as a fallback if there's no
+          -- next buffer, and `focus_next` is true
+          switch_target = switch_nr
+        end
+        if switch_nr > bufnr and (focus_next or switch_target == nil) then
+          -- We found the next buffer, break
+          switch_target = switch_nr
+          break
+        end
       end
-      if switch_nr > bufnr and (focus_next or switch_target == nil) then
-        -- We found the next buffer, break
-        switch_target = switch_nr
-        break
+    else
+      -- If there's no possible switch target, create a new buffer and switch to it
+      switch_target = vim.api.nvim_create_buf(true, false)
+      if switch_target == 0 then
+        vim.api.nvim_err_writeln("Failed to create new buffer")
       end
     end
-  else
-    -- If there's no possible switch target, create a new buffer and switch to it
-    switch_target = vim.api.nvim_create_buf(true, false)
-    if switch_target == 0 then
-      vim.api.nvim_err_writeln("Failed to create new buffer")
-    end
+
+    vim.api.nvim_win_set_buf(win, switch_target)
   end
-
-  vim.api.nvim_win_set_buf(win, switch_target)
 
   if wipeout then
     if vim.api.nvim_buf_is_valid(bufnr) then
