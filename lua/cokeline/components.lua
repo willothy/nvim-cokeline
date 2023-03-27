@@ -14,7 +14,8 @@ local map = vim.tbl_map
 ---@field style  string|fun(buffer:Buffer): string
 ---@field fg  string|fun(buffer:Buffer): string
 ---@field bg  string|fun(buffer:Buffer): string
----@field delete_buffer_on_left_click  boolean
+---@field on_click ClickHandler | nil
+---@field delete_buffer_on_left_click  boolean Use the component as a close button ()
 ---@field truncation  table
 ---@field idx  number
 ---@field bufnr  bufnr
@@ -23,7 +24,7 @@ local map = vim.tbl_map
 local Component = {}
 Component.__index = Component
 
----@param c table
+---@param c table | Component
 ---@param i number
 ---@return Component
 Component.new = function(c, i, default_hl)
@@ -36,6 +37,7 @@ Component.new = function(c, i, default_hl)
     bg = c.bg or default_hl.bg or "NONE",
     style = c.style or default_hl.style or "NONE",
     delete_buffer_on_left_click = c.delete_buffer_on_left_click or false,
+    on_click = c.on_click or nil,
     truncation = {
       priority = c.truncation and c.truncation.priority or i,
       direction = c.truncation and c.truncation.direction or "right",
@@ -52,18 +54,20 @@ end
 
 -- Renders a component for a specific buffer.
 ---@param self   Component
----@param buffer Buffer
+---@param context RenderContext
 ---@return Component
-Component.render = function(self, buffer)
+Component.render = function(self, context)
   local evaluate = function(field)
     return (type(field) == "string" and field)
-      or (type(field) == "function" and field(buffer))
+      or (type(field) == "function" and field(context.provider))
   end
 
   local component = vim.deepcopy(self)
   component.text = evaluate(self.text)
   component.width = fn.strwidth(component.text)
-  component.bufnr = buffer.number
+  if context.kind == "buffer" then
+    component.bufnr = context.provider.number
+  end
 
   -- `evaluate(self.hl.*)` might return `nil`, in that case we fallback to the
   -- default highlight first and to NONE if that's `nil` too.
@@ -78,7 +82,7 @@ Component.render = function(self, buffer)
     or "NONE"
 
   component.hlgroup = Hlgroup.new(
-    ("Cokeline_%s_%s"):format(buffer.number, self.index),
+    ("Cokeline_%s_%s"):format(context.provider.number, self.index),
     style,
     fg,
     bg
@@ -195,10 +199,18 @@ local render_components = function(components)
     if not fn.has("tablineat") then
       return text
     else
-      local on_click = component.delete_buffer_on_left_click
-          and "v:lua.cokeline.handle_close_click"
-        or "v:lua.cokeline.handle_click"
-      return ("%%%s@%s@%s%%X"):format(component.bufnr, on_click, text)
+      local on_click
+      if component.delete_buffer_on_left_click then
+        on_click =
+          string.format("v:lua.cokeline.__handlers.close_%d", component.bufnr)
+      else
+        on_click = string.format(
+          "v:lua.cokeline.__handlers.click_%d_%d",
+          component.index,
+          component.bufnr or 0
+        )
+      end
+      return ("%%%s@%s@%s%%X"):format(component.index, on_click, text)
     end
   end
 

@@ -1,6 +1,7 @@
 local Buffer = require("cokeline/buffers").Buffer
 local Component = require("cokeline/components").Component
 local components = require("cokeline/components")
+local RenderContext = require("cokeline/context")
 
 local min = math.min
 local rep = string.rep
@@ -64,7 +65,7 @@ local get_components = function()
   local sidebar_components = {}
   local width = 0
   for i, c in ipairs(_G.cokeline.config.sidebar.components) do
-    local component = Component.new(c, i):render(buffer)
+    local component = Component.new(c, i):render(RenderContext:new(buffer))
     -- We need at least one component, otherwise we can't add padding to the
     -- last component if needed.
     if component.width > 0 or #sidebar_components == 0 then

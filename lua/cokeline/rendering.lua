@@ -1,5 +1,6 @@
 local components = require("cokeline/components")
 local sidebar = require("cokeline/sidebar")
+local RenderContext = require("cokeline/context")
 
 local insert = table.insert
 local sort = table.sort
@@ -47,7 +48,7 @@ local function to_components(buffers)
   if buffers.number then
     local cs = {}
     for _, c in ipairs(_G.cokeline.components) do
-      local rendered = c:render(buffers)
+      local rendered = c:render(RenderContext:new(buffers))
       if rendered.width > 0 then
         insert(cs, rendered)
       end
