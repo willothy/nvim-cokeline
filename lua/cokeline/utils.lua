@@ -11,48 +11,7 @@ local get_hex = function(hlgroup_name, attr)
   return hex ~= "" and hex or "NONE"
 end
 
----@param bufnr bufnr
----@return boolean quit, boolean | nil save
-local function confirm(bufnr)
-  local prompt = string.format(
-    "Buffer %s has unsaved changes.\n"
-      .. "(s)ave and close\n(d)iscard changes and close\n(c)ancel",
-    vim.fn.bufname(bufnr)
-  )
-  vim.api.nvim_echo({ { prompt } }, false, {})
-  local response = string.char(vim.fn.getchar())
-  if response == "s" then
-    return false, true
-  elseif response == "d" then
-    return false, false
-  else
-    return true
-  end
-end
-
----@param bufnr bufnr The buffer to delete
----@param focus "prev" | "next" | nil Buffer to focus on deletion (default: "next")
----@param wipeout boolean Whether to wipe the buffer (default: false)
----Deletes a buffer but keeps window layout
-local function buf_delete(bufnr, focus, wipeout)
-  bufnr = bufnr or 0
-  wipeout = wipeout or false
-  local focus_next = true
-
-  if focus == "prev" then
-    focus_next = false
-  end
-
-  if vim.bo[bufnr].modified then
-    local cancel, save = confirm(bufnr)
-    if cancel == true then
-      return
-    end
-    if save == true then
-      vim.api.nvim_buf_call(bufnr, vim.cmd.write)
-    end
-  end
-
+local function buf_del_impl(bufnr, focus_next, wipeout, force)
   local win = vim.fn.bufwinid(bufnr)
 
   if win ~= -1 then
@@ -96,8 +55,64 @@ local function buf_delete(bufnr, focus, wipeout)
     end
   else
     if vim.api.nvim_buf_is_loaded(bufnr) then
-      vim.cmd.bdelete({ count = bufnr })
+      vim.api.nvim_buf_delete(bufnr, {
+        force = force,
+      })
     end
+  end
+end
+
+---@param bufnr bufnr The buffer to delete
+---@param focus "prev" | "next" | nil Buffer to focus on deletion (default: "next")
+---@param wipeout boolean Whether to wipe the buffer (default: false)
+---Deletes a buffer but keeps window layout
+local function buf_delete(bufnr, focus, wipeout)
+  bufnr = bufnr or 0
+  wipeout = wipeout or false
+  local focus_next = true
+
+  if focus == "prev" then
+    focus_next = false
+  end
+
+  if vim.bo[bufnr].modified then
+    vim.ui.select({
+      "Save and close",
+      "Discard changes and close",
+      "Cancel",
+    }, {
+      prompt = string.format(
+        "Buffer %s has unsaved changes.",
+        vim.fn.fnamemodify(vim.fn.bufname(bufnr), ":f")
+      ),
+    }, function(choice)
+      if choice == 1 then
+        vim.api.nvim_buf_call(bufnr, vim.cmd.write)
+        buf_del_impl(bufnr, focus_next, wipeout, false)
+      elseif choice == 2 then
+        buf_del_impl(bufnr, focus_next, wipeout, true)
+      elseif choice == 3 then
+        return
+      end
+    end)
+  elseif vim.bo[bufnr].buftype == "terminal" then
+    vim.ui.select({
+      "Quit",
+      "Cancel",
+    }, {
+      prompt = string.format(
+        "Buffer %s is a terminal, and is still running.",
+        vim.fn.fnamemodify(vim.fn.bufname(bufnr), ":t")
+      ),
+    }, function(_, choice)
+      if choice == 1 then
+        buf_del_impl(bufnr, focus_next, wipeout, true)
+      elseif choice == 2 then
+        return
+      end
+    end)
+  else
+    buf_del_impl(bufnr, focus_next, wipeout, false)
   end
 end
 
