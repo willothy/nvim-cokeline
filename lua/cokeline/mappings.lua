@@ -1,4 +1,5 @@
 local buffers = require("cokeline/buffers")
+local utils = require("cokeline.utils")
 
 local cmd = vim.cmd
 local filter = vim.tbl_filter
@@ -71,7 +72,9 @@ local pick = function(goal)
 
   local valid_char, char = pcall(fn.getchar)
   -- bail out on keyboard interrupt
-  if not valid_char then char = 0 end
+  if not valid_char then
+    char = 0
+  end
 
   local letter = fn.nr2char(char)
   local target_buffer = filter(function(buffer)
@@ -84,9 +87,10 @@ local pick = function(goal)
   end
 
   if goal == "focus" then
-    cmd("b" .. target_buffer.number)
+    vim.api.nvim_set_current_buf(target_buffer.number)
   elseif goal == "close" then
-    cmd(("bd%s | redrawtabline"):format(target_buffer.number))
+    utils.buf_delete(target_buffer.number)
+    vim.cmd.redrawtabline()
   end
 end
 
