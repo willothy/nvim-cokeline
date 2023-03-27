@@ -473,16 +473,21 @@ require('cokeline').setup({
 
     -- Which buffer to focus when a buffer is deleted, `prev` focuses the
     -- buffer to the left of the deleted one while `next` focuses the one the
-    -- right. Turned off by default.
-    -- default: `false`
+    -- right.
+    -- default: 'next'.
     focus_on_delete = 'prev' | 'next',
 
     -- If set to `last` new buffers are added to the end of the bufferline,
     -- if `next` they are added next to the current buffer.
     -- if set to `directory` buffers are sorted by their full path.
     -- if set to `number` buffers are sorted by bufnr, as in default Neovim
-    -- default: 'last',
+    -- default: 'last'.
     new_buffers_position = 'last' | 'next' | 'directory' | 'number',
+
+    -- If true, right clicking a buffer will close it
+    -- The close button will still work normally
+    -- Default: true
+    delete_on_right_click = true | false,
   },
 
   mappings = {
