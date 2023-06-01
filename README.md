@@ -70,10 +70,17 @@ require('cokeline').setup({
     },
     {
       text = function(buffer) return buffer.filename .. ' ' end,
+	  style = function(buffer)
+        if buffer.is_hovered and not buffer.is_focused then
+		  return 'underline'
+		end
+	  end
     },
     {
       text = '',
-      delete_buffer_on_left_click = true,
+      on_click = function(_, _, _, _, buffer)
+		buffer:delete()
+	  end
     },
     {
       text = ' ',
@@ -367,10 +374,9 @@ them:
 
 ![unique-prefix](https://user-images.githubusercontent.com/38540736/226447822-3315ad2f-35c9-4fc3-a777-c01cd8f2fe46.gif)
 
-### Clickable buffers
+### Clickable and hoverable buffers
 
-You can switch focus between buffers with a left click and you can delete
-them with a right click:
+Each component can be given custom click and hover handlers, allowing for implementations of close buttons, diagnostic previews, and more.
 
 ![clickable-buffers](https://user-images.githubusercontent.com/38540736/226447799-e845d266-0658-44e3-bd89-f706577844bf.gif)
 
@@ -384,10 +390,9 @@ them with a right click:
 
 ## :mountain: Plans and Ideas
 
-- Statusline and Winbar
+- Statusline
 - More mouse events
   - Reorder with drag
-  - Hover events
 - Group buffers by tabpage
 - Non-buffer custom components
   - Right-side tabline components
@@ -406,9 +411,19 @@ plugin and a patched font (see [Nerd Fonts](https://www.nerdfonts.com/)).
 
 #### Lua
 
-If you ported your Neovim config to Lua and use
-[packer.nvim](https://github.com/wbthomason/packer.nvim) as your plugin
-manager you can install this plugin with:
+##### With lazy.nvim
+
+```lua
+{
+  "willothy/nvim-cokeline",
+  dependencies = {
+    "kyazdani42/nvim-web-devicons",
+  },
+  config = true
+}
+```
+
+##### With packer.nvim
 
 ```lua
 vim.opt.termguicolors = true
@@ -586,6 +601,13 @@ buffer = {
   -- The buffer is the last visible buffer in the tab bar
   is_last     = true | false,
 
+  -- The mouse is hovering over the buffer
+  -- This is a special variable in that it will only be true for the hovered *component*
+  -- on render. This is to allow components to respond to hover events individually without managing
+  -- component state.
+  -- If you just need the hovered bufnr, you can use `require('cokeline.hover').hovered().bufnr`
+  is_hovered  = true | false
+
   -- The buffer's type as reported by `:echo &buftype`.
   type = 'string',
 
@@ -720,6 +742,12 @@ Every component passed to the `components` list has to be a table of the form:
   -- If not set, component will have the default click behavior
   -- buffer is a Buffer object, not a bufnr
   on_click = nil | function(idx, clicks, buttons, modifiers, buffer)
+
+  -- Called on a component when hovered
+  on_mouse_enter = nil | function(buffer)
+
+  -- Called on a component when unhovered
+  on_mouse_leave = nil | function(buffer)
 
   truncation = {
     -- default: index of the component in the `components` table (1 for the

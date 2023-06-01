@@ -209,6 +209,7 @@ Buffer.new = function(b)
     is_last = false,
     is_modified = opts.modified,
     is_readonly = opts.readonly,
+    is_hovered = false,
     path = b.name,
     unique_prefix = "",
     filename = filename,
@@ -348,8 +349,9 @@ local move_buffer = function(buffer, target_valid_index)
   cmd("redrawtabline")
 end
 
+---@param unsorted bool
 ---@return Buffer[]
-local get_valid_buffers = function()
+local get_valid_buffers = function(unsorted)
   local buffers = map(function(b)
     return Buffer.new(b)
   end, fn.getbufinfo({ buflisted = 1 }))
@@ -364,14 +366,16 @@ local get_valid_buffers = function()
 
   buffers = compute_unique_prefixes(buffers)
 
-  if _G.cokeline.config.buffers.new_buffers_position == "last" then
-    sort(buffers, sort_by_new_after_last)
-  elseif _G.cokeline.config.buffers.new_buffers_position == "next" then
-    sort(buffers, sort_by_new_after_current)
-  elseif _G.cokeline.config.buffers.new_buffers_position == "directory" then
-    sort(buffers, sort_by_directory)
-  elseif _G.cokeline.config.buffers.new_buffers_position == "number" then
-    sort(buffers, sort_by_number)
+  if not unsorted then
+    if _G.cokeline.config.buffers.new_buffers_position == "last" then
+      sort(buffers, sort_by_new_after_last)
+    elseif _G.cokeline.config.buffers.new_buffers_position == "next" then
+      sort(buffers, sort_by_new_after_current)
+    elseif _G.cokeline.config.buffers.new_buffers_position == "directory" then
+      sort(buffers, sort_by_directory)
+    elseif _G.cokeline.config.buffers.new_buffers_position == "number" then
+      sort(buffers, sort_by_number)
+    end
   end
 
   order = {}
@@ -386,9 +390,10 @@ local get_valid_buffers = function()
   return buffers
 end
 
+---@param unsorted boolean
 ---@return Buffer[]
-local get_visible_buffers = function()
-  _G.cokeline.valid_buffers = get_valid_buffers()
+local get_visible_buffers = function(unsorted)
+  _G.cokeline.valid_buffers = get_valid_buffers(unsorted)
 
   _G.cokeline.visible_buffers = not _G.cokeline.config.buffers.filter_visible
       and _G.cokeline.valid_buffers

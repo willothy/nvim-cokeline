@@ -3,6 +3,8 @@ local buffers = require("cokeline/buffers")
 
 ---@alias ClickHandler fun(button_id: number, clicks: number, button: string, modifiers: string, buffer: Buffer): void
 ---@alias WrappedClickHandler fun(buffer: Buffer): ClickHandler
+---@alias MouseEnterHandler fun(buffer: Buffer)
+---@alias MouseLeaveHandler fun(buffer: Buffer)
 
 ---@class Handlers Singleton event handler manager
 ---@field click WrappedClickHandler[]
@@ -13,22 +15,6 @@ local Handlers = {
     click = {},
   },
 }
-
----@param handler ClickHandler
----@param kind string
----@param idx number
-local function register(handler, kind, idx)
-  -- for global handlers
-  if idx == nil then
-    idx = kind
-    kind = nil
-  end
-  rawset(Handlers.private[kind], idx, function(buffer)
-    return function(minwid, clicks, button, modifiers)
-      return handler(minwid, clicks, button, modifiers, buffer)
-    end
-  end)
-end
 
 ---@param kind string
 ---@param idx number
@@ -44,7 +30,11 @@ end
 ---@param idx number
 ---@param handler ClickHandler
 function Handlers.click:register(idx, handler)
-  register(handler, "click", idx)
+  rawset(Handlers.private.click, idx, function(buffer)
+    return function(minwid, clicks, button, modifiers)
+      return handler(minwid, clicks, button, modifiers, buffer)
+    end
+  end)
 end
 
 ---Unregister a click handler

@@ -15,6 +15,8 @@ local map = vim.tbl_map
 ---@field fg  string|fun(buffer:Buffer): string
 ---@field bg  string|fun(buffer:Buffer): string
 ---@field on_click ClickHandler | nil
+---@field on_mouse_enter MouseEnterHandler | nil
+---@field on_mouse_leave MouseLeaveHandler | nil
 ---@field delete_buffer_on_left_click  boolean Use the component as a close button ()
 ---@field truncation  table
 ---@field idx  number
@@ -37,7 +39,9 @@ Component.new = function(c, i, default_hl)
     bg = c.bg or default_hl.bg or "NONE",
     style = c.style or default_hl.style or "NONE",
     delete_buffer_on_left_click = c.delete_buffer_on_left_click or false,
-    on_click = c.on_click or nil,
+    on_click = c.on_click,
+    on_mouse_enter = c.on_mouse_enter,
+    on_mouse_leave = c.on_mouse_leave,
     truncation = {
       priority = c.truncation and c.truncation.priority or i,
       direction = c.truncation and c.truncation.direction or "right",
@@ -57,6 +61,7 @@ end
 ---@param context RenderContext
 ---@return Component
 Component.render = function(self, context)
+  ---@return string
   local evaluate = function(field)
     return (type(field) == "string" and field)
       or (type(field) == "function" and field(context.provider))
