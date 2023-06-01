@@ -11,6 +11,10 @@ local get_hex = function(hlgroup_name, attr)
   return hex ~= "" and hex or "NONE"
 end
 
+---@param bufnr number
+---@param focus_next boolean
+---@param wipeout boolean
+---@param force boolean
 local function buf_del_impl(bufnr, focus_next, wipeout, force)
   local win = vim.fn.bufwinid(bufnr)
 

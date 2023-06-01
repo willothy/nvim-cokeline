@@ -11,6 +11,8 @@ local fn = vim.fn
 local map = vim.tbl_map
 local split = vim.split
 
+local util = require("cokeline.utils")
+
 ---@type table<bufnr, valid_index>
 local order = {}
 
@@ -197,7 +199,7 @@ Buffer.new = function(b)
   local devicon = has_devicons and get_devicon(path, filename, type)
     or { icon = "", color = "" }
 
-  return {
+  return setmetatable({
     _valid_index = order[b.bufnr] or -1,
     index = -1,
     number = b.bufnr,
@@ -214,7 +216,40 @@ Buffer.new = function(b)
     pick_letter = pick_letter,
     devicon = devicon,
     diagnostics = get_diagnostics(number),
-  }
+  }, Buffer)
+end
+
+---@param self Buffer
+---Deletes the buffer
+function Buffer:delete()
+  util.buf_delete(self.number)
+end
+
+---@param self Buffer
+---Focuses the buffer
+function Buffer:focus()
+  vim.api.nvim_set_current_buf(self.number)
+end
+
+---@param self Buffer
+---@return number
+---Returns the number of lines in the buffer
+function Buffer:lines()
+  return vim.api.nvim_buf_line_count(self.number)
+end
+
+---@param self Buffer
+---@return string[]
+---Returns the buffer's lines
+function Buffer:text()
+  return vim.api.nvim_buf_get_lines(self.number, 0, -1, false)
+end
+
+---@param buf Buffer
+---@return boolean
+---Returns true if the buffer is valid
+function Buffer:is_valid()
+  return vim.api.nvim_buf_is_valid(self.number)
 end
 
 ---@param buffer  Buffer

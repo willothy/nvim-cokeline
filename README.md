@@ -629,6 +629,33 @@ buffer = {
 }
 ```
 
+It also has methods that can be used in component event handlers:
+
+```lua
+---@param self Buffer
+---Deletes the buffer
+function Buffer:delete()
+
+---@param self Buffer
+---Focuses the buffer
+function Buffer:focus()
+
+---@param self Buffer
+---@return number
+---Returns the number of lines in the buffer
+function Buffer:lines()
+
+---@param self Buffer
+---@return string[]
+---Returns the buffer's lines
+function Buffer:text()
+
+---@param buf Buffer
+---@return boolean
+---Returns true if the buffer is valid
+function Buffer:is_valid()
+```
+
 #### What about `components`?
 
 You can configure what each buffer in your bufferline will be composed of by
@@ -685,10 +712,13 @@ Every component passed to the `components` list has to be a table of the form:
 
   -- If `true` the buffer will be deleted when this component is
   -- left-clicked (usually used to implement close buttons, overrides `on_click`).
+  -- deprecated, it is recommended to use the Buffer:delete() method in an on_click event
+  -- to implement close buttons instead.
   delete_buffer_on_left_click = true | false,
 
   -- Handles click event for a component
   -- If not set, component will have the default click behavior
+  -- buffer is a Buffer object, not a bufnr
   on_click = nil | function(idx, clicks, buttons, modifiers, buffer)
 
   truncation = {
