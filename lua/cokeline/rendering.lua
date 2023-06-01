@@ -43,12 +43,19 @@ end
 ---@param buffers Buffer|Buffer[]
 ---@return Component, number
 local function to_components(buffers)
+  local hovered = _G.cokeline.__hovered
   -- A simple heuristic to check if we're dealing with single buffer or a list
   -- of them is to just check if one of they keys is defined.
   if buffers.number then
     local cs = {}
     for _, c in ipairs(_G.cokeline.components) do
-      local rendered = c:render(RenderContext:new(buffers))
+      local ctx = RenderContext:new(buffers)
+      ctx.provider.is_hovered = hovered ~= nil
+        and hovered.bufnr == buffers.number
+        and hovered.index == c.index
+      local rendered = c:render(ctx)
+      ctx.provider.is_hovered = false
+      -- rendered.bufnr = buffers.number
       if rendered.width > 0 then
         insert(cs, rendered)
       end
@@ -77,12 +84,12 @@ local function to_components(buffers)
   end
 end
 
----This is the main function responsible for rendering the bufferline. It takes
----the list of visible buffers, figures out which components to display and
----returns their rendered version.
+---This is a helper function for rendering and hover handers. It takes
+---the list of visible buffers, figures out which components to display, and
+---returns a list of pre-render components
 ---@param visible_buffers  Buffer[]
 ---@return string
-local render = function(visible_buffers)
+local prepare = function(visible_buffers)
   local sidebar_components = sidebar.get_components()
   local available_width = o.columns - components.width(sidebar_components)
   if available_width == 0 then
@@ -143,6 +150,16 @@ local render = function(visible_buffers)
     components.shorten(buffer_components, available_width, "right")
   end
 
+  return buffer_components, sidebar_components
+end
+
+---This is the main function responsible for rendering the bufferline. It takes
+---the list of visible buffers, figures out which components to display and
+---returns their rendered version.
+---@param visible_buffers  Buffer[]
+---@return string
+local render = function(visible_buffers)
+  local buffer_components, sidebar_components = prepare(visible_buffers)
   return components.render(sidebar_components)
     .. components.render(buffer_components)
     .. "%#TabLine#"
@@ -151,5 +168,6 @@ end
 return {
   by_decreasing_priority = by_decreasing_priority,
   by_increasing_index = by_increasing_index,
+  prepare = prepare,
   render = render,
 }

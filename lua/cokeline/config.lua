@@ -63,12 +63,23 @@ local defaults = {
     },
     {
       text = function(buffer)
-        return buffer.filename .. " "
+        return buffer.filename
+      end,
+      style = function(buffer)
+        if buffer.is_hovered and not buffer.is_focused then
+          return "underline"
+        end
+        return nil
       end,
     },
     {
+      text = " ",
+    },
+    {
       text = "",
-      delete_buffer_on_left_click = true,
+      on_click = function(_, _, _, _, buffer)
+        buffer:delete()
+      end,
     },
     {
       text = " ",

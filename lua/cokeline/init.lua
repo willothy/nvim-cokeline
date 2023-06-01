@@ -3,6 +3,7 @@ local buffers = require("cokeline/buffers")
 local config = require("cokeline/config")
 local mappings = require("cokeline/mappings")
 local rendering = require("cokeline/rendering")
+local hover = require("cokeline/hover")
 
 local opt = vim.opt
 
@@ -31,6 +32,7 @@ local setup = function(preferences)
   _G.cokeline.config = config.get(preferences or {})
   augroups.setup()
   mappings.setup()
+  hover.setup()
 
   opt.showtabline = 2
   opt.tabline = "%!v:lua.cokeline.tabline()"
