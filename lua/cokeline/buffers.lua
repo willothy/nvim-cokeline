@@ -135,6 +135,15 @@ local get_pick_letter = function(filename, bufnr)
   return "?"
 end
 
+---@param bufnr  bufnr
+---@return nil
+local function release_taken_letter(bufnr)
+  if taken_pick_letters[bufnr] then
+    valid_pick_letters = valid_pick_letters .. taken_pick_letters[bufnr]
+    taken_pick_letters[bufnr] = nil
+  end
+end
+
 ---@param path  string
 ---@param filename  string
 ---@param type  string
@@ -428,4 +437,5 @@ return {
   get_visible = get_visible_buffers,
   move_buffer = move_buffer,
   get_buffer = get_buffer,
+  release_taken_letter = release_taken_letter,
 }
