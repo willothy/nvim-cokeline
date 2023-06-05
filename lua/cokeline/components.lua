@@ -51,6 +51,7 @@ Component.new = function(c, i, default_hl)
     width = nil,
     bufnr = nil,
     hlgroup = nil,
+    kind = c.kind or "buffer",
   }
   setmetatable(component, Component)
   return component

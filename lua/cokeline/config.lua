@@ -144,6 +144,7 @@ local get = function(preferences)
   end
   if config.rhs then
     for _, component in ipairs(config.rhs) do
+      component.kind = "rhs"
       local new_component = Component.new(component, id, config.default_hl)
       insert(_G.cokeline.rhs, new_component)
       if new_component.on_click ~= nil then
@@ -154,6 +155,7 @@ local get = function(preferences)
   end
   if config.sidebar and config.sidebar.components then
     for _, component in ipairs(config.sidebar.components) do
+      component.kind = "sidebar"
       local new_component = Component.new(component, id, config.default_hl)
       insert(_G.cokeline.sidebar, new_component)
       if new_component.on_click ~= nil then

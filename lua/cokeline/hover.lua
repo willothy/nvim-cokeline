@@ -57,17 +57,31 @@ local function on_hover(current)
     end
     local component = M.get_current(current.screencol)
 
-    if not component then
-      if hovered ~= nil then
-        local buf = buffers.get_buffer(hovered.bufnr)
-        if buf then
-          buf.is_hovered = false
-          if hovered.on_mouse_leave then
+    if
+      hovered
+      and component.index == hovered.index
+      and component.bufnr == hovered.bufnr
+    then
+      return
+    end
+
+    if hovered ~= nil then
+      local buf = buffers.get_buffer(hovered.bufnr)
+      if buf then
+        buf.is_hovered = false
+      end
+      if hovered.on_mouse_leave then
+        if hovered.kind == "buffer" then
+          if buf ~= nil then
             hovered.on_mouse_leave(buf)
           end
+        else
+          hovered.on_mouse_leave(buf)
         end
-        _G.cokeline.__hovered = nil
       end
+      _G.cokeline.__hovered = nil
+    end
+    if not component then
       vim.cmd.redrawtabline()
       return
     end
@@ -75,7 +89,13 @@ local function on_hover(current)
     local buf = buffers.get_buffer(component.bufnr)
     if buf then
       buf.is_hovered = true
-      if component.on_mouse_enter then
+    end
+    if component.on_mouse_enter then
+      if component.kind == "buffer" then
+        if buf ~= nil then
+          component.on_mouse_enter(buf, current.screencol)
+        end
+      else
         component.on_mouse_enter(buf, current.screencol)
       end
     end
@@ -83,13 +103,20 @@ local function on_hover(current)
       index = component.index,
       bufnr = buf and buf.number or nil,
       on_mouse_leave = component.on_mouse_leave,
+      kind = component.kind,
     }
     vim.cmd.redrawtabline()
   elseif hovered ~= nil then
     local buf = buffers.get_buffer(hovered.bufnr)
     if buf then
       buf.is_hovered = false
-      if hovered.on_mouse_leave then
+    end
+    if hovered.on_mouse_leave then
+      if hovered.kind == "buffer" then
+        if buf ~= nil then
+          hovered.on_mouse_leave(buf)
+        end
+      else
         hovered.on_mouse_leave(buf)
       end
     end
