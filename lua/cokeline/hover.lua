@@ -58,7 +58,8 @@ local function on_hover(current)
     local component = M.get_current(current.screencol)
 
     if
-      hovered
+      component
+      and hovered
       and component.index == hovered.index
       and component.bufnr == hovered.bufnr
     then

@@ -559,6 +559,11 @@ require('cokeline').setup({
   -- default: see `/lua/cokeline/defaults.lua`
   components = {..},
 
+  -- Custom areas can be displayed on the right hand side of the bufferline.
+  -- They act identically to buffer components, except their methods don't take a Buffer object.
+  -- If you want a rhs component to be stateful, you can wrap it in a closure containing state.
+  rhs = {..},
+
   -- Left sidebar to integrate nicely with file explorer plugins.
   -- This is a table containing a `filetype` key and a list of `components` to
   -- be rendered in the sidebar.
@@ -744,7 +749,7 @@ Every component passed to the `components` list has to be a table of the form:
   on_click = nil | function(idx, clicks, buttons, modifiers, buffer)
 
   -- Called on a component when hovered
-  on_mouse_enter = nil | function(buffer)
+  on_mouse_enter = nil | function(buffer, mouse_col)
 
   -- Called on a component when unhovered
   on_mouse_leave = nil | function(buffer)
