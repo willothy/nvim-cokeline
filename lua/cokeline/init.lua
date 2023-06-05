@@ -12,6 +12,12 @@ _G.cokeline = {
   ---@type Component[]
   components = {},
 
+  ---@type Component[]
+  rhs = {},
+
+  ---@type Component[]
+  sidebar = {},
+
   ---@type table
   config = {},
 

@@ -86,6 +86,8 @@ local defaults = {
     },
   },
 
+  rhs = false,
+
   sidebar = false,
 }
 
@@ -129,11 +131,35 @@ end
 local get = function(preferences)
   local config = update(defaults, preferences)
   _G.cokeline.components = {}
-  for i, component in ipairs(config.components) do
-    local new_component = Component.new(component, i, config.default_hl)
+  _G.cokeline.rhs = {}
+  _G.cokeline.sidebar = {}
+  local id = 1
+  for _, component in ipairs(config.components) do
+    local new_component = Component.new(component, id, config.default_hl)
     insert(_G.cokeline.components, new_component)
     if new_component.on_click ~= nil then
-      require("cokeline/handlers").click:register(i, new_component.on_click)
+      require("cokeline/handlers").click:register(id, new_component.on_click)
+    end
+    id = id + 1
+  end
+  if config.rhs then
+    for _, component in ipairs(config.rhs) do
+      local new_component = Component.new(component, id, config.default_hl)
+      insert(_G.cokeline.rhs, new_component)
+      if new_component.on_click ~= nil then
+        require("cokeline/handlers").click:register(id, new_component.on_click)
+      end
+      id = id + 1
+    end
+  end
+  if config.sidebar and config.sidebar.components then
+    for _, component in ipairs(config.sidebar.components) do
+      local new_component = Component.new(component, id, config.default_hl)
+      insert(_G.cokeline.sidebar, new_component)
+      if new_component.on_click ~= nil then
+        require("cokeline/handlers").click:register(id, new_component.on_click)
+      end
+      id = id + 1
     end
   end
   return config

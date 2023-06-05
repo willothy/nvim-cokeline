@@ -4,6 +4,7 @@ local version = vim.version()
 
 local buffers = require("cokeline.buffers")
 local rendering = require("cokeline.rendering")
+local last_position = nil
 
 function M.hovered()
   return _G.cokeline.__hovered
@@ -14,10 +15,26 @@ function M.get_current(col)
   if not bufs then
     return
   end
-  local components = rendering.prepare(buffers.get_visible())
+  local cx = rendering.prepare(buffers.get_visible())
 
   local current_width = 0
-  for _, component in ipairs(components) do
+  for _, component in ipairs(cx.sidebar) do
+    current_width = current_width + component.width
+    if current_width >= col then
+      return component
+    end
+  end
+  for _, component in ipairs(cx.buffers) do
+    current_width = current_width + component.width
+    if current_width >= col then
+      return component
+    end
+  end
+  current_width = current_width + cx.gap
+  if current_width >= col then
+    return
+  end
+  for _, component in ipairs(cx.rhs) do
     current_width = current_width + component.width
     if current_width >= col then
       return component
@@ -31,6 +48,13 @@ local function on_hover(current)
     return
   end
   if current.screenrow == 1 then
+    if
+      last_position
+      and hovered
+      and last_position.screencol == current.screencol
+    then
+      return
+    end
     local component = M.get_current(current.screencol)
 
     if not component then
@@ -54,12 +78,12 @@ local function on_hover(current)
       if component.on_mouse_enter then
         component.on_mouse_enter(buf)
       end
-      _G.cokeline.__hovered = {
-        index = component.index,
-        bufnr = buf.number,
-        on_mouse_leave = component.on_mouse_leave,
-      }
     end
+    _G.cokeline.__hovered = {
+      index = component.index,
+      bufnr = buf and buf.number or nil,
+      on_mouse_leave = component.on_mouse_leave,
+    }
     vim.cmd.redrawtabline()
   elseif hovered ~= nil then
     local buf = buffers.get_buffer(hovered.bufnr)
@@ -72,6 +96,7 @@ local function on_hover(current)
     _G.cokeline.__hovered = nil
     vim.cmd.redrawtabline()
   end
+  last_position = current
 end
 
 function M.setup()

@@ -1,5 +1,4 @@
 local Buffer = require("cokeline/buffers").Buffer
-local Component = require("cokeline/components").Component
 local components = require("cokeline/components")
 local RenderContext = require("cokeline/context")
 
@@ -19,6 +18,7 @@ local get_components = function()
     return {}
   end
 
+  local hover = require("cokeline/hover").hovered()
   local layout = fn.winlayout()
 
   -- If the first split level is not given by vertically split windows we
@@ -61,20 +61,24 @@ local get_components = function()
     bufnr = bufnr,
     name = fn.bufname(4),
   })
+  local sidebar_width = min(api.nvim_win_get_width(winid), o.columns)
 
   local sidebar_components = {}
   local width = 0
-  for i, c in ipairs(_G.cokeline.config.sidebar.components) do
-    local component = Component.new(c, i):render(RenderContext:new(buffer))
+  local id = #_G.cokeline.components + #_G.cokeline.rhs + 1
+  for _, c in ipairs(_G.cokeline.sidebar) do
+    buffer.is_hovered = hover and hover.index == id
+    local component = c:render(RenderContext:new(buffer))
+    buffer.is_hovered = false
     -- We need at least one component, otherwise we can't add padding to the
     -- last component if needed.
     if component.width > 0 or #sidebar_components == 0 then
       insert(sidebar_components, component)
       width = width + component.width
     end
+    id = id + 1
   end
 
-  local sidebar_width = min(api.nvim_win_get_width(winid), o.columns)
   local rendering = require("cokeline/rendering")
 
   if width > sidebar_width then

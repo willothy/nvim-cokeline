@@ -1,5 +1,6 @@
 local components = require("cokeline/components")
 local sidebar = require("cokeline/sidebar")
+local rhs = require("cokeline/rhs")
 local RenderContext = require("cokeline/context")
 
 local insert = table.insert
@@ -49,12 +50,12 @@ local function to_components(buffers)
   if buffers.number then
     local cs = {}
     for _, c in ipairs(_G.cokeline.components) do
-      local ctx = RenderContext:new(buffers)
-      ctx.provider.is_hovered = hovered ~= nil
+      local cx = RenderContext:new(buffers)
+      cx.provider.is_hovered = hovered ~= nil
         and hovered.bufnr == buffers.number
         and hovered.index == c.index
-      local rendered = c:render(ctx)
-      ctx.provider.is_hovered = false
+      local rendered = c:render(cx)
+      cx.provider.is_hovered = false
       -- rendered.bufnr = buffers.number
       if rendered.width > 0 then
         insert(cs, rendered)
@@ -91,6 +92,7 @@ end
 ---@return string
 local prepare = function(visible_buffers)
   local sidebar_components = sidebar.get_components()
+  local rhs_components = rhs.get_components()
   local available_width = o.columns - components.width(sidebar_components)
   if available_width == 0 then
     return components.render(sidebar_components)
@@ -110,8 +112,20 @@ local prepare = function(visible_buffers)
     if current_buffer.index < #visible_buffers then
       components.shorten(current_components, available_width, "right")
     end
-    return components.render(sidebar_components)
-      .. components.render(current_components)
+
+    return {
+      sidebar = sidebar_components,
+      buffers = current_components,
+      rhs = rhs_components,
+      gap = math.max(
+        0,
+        available_width
+          - (
+            components.width(current_components)
+            + components.width(rhs_components)
+          )
+      ),
+    }
   end
 
   local left_components, left_width = to_components({
@@ -122,9 +136,10 @@ local prepare = function(visible_buffers)
     unpack(visible_buffers, current_buffer.index + 1, #visible_buffers),
   })
 
+  local rhs_width = components.width(rhs_components)
   local available_width_left, available_width_right =
     _G.cokeline.config.rendering.slider(
-      available_width - current_width,
+      available_width - current_width - rhs_width,
       left_width,
       right_width
     )
@@ -150,7 +165,13 @@ local prepare = function(visible_buffers)
     components.shorten(buffer_components, available_width, "right")
   end
 
-  return buffer_components, sidebar_components
+  local bufs_width = components.width(buffer_components)
+  return {
+    sidebar = sidebar_components,
+    buffers = buffer_components,
+    rhs = rhs_components,
+    gap = math.max(0, available_width - (bufs_width + rhs_width)),
+  }
 end
 
 ---This is the main function responsible for rendering the bufferline. It takes
@@ -159,9 +180,12 @@ end
 ---@param visible_buffers  Buffer[]
 ---@return string
 local render = function(visible_buffers)
-  local buffer_components, sidebar_components = prepare(visible_buffers)
-  return components.render(sidebar_components)
-    .. components.render(buffer_components)
+  local cx = prepare(visible_buffers)
+  return components.render(cx.sidebar)
+    .. components.render(cx.buffers)
+    .. "%#TabLine#"
+    .. string.rep(" ", cx.gap)
+    .. components.render(cx.rhs)
     .. "%#TabLine#"
 end
 

@@ -1,4 +1,4 @@
----@alias ContextKind '"buffer"' | '"tab"'
+---@alias ContextKind '"buffer"' | '"tab"' | '"rhs"'
 
 ---@class RenderContext
 ---@field kind ContextKind
@@ -8,10 +8,10 @@ local RenderContext = {
 }
 
 ---@param kind ContextKind
----@param provider Buffer | Tab
+---@param provider Buffer | Tab | RhsContext
 ---@return RenderContext
 function RenderContext:new(provider, kind)
-  return vim.tbl_extend("keep", { provider = provider, kind = kind }, self)
+  return setmetatable({ provider = provider, kind = kind }, { __index = self })
 end
 
 return RenderContext

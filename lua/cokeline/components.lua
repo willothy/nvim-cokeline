@@ -72,6 +72,8 @@ Component.render = function(self, context)
   component.width = fn.strwidth(component.text)
   if context.kind == "buffer" then
     component.bufnr = context.provider.number
+  elseif context.kind == "sidebar" then
+    component.bufnr = context.provider.buffer.number
   end
 
   -- `evaluate(self.hl.*)` might return `nil`, in that case we fallback to the
@@ -87,7 +89,7 @@ Component.render = function(self, context)
     or "NONE"
 
   component.hlgroup = Hlgroup.new(
-    ("Cokeline_%s_%s"):format(context.provider.number, self.index),
+    ("Cokeline_%s_%s"):format(component.bufnr or context.kind, self.index),
     style,
     fg,
     bg

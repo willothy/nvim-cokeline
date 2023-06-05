@@ -48,7 +48,9 @@ end
 local function default_click(buffer)
   return function(_, _, button)
     if button == "l" then
-      vim.api.nvim_set_current_buf(buffer.number)
+      if buffer then
+        vim.api.nvim_set_current_buf(buffer.number)
+      end
     elseif
       button == "r" and _G.cokeline.config.buffers.delete_on_right_click
     then
