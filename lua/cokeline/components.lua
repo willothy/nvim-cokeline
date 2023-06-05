@@ -70,10 +70,9 @@ Component.render = function(self, context)
   local component = vim.deepcopy(self)
   component.text = evaluate(self.text)
   component.width = fn.strwidth(component.text)
-  if context.kind == "buffer" then
+
+  if context.kind == "buffer" or context.kind == "sidebar" then
     component.bufnr = context.provider.number
-  elseif context.kind == "sidebar" then
-    component.bufnr = context.provider.buffer.number
   end
 
   -- `evaluate(self.hl.*)` might return `nil`, in that case we fallback to the
