@@ -76,7 +76,7 @@ local function on_hover(current)
     if buf then
       buf.is_hovered = true
       if component.on_mouse_enter then
-        component.on_mouse_enter(buf)
+        component.on_mouse_enter(buf, current.screencol)
       end
     end
     _G.cokeline.__hovered = {
