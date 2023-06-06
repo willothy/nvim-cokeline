@@ -70,17 +70,17 @@ require('cokeline').setup({
     },
     {
       text = function(buffer) return buffer.filename .. ' ' end,
-	  style = function(buffer)
+      style = function(buffer)
         if buffer.is_hovered and not buffer.is_focused then
-		  return 'underline'
-		end
-	  end
+          return 'underline'
+	end
+      end
     },
     {
       text = '',
       on_click = function(_, _, _, _, buffer)
-		buffer:delete()
-	  end
+	buffer:delete()
+      end
     },
     {
       text = ' ',
@@ -374,11 +374,19 @@ them:
 
 ![unique-prefix](https://user-images.githubusercontent.com/38540736/226447822-3315ad2f-35c9-4fc3-a777-c01cd8f2fe46.gif)
 
-### Clickable and hoverable buffers
+### Clickable buffers
 
-Each component can be given custom click and hover handlers, allowing for implementations of close buttons, diagnostic previews, and more.
+Left click on a buffer to focus it, and right click to delete it. Alternatively, define custom click handlers for each component that override the default behavior.
 
 ![clickable-buffers](https://user-images.githubusercontent.com/38540736/226447799-e845d266-0658-44e3-bd89-f706577844bf.gif)
+
+### Hover events
+
+Each component has access to an is_hovered property, and can be given custom `on_mouse_enter` and `on_mouse_leave` handlers, allowing for implementations of close buttons, diagnostic previews, and more complex funcionality.
+
+![hover-events](https://github.com/willothy/nvim-cokeline/assets/38540736/fb92475f-d775-44fe-9c95-a76c1cbaf560)
+
+![hover-events-2](https://github.com/willothy/nvim-cokeline/assets/38540736/3b319c79-0bff-41dd-9a08-36fd627b3d08)
 
 ### Buffer re-ordering
 
