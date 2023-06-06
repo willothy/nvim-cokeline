@@ -30,6 +30,9 @@ _G.cokeline = {
   ---@type Buffer[]
   visible_buffers = {},
 
+  ---@type table<bufnr, valid_index>
+  buf_order = {},
+
   __handlers = require("cokeline/handlers"),
 }
 

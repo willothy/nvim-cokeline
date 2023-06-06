@@ -11,11 +11,11 @@ function M.hovered()
 end
 
 function M.get_current(col)
-  local bufs = buffers.get_visible(true)
+  local bufs = buffers.get_visible()
   if not bufs then
     return
   end
-  local cx = rendering.prepare(buffers.get_visible())
+  local cx = rendering.prepare(bufs)
 
   local current_width = 0
   for _, component in ipairs(cx.sidebar) do

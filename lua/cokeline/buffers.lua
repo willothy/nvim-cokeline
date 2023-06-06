@@ -13,15 +13,14 @@ local split = vim.split
 
 local util = require("cokeline.utils")
 
----@type table<bufnr, valid_index>
-local order = {}
-
 ---@type bufnr
 local current_valid_index
 
 local valid_pick_letters = false
 
 local taken_pick_letters = {}
+
+local M = {}
 
 ---@diagnostic disable: duplicate-doc-class
 
@@ -135,15 +134,6 @@ local get_pick_letter = function(filename, bufnr)
   return "?"
 end
 
----@param bufnr  bufnr
----@return nil
-local function release_taken_letter(bufnr)
-  if taken_pick_letters[bufnr] then
-    valid_pick_letters = valid_pick_letters .. taken_pick_letters[bufnr]
-    taken_pick_letters[bufnr] = nil
-  end
-end
-
 ---@param path  string
 ---@param filename  string
 ---@param type  string
@@ -209,7 +199,7 @@ Buffer.new = function(b)
     or { icon = "", color = "" }
 
   return setmetatable({
-    _valid_index = order[b.bufnr] or -1,
+    _valid_index = _G.cokeline.buf_order[b.bufnr] or -1,
     index = -1,
     number = b.bufnr,
     type = opts.buftype,
@@ -336,22 +326,33 @@ local sort_by_number = function(buffer1, buffer2)
   return buffer1.number < buffer2.number
 end
 
+---@param bufnr  bufnr
+---@return nil
+function M.release_taken_letter(bufnr)
+  if taken_pick_letters[bufnr] then
+    valid_pick_letters = valid_pick_letters .. taken_pick_letters[bufnr]
+    taken_pick_letters[bufnr] = nil
+  end
+end
+
 ---@param buffer  Buffer
 ---@param target_valid_index  valid_index
-local move_buffer = function(buffer, target_valid_index)
+function M.move_buffer(buffer, target_valid_index)
   if buffer._valid_index == target_valid_index then
     return
   end
 
-  order[buffer.number] = target_valid_index
+  _G.cokeline.buf_order[buffer.number] = target_valid_index
 
   if buffer._valid_index < target_valid_index then
     for index = (buffer._valid_index + 1), target_valid_index do
-      order[_G.cokeline.valid_buffers[index].number] = index - 1
+      _G.cokeline.buf_order[_G.cokeline.valid_buffers[index].number] = index
+        - 1
     end
   else
     for index = target_valid_index, (buffer._valid_index - 1) do
-      order[_G.cokeline.valid_buffers[index].number] = index + 1
+      _G.cokeline.buf_order[_G.cokeline.valid_buffers[index].number] = index
+        + 1
     end
   end
 
@@ -360,7 +361,10 @@ end
 
 ---@param unsorted bool
 ---@return Buffer[]
-local get_valid_buffers = function(unsorted)
+function M.get_valid_buffers()
+  if not _G.cokeline.buf_order then
+    _G.cokeline.buf_order = {}
+  end
   local buffers = map(function(b)
     return Buffer.new(b)
   end, fn.getbufinfo({ buflisted = 1 }))
@@ -375,22 +379,31 @@ local get_valid_buffers = function(unsorted)
 
   buffers = compute_unique_prefixes(buffers)
 
-  if not unsorted then
-    if _G.cokeline.config.buffers.new_buffers_position == "last" then
-      sort(buffers, sort_by_new_after_last)
-    elseif _G.cokeline.config.buffers.new_buffers_position == "next" then
-      sort(buffers, sort_by_new_after_current)
-    elseif _G.cokeline.config.buffers.new_buffers_position == "directory" then
-      sort(buffers, sort_by_directory)
-    elseif _G.cokeline.config.buffers.new_buffers_position == "number" then
-      sort(buffers, sort_by_number)
+  if current_valid_index == nil then
+    _G.cokeline.buf_order = {}
+    for i, buffer in ipairs(buffers) do
+      buffer._valid_index = i
+      _G.cokeline.buf_order[buffer.number] = buffer._valid_index
+      if buffer.is_focused then
+        current_valid_index = i
+      end
     end
   end
 
-  order = {}
+  if _G.cokeline.config.buffers.new_buffers_position == "last" then
+    sort(buffers, sort_by_new_after_last)
+  elseif _G.cokeline.config.buffers.new_buffers_position == "next" then
+    sort(buffers, sort_by_new_after_current)
+  elseif _G.cokeline.config.buffers.new_buffers_position == "directory" then
+    sort(buffers, sort_by_directory)
+  elseif _G.cokeline.config.buffers.new_buffers_position == "number" then
+    sort(buffers, sort_by_number)
+  end
+
+  _G.cokeline.buf_order = {}
   for i, buffer in ipairs(buffers) do
     buffer._valid_index = i
-    order[buffer.number] = buffer._valid_index
+    _G.cokeline.buf_order[buffer.number] = buffer._valid_index
     if buffer.is_focused then
       current_valid_index = i
     end
@@ -401,8 +414,8 @@ end
 
 ---@param unsorted boolean
 ---@return Buffer[]
-local get_visible_buffers = function(unsorted)
-  _G.cokeline.valid_buffers = get_valid_buffers(unsorted)
+function M.get_visible()
+  _G.cokeline.valid_buffers = M.get_valid_buffers()
 
   _G.cokeline.visible_buffers = not _G.cokeline.config.buffers.filter_visible
       and _G.cokeline.valid_buffers
@@ -426,16 +439,12 @@ end
 ---Get Buffer
 ---@param bufnr number
 ---@return Buffer|nil
-local get_buffer = function(bufnr)
+function M.get_buffer(bufnr)
   return vim.tbl_filter(function(buffer)
     return buffer.number == bufnr
-  end, get_visible_buffers())[1]
+  end, M.get_visible())[1]
 end
 
-return {
-  Buffer = Buffer,
-  get_visible = get_visible_buffers,
-  move_buffer = move_buffer,
-  get_buffer = get_buffer,
-  release_taken_letter = release_taken_letter,
-}
+M.Buffer = Buffer
+
+return M
