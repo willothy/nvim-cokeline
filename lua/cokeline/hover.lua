@@ -132,14 +132,12 @@ function M.setup()
     return
   end
 
-  vim.keymap.set({ "", "i" }, "<MouseMove>", function()
-    local ok, pos = pcall(vim.fn.getmousepos)
-    if not ok then
-      return
-    end
-    on_hover(pos)
-    return "<MouseMove>"
-  end, { expr = true })
+  vim.api.nvim_create_autocmd("MouseMoved", {
+    callback = function(ev)
+      on_hover(ev.data)
+      return "<MouseMove>"
+    end,
+  })
 end
 
 return M
