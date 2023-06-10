@@ -21,13 +21,13 @@ function M.get_current(col)
   for _, component in ipairs(cx.sidebar) do
     current_width = current_width + component.width
     if current_width >= col then
-      return component
+      return component, cx.sidebar
     end
   end
   for _, component in ipairs(cx.buffers) do
     current_width = current_width + component.width
     if current_width >= col then
-      return component
+      return component, cx.buffers
     end
   end
   current_width = current_width + cx.gap
@@ -37,7 +37,7 @@ function M.get_current(col)
   for _, component in ipairs(cx.rhs) do
     current_width = current_width + component.width
     if current_width >= col then
-      return component
+      return component, cx.rhs
     end
   end
 end
@@ -127,11 +127,35 @@ local function on_hover(current)
   last_position = current
 end
 
+local function width(bufs, buf)
+  return vim
+    .iter(bufs)
+    :filter(function(v)
+      return v.bufnr == buf
+    end)
+    :map(function(v)
+      return v.width
+    end)
+    :fold(0, function(acc, v)
+      return acc + v
+    end)
+end
+
+local function start_pos(bufs, buf)
+  local pos = 0
+  for _, v in ipairs(bufs) do
+    if v.bufnr == buf then
+      return pos
+    end
+    pos = pos + v.width
+  end
+  return pos
+end
+
 local function on_drag(pos)
   if pos.dragging == "l" then
-    -- TODO: handle drag events
-    local current = M.get_current(pos.screencol)
-    if not current or current.kind ~= "buffer" then
+    local current, bufs = M.get_current(pos.screencol)
+    if not current or current.kind ~= "buffer" or not bufs then
       return
     end
 
@@ -140,21 +164,31 @@ local function on_drag(pos)
       if not buf then
         return
       end
-      _G.cokeline.__dragging = {
-        bufnr = current.bufnr,
-        index = buf._valid_index,
-      }
+      _G.cokeline.__dragging = current.bufnr
     end
-    if _G.cokeline.__dragging.bufnr == current.bufnr then
+    if _G.cokeline.__dragging == current.bufnr then
       return
     end
-    if _G.cokeline.__dragging.bufnr then
-      local buf = buffers.get_buffer(_G.cokeline.__dragging.bufnr)
-      if buf and current.index then
-        buffers.move_buffer(
-          buf,
-          buffers.get_buffer(current.bufnr)._valid_index
-        )
+    if _G.cokeline.__dragging then
+      local buf = buffers.get_buffer(_G.cokeline.__dragging)
+      local dragging_start = start_pos(bufs, _G.cokeline.__dragging)
+      local cur_buf_width = width(bufs, current.bufnr)
+      if buf then
+        if dragging_start > pos.screencol then
+          if pos.screencol + cur_buf_width > dragging_start then
+            buffers.move_buffer(
+              buf,
+              buffers.get_buffer(current.bufnr)._valid_index
+            )
+          end
+        else
+          if dragging_start + cur_buf_width <= pos.screencol then
+            buffers.move_buffer(
+              buf,
+              buffers.get_buffer(current.bufnr)._valid_index
+            )
+          end
+        end
       end
     end
   end
@@ -191,6 +225,22 @@ function M.setup()
       return "<MouseMove>"
     end,
   })
+
+  -- vim.keymap.set({ "", "i" }, "<MouseMove>", function()
+  --   local ok, pos = pcall(vim.fn.getmousepos)
+  --   if ok then
+  --     on_hover(pos)
+  --   end
+  --   return "<MouseMove>"
+  -- end, { expr = true, noremap = true })
+  -- vim.keymap.set({ "", "i" }, "<LeftDrag>", function()
+  --   local ok, pos = pcall(vim.fn.getmousepos)
+  --   if ok then
+  --     pos.dragging = "l"
+  --     on_drag(pos)
+  --   end
+  --   return "<MouseMove>"
+  -- end, { expr = true, noremap = true })
 end
 
 return M
