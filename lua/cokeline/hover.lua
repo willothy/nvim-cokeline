@@ -10,6 +10,26 @@ function M.hovered()
   return _G.cokeline.__hovered
 end
 
+function M.set_hovered(val)
+  _G.cokeline.__hovered = val
+end
+
+function M.clear_hovered()
+  _G.cokeline.__hovered = nil
+end
+
+function M.dragging()
+  return _G.cokeline.__dragging
+end
+
+function M.set_dragging(val)
+  _G.cokeline.__dragging = val
+end
+
+function M.clear_dragging()
+  _G.cokeline.__dragging = nil
+end
+
 function M.get_current(col)
   local bufs = buffers.get_visible()
   if not bufs then
@@ -43,7 +63,7 @@ function M.get_current(col)
 end
 
 local function on_hover(current)
-  local hovered = _G.cokeline.__hovered
+  local hovered = M.hovered()
   if vim.o.showtabline == 0 then
     return
   end
@@ -80,7 +100,7 @@ local function on_hover(current)
           hovered.on_mouse_leave(buf)
         end
       end
-      _G.cokeline.__hovered = nil
+      M.clear_hovered()
     end
     if not component then
       vim.cmd.redrawtabline()
@@ -100,12 +120,12 @@ local function on_hover(current)
         component.on_mouse_enter(buf, current.screencol)
       end
     end
-    _G.cokeline.__hovered = {
+    M.set_hovered({
       index = component.index,
       bufnr = buf and buf.number or nil,
       on_mouse_leave = component.on_mouse_leave,
       kind = component.kind,
-    }
+    })
     vim.cmd.redrawtabline()
   elseif hovered ~= nil then
     local buf = buffers.get_buffer(hovered.bufnr)
@@ -121,7 +141,7 @@ local function on_hover(current)
         hovered.on_mouse_leave(buf)
       end
     end
-    _G.cokeline.__hovered = nil
+    M.clear_hovered()
     vim.cmd.redrawtabline()
   end
   last_position = current
@@ -155,41 +175,43 @@ end
 local function on_drag(pos)
   if pos.dragging == "l" then
     local current, bufs = M.get_current(pos.screencol)
-    if not current or current.kind ~= "buffer" or not bufs then
+    if current == nil or bufs == nil or current.kind ~= "buffer" then
       return
     end
 
-    if not _G.cokeline.__dragging then
-      local buf = buffers.get_buffer(current.bufnr)
-      if not buf then
-        return
-      end
-      _G.cokeline.__dragging = current.bufnr
-    end
-    if _G.cokeline.__dragging == current.bufnr then
+    -- if we're not dragging yet or we're dragging the same buffer, start dragging
+    if M.dragging() == current.bufnr or not M.dragging() then
+      M.set_dragging(current.bufnr)
       return
     end
-    if _G.cokeline.__dragging then
-      local buf = buffers.get_buffer(_G.cokeline.__dragging)
-      local dragging_start = start_pos(bufs, _G.cokeline.__dragging)
-      local cur_buf_width = width(bufs, current.bufnr)
-      if buf then
-        if dragging_start > pos.screencol then
-          if pos.screencol + cur_buf_width > dragging_start then
-            buffers.move_buffer(
-              buf,
-              buffers.get_buffer(current.bufnr)._valid_index
-            )
-          end
-        else
-          if dragging_start + cur_buf_width <= pos.screencol then
-            buffers.move_buffer(
-              buf,
-              buffers.get_buffer(current.bufnr)._valid_index
-            )
-          end
-        end
-      end
+
+    -- dragged buffer
+    local dragged_buf = buffers.get_buffer(_G.cokeline.__dragging)
+    if not dragged_buf then
+      return
+    end
+
+    -- current (hovered) buffer
+    local cur_buf = buffers.get_buffer(current.bufnr)
+    if not cur_buf then
+      return
+    end
+
+    -- start position of dragged buffer
+    local dragging_start = start_pos(bufs, _G.cokeline.__dragging)
+    -- width of the current (hovered) buffer
+    local cur_buf_width = width(bufs, current.bufnr)
+
+    if
+      -- buffer is being dragged to the left
+      (
+        dragging_start > pos.screencol
+        and pos.screencol + cur_buf_width > dragging_start
+      )
+      -- buffer is being dragged to the right
+      or dragging_start + cur_buf_width <= pos.screencol
+    then
+      buffers.move_buffer(dragged_buf, cur_buf._valid_index)
     end
   end
 end
