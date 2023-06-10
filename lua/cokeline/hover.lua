@@ -127,14 +127,67 @@ local function on_hover(current)
   last_position = current
 end
 
+local function on_drag(pos)
+  if pos.dragging == "l" then
+    -- TODO: handle drag events
+    local current = M.get_current(pos.screencol)
+    if not current or current.kind ~= "buffer" then
+      return
+    end
+
+    if not _G.cokeline.__dragging then
+      local buf = buffers.get_buffer(current.bufnr)
+      if not buf then
+        return
+      end
+      _G.cokeline.__dragging = {
+        bufnr = current.bufnr,
+        index = buf._valid_index,
+      }
+    end
+    if _G.cokeline.__dragging.bufnr == current.bufnr then
+      return
+    end
+    if _G.cokeline.__dragging.bufnr then
+      local buf = buffers.get_buffer(_G.cokeline.__dragging.bufnr)
+      if buf and current.index then
+        buffers.move_buffer(
+          buf,
+          buffers.get_buffer(current.bufnr)._valid_index
+        )
+      end
+    end
+  end
+end
+
 function M.setup()
   if version.minor < 8 then
     return
   end
 
-  vim.api.nvim_create_autocmd("MouseMoved", {
+  vim.api.nvim_create_autocmd("MouseMove", {
     callback = function(ev)
-      on_hover(ev.data)
+      if ev.data.dragging then
+        local hov = M.hovered()
+        if hov ~= nil then
+          local buf = buffers.get_buffer(hov.bufnr)
+          if buf then
+            buf.is_hovered = false
+          end
+          if hov.kind == "buffer" then
+            if buf and hov.on_mouse_leave then
+              hov.on_mouse_leave(buf)
+            end
+          elseif hov.on_mouse_leave then
+            hov.on_mouse_leave()
+          end
+          _G.cokeline.__hovered = nil
+        end
+        on_drag(ev.data)
+      else
+        _G.cokeline.__dragging = nil
+        on_hover(ev.data)
+      end
       return "<MouseMove>"
     end,
   })
