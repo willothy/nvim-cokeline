@@ -89,7 +89,7 @@ end
 ---the list of visible buffers, figures out which components to display, and
 ---returns a list of pre-render components
 ---@param visible_buffers  Buffer[]
----@return string
+---@return table|string
 local prepare = function(visible_buffers)
   local sidebar_components = sidebar.get_components()
   local rhs_components = rhs.get_components()
@@ -178,15 +178,16 @@ end
 ---the list of visible buffers, figures out which components to display and
 ---returns their rendered version.
 ---@param visible_buffers  Buffer[]
+---@param fill_hl string
 ---@return string
-local render = function(visible_buffers)
+local render = function(visible_buffers, fill_hl)
   local cx = prepare(visible_buffers)
   return components.render(cx.sidebar)
     .. components.render(cx.buffers)
-    .. "%#TabLine#"
+    .. "%#" .. fill_hl .. "#"
     .. string.rep(" ", cx.gap)
     .. components.render(cx.rhs)
-    .. "%#TabLine#"
+    .. "%#" .. fill_hl .. "#"
 end
 
 return {
