@@ -57,7 +57,7 @@ _G.cokeline.tabline = function()
     opt.showtabline = 0
     return
   end
-  return rendering.render(visible_buffers)
+  return rendering.render(visible_buffers, _G.cokeline.config.fill_hl)
 end
 
 return {

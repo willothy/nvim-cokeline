@@ -44,6 +44,8 @@ local defaults = {
     style = "NONE",
   },
 
+  fill_hl = 'TabLineFill',
+
   ---@type Component[]
   components = {
     {

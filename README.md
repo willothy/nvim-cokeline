@@ -562,6 +562,9 @@ require('cokeline').setup({
     style = 'attr1,attr2,...' | function(buffer) -> 'attr1,attr2,...',
   },
 
+  -- The highlight group used to fill the tabline space
+  fill_hl = 'TabLineFill',
+
   -- A list of components to be rendered for each buffer. Check out the section
   -- below explaining what this value can be set to.
   -- default: see `/lua/cokeline/defaults.lua`
