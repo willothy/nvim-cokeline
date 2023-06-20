@@ -50,7 +50,10 @@ end
 ---@return string
 _G.cokeline.tabline = function()
   local visible_buffers = buffers.get_visible()
-  if #visible_buffers < _G.cokeline.config.show_if_buffers_are_at_least then
+  if
+    #visible_buffers < _G.cokeline.config.show_if_buffers_are_at_least
+    or #visible_buffers == 0
+  then
     opt.showtabline = 0
     return
   end
