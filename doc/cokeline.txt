@@ -61,6 +61,11 @@ The valid keys are:
       -- if set to `number` buffers are sorted by bufnr, as in default Neovim
       -- default: 'last',
       new_buffers_position = 'last' | 'next' | 'directory' | 'number',
+
+      -- If set to `name` filename extension is used to get the buffer icon
+      -- if set to `type` filetype is used to get the buffer icon
+      -- default: 'name'
+      icon_by = 'name' | 'type',
     },
 
     pick = {
