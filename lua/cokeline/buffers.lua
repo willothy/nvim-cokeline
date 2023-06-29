@@ -113,7 +113,7 @@ local get_pick_letter = function(filename, bufnr)
   -- If the config option pick.use_filename is true, and the initial letter
   -- of the filename is valid and it hasn't already been assigned return that.
   if _G.cokeline.config.pick.use_filename then
-    local init_letter = filename:sub(1, 1)
+    local init_letter = vim.fn.strcharpart(filename, 0, 1)
     if valid_pick_letters:find(init_letter, nil, true) then
       valid_pick_letters = valid_pick_letters:gsub(init_letter, "")
       taken_pick_letters[bufnr] = init_letter
@@ -123,8 +123,8 @@ local get_pick_letter = function(filename, bufnr)
 
   -- Return the first valid letter if there is one.
   if #valid_pick_letters > 0 then
-    local first_valid = valid_pick_letters:sub(1, 1)
-    valid_pick_letters = valid_pick_letters:sub(2)
+    local first_valid = vim.fn.strcharpart(valid_pick_letters, 0, 1)
+    valid_pick_letters = vim.fn.strcharpart(valid_pick_letters, 1, #valid_pick_letters - 1)
     taken_pick_letters[bufnr] = first_valid
     return first_valid
   end
