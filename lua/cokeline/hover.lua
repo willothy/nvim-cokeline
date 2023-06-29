@@ -186,7 +186,7 @@ local function on_drag(pos)
     end
 
     -- dragged buffer
-    local dragged_buf = buffers.get_buffer(_G.cokeline.__dragging)
+    local dragged_buf = buffers.get_buffer(M.dragging())
     if not dragged_buf then
       return
     end
@@ -198,7 +198,7 @@ local function on_drag(pos)
     end
 
     -- start position of dragged buffer
-    local dragging_start = start_pos(bufs, _G.cokeline.__dragging)
+    local dragging_start = start_pos(bufs, M.dragging())
     -- width of the current (hovered) buffer
     local cur_buf_width = width(bufs, current.bufnr)
 
@@ -217,52 +217,54 @@ local function on_drag(pos)
 end
 
 function M.setup()
-  if version.minor < 8 then
+  if version.minor < 8 or not vim.on_key then
     return
   end
 
-  vim.api.nvim_create_autocmd("MouseMove", {
-    callback = function(ev)
-      if ev.data.dragging then
-        local hov = M.hovered()
-        if hov ~= nil then
-          local buf = buffers.get_buffer(hov.bufnr)
-          if buf then
-            buf.is_hovered = false
-          end
-          if hov.kind == "buffer" then
-            if buf and hov.on_mouse_leave then
-              hov.on_mouse_leave(buf)
-            end
-          elseif hov.on_mouse_leave then
-            hov.on_mouse_leave()
-          end
-          _G.cokeline.__hovered = nil
-        end
-        on_drag(ev.data)
-      else
-        _G.cokeline.__dragging = nil
-        on_hover(ev.data)
-      end
-      return "<MouseMove>"
-    end,
-  })
+  local mouse_move = vim.keycode("<MouseMove>")
+  local drag = {
+    [vim.keycode("<LeftDrag>")] = "l",
+    [vim.keycode("<RightDrag>")] = "r",
+    [vim.keycode("<MiddleDrag>")] = "m",
+  }
+  vim.on_key(function(key)
+    local ok, pos = pcall(vim.fn.getmousepos)
+    if not ok then
+      return
+    end
 
-  -- vim.keymap.set({ "", "i" }, "<MouseMove>", function()
-  --   local ok, pos = pcall(vim.fn.getmousepos)
-  --   if ok then
-  --     on_hover(pos)
-  --   end
-  --   return "<MouseMove>"
-  -- end, { expr = true, noremap = true })
-  -- vim.keymap.set({ "", "i" }, "<LeftDrag>", function()
-  --   local ok, pos = pcall(vim.fn.getmousepos)
-  --   if ok then
-  --     pos.dragging = "l"
-  --     on_drag(pos)
-  --   end
-  --   return "<MouseMove>"
-  -- end, { expr = true, noremap = true })
+    local data = {
+      dragging = drag[key],
+      screencol = pos.screencol,
+      screenrow = pos.screenrow,
+      line = pos.line,
+      column = pos.column,
+      winid = pos.winid,
+      winrow = pos.winrow,
+      wincol = pos.wincol,
+    }
+    if key == mouse_move then
+      M.clear_dragging()
+      on_hover(data)
+    elseif drag[key] then
+      local hov = M.hovered()
+      if hov then
+        local buf = buffers.get_buffer(hov.bufnr)
+        if buf then
+          buf.is_hovered = false
+        end
+        if hov.kind == "buffer" then
+          if buf and hov.on_mouse_leave then
+            hov.on_mouse_leave(buf)
+          end
+        elseif hov.on_mouse_leave then
+          hov.on_mouse_leave()
+        end
+        M.clear_hovered()
+      end
+      on_drag(data)
+    end
+  end)
 end
 
 return M
