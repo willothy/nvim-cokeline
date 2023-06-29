@@ -399,12 +399,8 @@ Each component has access to an is_hovered property, and can be given custom `on
 ## :mountain: Plans and Ideas
 
 - Statusline
-- More mouse events
-  - Reorder with drag
-- Group buffers by tabpage
-- Non-buffer custom components
-  - Right-side tabline components
-  - Component groups
+- Tapbage components
+  - Scope buffers to tabs
 
 If you have an idea or feature request, don't hesitate to open an issue!
 
