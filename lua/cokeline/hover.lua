@@ -217,7 +217,7 @@ local function on_drag(pos)
 end
 
 function M.setup()
-  if version.minor < 8 or not vim.on_key then
+  if version.minor < 8 or not vim.on_key or not vim.keycode then
     return
   end
 
