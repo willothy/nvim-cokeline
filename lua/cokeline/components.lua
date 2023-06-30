@@ -179,15 +179,23 @@ local shorten_components = function(components, to_width, direction)
     (current_width > to_width)
     or (current_width - components[i].width + extra > to_width)
   do
-    last_removed_component = remove(components, i)
-    current_width = current_width - last_removed_component.width
-    i = direction == "left" and 1 or i - 1
-    if #components == 0 then
+    local removed = remove(components, i)
+    if removed then
+      last_removed_component = removed
+      current_width = current_width - last_removed_component.width
+      i = direction == "left" and 1 or i - 1
+      if #components == 0 then
+        break
+      end
+    else
       break
     end
   end
 
-  if to_width - current_width > extra or #components == 0 then
+  if
+    last_removed_component
+    and (to_width - current_width > extra or #components == 0)
+  then
     i = direction == "left" and 1 or i + 1
     last_removed_component:shorten(to_width - current_width, direction)
     insert(components, i, last_removed_component)
