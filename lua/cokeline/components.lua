@@ -14,7 +14,7 @@ local map = vim.tbl_map
 ---@field style  string|fun(buffer:Buffer): string
 ---@field fg  string|fun(buffer:Buffer): string
 ---@field bg  string|fun(buffer:Buffer): string
----@field hl_group  string|fun(buffer:Buffer): string
+---@field highlight  string|fun(buffer:Buffer): string
 ---@field on_click ClickHandler | nil
 ---@field on_mouse_enter MouseEnterHandler | nil
 ---@field on_mouse_leave MouseLeaveHandler | nil
@@ -39,7 +39,7 @@ Component.new = function(c, i, default_hl)
     fg = c.fg or default_hl.fg or "NONE",
     bg = c.bg or default_hl.bg or "NONE",
     style = c.style or default_hl.style or "NONE",
-    hl_group = c.hl_group,
+    highlight = c.highlight,
     delete_buffer_on_left_click = c.delete_buffer_on_left_click or false,
     on_click = c.on_click,
     on_mouse_enter = c.on_mouse_enter,
@@ -90,8 +90,8 @@ Component.render = function(self, context)
     or evaluate(_G.cokeline.config.default_hl.bg)
     or "NONE"
 
-  if component.hl_group then
-    component.hlgroup = Hlgroup.new_existing(evaluate(component.hl_group))
+  if component.highlight then
+    component.hlgroup = Hlgroup.new_existing(evaluate(component.highlight))
   else
     component.hlgroup = Hlgroup.new(
       ("Cokeline_%s_%s"):format(component.bufnr or context.kind, self.index),
