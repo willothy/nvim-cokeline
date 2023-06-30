@@ -16,7 +16,6 @@ local defaults = {
     focus_on_delete = "next",
     new_buffers_position = "last",
     delete_on_right_click = true,
-    icon_by = "name",
   },
 
   mappings = {

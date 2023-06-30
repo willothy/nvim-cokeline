@@ -140,19 +140,18 @@ end
 ---@param filetype  string
 ---@return table<string, string>
 local get_devicon = function(path, filename, buftype, filetype)
-  local icon, color
-  if _G.cokeline.config.buffers.icon_by == "type" then
-    local type = (buftype == "terminal") and "terminal" or filetype
-    icon, color = rq_devicons.get_icon_color_by_filetype(type, { default = true })
-  else
-    local name = (buftype == "terminal") and "terminal" or filename
-    local extn = fn.fnamemodify(path, ":e")
-    icon, color = rq_devicons.get_icon_color(name, extn, { default = true })
+  local name = (buftype == "terminal") and "terminal" or filename
+
+  local extn = fn.fnamemodify(path, ":e")
+  local icon, color = rq_devicons.get_icon_color(name, extn, { default = false })
+  if not icon then
+    icon, color = rq_devicons.get_icon_color_by_filetype(filetype, { default = true })
   end
-    return {
-      icon = icon .. " ",
-      color = color,
-    }
+
+  return {
+    icon = icon .. " ",
+    color = color,
+  }
 end
 
 ---@param bufnr  bufnr
