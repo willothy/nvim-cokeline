@@ -399,12 +399,8 @@ Each component has access to an is_hovered property, and can be given custom `on
 ## :mountain: Plans and Ideas
 
 - Statusline
-- More mouse events
-  - Reorder with drag
-- Group buffers by tabpage
-- Non-buffer custom components
-  - Right-side tabline components
-  - Component groups
+- Tapbage components
+  - Scope buffers to tabs
 
 If you have an idea or feature request, don't hesitate to open an issue!
 
@@ -561,6 +557,9 @@ require('cokeline').setup({
     -- default: `'NONE'`.
     style = 'attr1,attr2,...' | function(buffer) -> 'attr1,attr2,...',
   },
+
+  -- The highlight group used to fill the tabline space
+  fill_hl = 'TabLineFill',
 
   -- A list of components to be rendered for each buffer. Check out the section
   -- below explaining what this value can be set to.

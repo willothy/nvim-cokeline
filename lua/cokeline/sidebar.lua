@@ -53,8 +53,19 @@ local get_components = function()
   local winid = first_split[2]
   local bufnr = api.nvim_win_get_buf(winid)
 
-  if bo[bufnr].filetype ~= _G.cokeline.config.sidebar.filetype then
-    return {}
+  if type(_G.cokeline.config.sidebar.filetype) == "table" then
+    if
+      not vim.tbl_contains(
+        _G.cokeline.config.sidebar.filetype,
+        bo[bufnr].filetype
+      )
+    then
+      return {}
+    end
+  else
+    if bo[bufnr].filetype ~= _G.cokeline.config.sidebar.filetype then
+      return {}
+    end
   end
 
   local buffer = Buffer.new({
