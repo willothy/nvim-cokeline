@@ -45,12 +45,20 @@ local get_components = function()
 
   -- Since we're checking if we need to display sidebars we're only
   -- interested in the first and last window splits.
+  --
+  -- However, with edgy.nvim, a sidebar can contain multiple splits nested one level in.
+  -- So if the first window found is a leaf, we check the first window of the container.
   local first_split = window_tree[1]
+  local winid = first_split[2]
   if first_split[1] ~= "leaf" then
-    return {}
+    local win = first_split[2][1]
+    if win and win[1] == "leaf" then
+      winid = win[2]
+    else
+      return {}
+    end
   end
 
-  local winid = first_split[2]
   local bufnr = api.nvim_win_get_buf(winid)
 
   if type(_G.cokeline.config.sidebar.filetype) == "table" then
