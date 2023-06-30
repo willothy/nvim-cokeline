@@ -31,6 +31,17 @@ Hlgroup.new = function(name, gui, guifg, guibg)
   return hlgroup
 end
 
+---Using already existing highlight group, returns a new `Hlgroup` table.
+---@param name  string
+---@return Hlgroup
+Hlgroup.new_existing = function(name)
+  local hlgroup = {
+    name = name,
+  }
+  setmetatable(hlgroup, Hlgroup)
+  return hlgroup
+end
+
 ---Embeds some text in a highlight group.
 ---@param self Hlgroup
 ---@param text string
