@@ -136,13 +136,18 @@ end
 
 ---@param path  string
 ---@param filename  string
----@param type  string
+---@param buftype  string
+---@param filetype  string
 ---@return table<string, string>
-local get_devicon = function(path, filename, type)
-  local name = (type == "terminal") and "terminal" or filename
+local get_devicon = function(path, filename, buftype, filetype)
+  local name = (buftype == "terminal") and "terminal" or filename
+
   local extn = fn.fnamemodify(path, ":e")
-  local icon, color =
-    rq_devicons.get_icon_color(name, extn, { default = true })
+  local icon, color = rq_devicons.get_icon_color(name, extn, { default = false })
+  if not icon then
+    icon, color = rq_devicons.get_icon_color_by_filetype(filetype, { default = true })
+  end
+
   return {
     icon = icon .. " ",
     color = color,
@@ -180,7 +185,7 @@ Buffer.new = function(b)
   local opts = bo[b.bufnr]
 
   local number = b.bufnr
-  local type = opts.buftype
+  local buftype = opts.buftype
   local path = b.name
 
   local filename = (type == "quickfix" and "quickfix")
@@ -195,7 +200,7 @@ Buffer.new = function(b)
       and get_pick_letter(filename, number)
     or "?"
 
-  local devicon = has_devicons and get_devicon(path, filename, type)
+  local devicon = has_devicons and get_devicon(path, filename, buftype, filetype)
     or { icon = "", color = "" }
 
   return setmetatable({
