@@ -23,6 +23,11 @@ local defaults = {
     disable_mouse = false,
   },
 
+  history = {
+    enabled = true,
+    size = 2,
+  },
+
   rendering = {
     max_buffer_width = 999,
     slider = sliders.center_current_buffer,

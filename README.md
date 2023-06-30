@@ -388,13 +388,19 @@ Each component has access to an is_hovered property, and can be given custom `on
 
 ![hover-events-2](https://github.com/willothy/nvim-cokeline/assets/38540736/3b319c79-0bff-41dd-9a08-36fd627b3d08)
 
-### Buffer re-ordering
+### Buffer re-ordering (including mouse-drag reordering)
 
 ![reordering](https://user-images.githubusercontent.com/38540736/226447818-bdf63d70-e153-4353-992d-d317a5764c09.gif)
 
 ### Close icons
 
 ![close-icons](https://user-images.githubusercontent.com/38540736/226447802-29b2919e-dd20-4789-8d6a-250d6d453c64.gif)
+
+### Buffer history tracking
+
+```lua
+require("cokeline.history"):last():focus()
+```
 
 ## :mountain: Plans and Ideas
 
@@ -519,6 +525,12 @@ require('cokeline').setup({
     -- Disables mouse mappings
     -- default: `false`.
     disable_mouse = true | false,
+  },
+
+  -- Maintains a history of focused buffers using a ringbuffer
+  history = {
+    enabled = true | false (default: true)
+    size = int (default: 2)
   },
 
   rendering = {
@@ -809,6 +821,59 @@ the filename has to be shortened you'll still be able to see its extension,
 like in the following example (where it's set to `'left'`):
 
 ![buffer-truncation](https://user-images.githubusercontent.com/38540736/226447798-6aee2e0f-f957-42ab-96dd-3618e78ba4ba.png)
+
+#### What about `history`?
+
+The History keeps track of the buffers you access using a ringbuffer, and provides
+an API for accessing Buffer objects from the history.
+
+You can access the history using `require("cokeline.history")`, or through the global `_G.cokeline.history`.
+
+The `History` object provides these methods:
+
+```lua
+---Adds a Buffer object to the history
+function History:push(bufnr: int)
+end
+
+---Removes and returns the oldest Buffer object in the history
+function History:pop(): Buffer | nil
+end
+
+---Returns a list of Buffer objects in the history,
+---ordered from oldest to newest
+function History:list(): Buffer[]
+end
+
+---Returns an iterator of Buffer objects in the history,
+---ordered from oldest to newest
+function History:iter(): fun(): Buffer | nil
+end
+
+---Get a Buffer object by history index
+function History:get(idx: int): Buffer | nil
+end
+
+---Get a Buffer object representing the last-accessed buffer (before the current one)
+function History:last(): Buffer | nil
+end
+
+---Returns true if the history is empty
+function History:is_empty(): boolean
+end
+
+---Returns the maximum number of buffers that can be stored in the history
+function History:capacity(): int
+end
+
+---Returns true if the history contains the given buffer
+function History:contains(bufnr: int): bool
+end
+
+---Returns the number of buffers in the history
+function History:len(): int
+end
+```
 
 ## :musical_keyboard: Mappings
 

@@ -124,7 +124,8 @@ local get_pick_letter = function(filename, bufnr)
   -- Return the first valid letter if there is one.
   if #valid_pick_letters > 0 then
     local first_valid = vim.fn.strcharpart(valid_pick_letters, 0, 1)
-    valid_pick_letters = vim.fn.strcharpart(valid_pick_letters, 1, #valid_pick_letters - 1)
+    valid_pick_letters =
+      vim.fn.strcharpart(valid_pick_letters, 1, #valid_pick_letters - 1)
     taken_pick_letters[bufnr] = first_valid
     return first_valid
   end
@@ -143,9 +144,11 @@ local get_devicon = function(path, filename, buftype, filetype)
   local name = (buftype == "terminal") and "terminal" or filename
 
   local extn = fn.fnamemodify(path, ":e")
-  local icon, color = rq_devicons.get_icon_color(name, extn, { default = false })
+  local icon, color =
+    rq_devicons.get_icon_color(name, extn, { default = false })
   if not icon then
-    icon, color = rq_devicons.get_icon_color_by_filetype(filetype, { default = true })
+    icon, color =
+      rq_devicons.get_icon_color_by_filetype(filetype, { default = true })
   end
 
   return {
@@ -200,7 +203,8 @@ Buffer.new = function(b)
       and get_pick_letter(filename, number)
     or "?"
 
-  local devicon = has_devicons and get_devicon(path, filename, buftype, filetype)
+  local devicon = has_devicons
+      and get_devicon(path, filename, buftype, filetype)
     or { icon = "", color = "" }
 
   return setmetatable({
@@ -448,6 +452,15 @@ function M.get_buffer(bufnr)
   return vim.tbl_filter(function(buffer)
     return buffer.number == bufnr
   end, M.get_visible())[1]
+end
+
+---Wrapper around `vim.api.nvim_get_current_buf`, returns Buffer object
+---@return Buffer|nil
+function M.get_current()
+  local bufnr = vim.api.nvim_get_current_buf()
+  if bufnr then
+    return M.get_buffer(bufnr)
+  end
 end
 
 M.Buffer = Buffer
