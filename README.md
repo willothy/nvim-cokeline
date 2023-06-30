@@ -744,6 +744,9 @@ Every component passed to the `components` list has to be a table of the form:
   bg = '#rrggbb' | function(buffer) -> '#rrggbb',
   style = 'attr1,attr2,...' | function(buffer) -> 'attr1,attr2,...',
 
+  -- Or, alternatively, the name of the highlight group
+  highlight = 'string' | function(buffer) -> string | nil,
+
   -- If `true` the buffer will be deleted when this component is
   -- left-clicked (usually used to implement close buttons, overrides `on_click`).
   -- deprecated, it is recommended to use the Buffer:delete() method in an on_click event

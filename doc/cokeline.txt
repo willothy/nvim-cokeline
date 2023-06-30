@@ -258,6 +258,9 @@ Every component passed to the `components` list has to be a table of the form:
     bg = '#rrggbb' | function(buffer) -> '#rrggbb' | nil,
     style = 'string' | nil,
 
+    -- Or, alternatively, the name of the highlight group
+    highlight = 'string' | function(buffer) -> string | nil,
+
     -- If `true` the buffer will be deleted when this component is
     -- left-clicked (useful to implement close buttons).
     delete_buffer_on_left_click = boolean,
