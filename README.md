@@ -515,6 +515,10 @@ require('cokeline').setup({
     -- (first) buffers gets focused/switched, if `false` nothing happens.
     -- default: `true`.
     cycle_prev_next = true | false,
+
+    -- Disables mouse mappings
+    -- default: `false`.
+    disable_mouse = true | false,
   },
 
   rendering = {

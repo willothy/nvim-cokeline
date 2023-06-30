@@ -20,6 +20,7 @@ local defaults = {
 
   mappings = {
     cycle_prev_next = true,
+    disable_mouse = false,
   },
 
   rendering = {
@@ -44,7 +45,7 @@ local defaults = {
     style = "NONE",
   },
 
-  fill_hl = 'TabLineFill',
+  fill_hl = "TabLineFill",
 
   ---@type Component[]
   components = {

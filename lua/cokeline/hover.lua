@@ -63,6 +63,7 @@ function M.get_current(col)
 end
 
 local function on_hover(current)
+  M.clear_dragging()
   local hovered = M.hovered()
   if vim.o.showtabline == 0 then
     return
@@ -173,6 +174,21 @@ local function start_pos(bufs, buf)
 end
 
 local function on_drag(pos)
+  local hov = M.hovered()
+  if hov then
+    local buf = buffers.get_buffer(hov.bufnr)
+    if buf then
+      buf.is_hovered = false
+    end
+    if hov.kind == "buffer" then
+      if buf and hov.on_mouse_leave then
+        hov.on_mouse_leave(buf)
+      end
+    elseif hov.on_mouse_leave then
+      hov.on_mouse_leave()
+    end
+    M.clear_hovered()
+  end
   if pos.dragging == "l" then
     local current, bufs = M.get_current(pos.screencol)
     if current == nil or bufs == nil or current.kind ~= "buffer" then
@@ -216,55 +232,67 @@ local function on_drag(pos)
   end
 end
 
-function M.setup()
-  if version.minor < 8 or not vim.on_key or not vim.keycode then
+function M.mouse_pos(drag, key)
+  drag = drag or {}
+  local ok, pos = pcall(vim.fn.getmousepos)
+  if not ok then
     return
   end
 
-  local mouse_move = vim.keycode("<MouseMove>")
-  local drag = {
-    [vim.keycode("<LeftDrag>")] = "l",
-    [vim.keycode("<RightDrag>")] = "r",
-    [vim.keycode("<MiddleDrag>")] = "m",
+  return {
+    dragging = type(drag) == "table" and drag[key] or drag,
+    screencol = pos.screencol,
+    screenrow = pos.screenrow,
+    line = pos.line,
+    column = pos.column,
+    winid = pos.winid,
+    winrow = pos.winrow,
+    wincol = pos.wincol,
   }
-  vim.on_key(function(key)
-    local ok, pos = pcall(vim.fn.getmousepos)
-    if not ok then
-      return
-    end
+end
 
-    local data = {
-      dragging = drag[key],
-      screencol = pos.screencol,
-      screenrow = pos.screenrow,
-      line = pos.line,
-      column = pos.column,
-      winid = pos.winid,
-      winrow = pos.winrow,
-      wincol = pos.wincol,
+function M.setup()
+  if
+    _G.cokeline.config.mappings.disable_mouse
+    or version.minor < 8
+    or not vim.o.mousemoveevent
+  then
+    return
+  end
+
+  if version.minor >= 9 and vim.on_key and vim.keycode then
+    local mouse_move = vim.keycode("<MouseMove>")
+    local drag = {
+      [vim.keycode("<LeftDrag>")] = "l",
+      [vim.keycode("<RightDrag>")] = "r",
+      [vim.keycode("<MiddleDrag>")] = "m",
     }
-    if key == mouse_move then
-      M.clear_dragging()
-      on_hover(data)
-    elseif drag[key] then
-      local hov = M.hovered()
-      if hov then
-        local buf = buffers.get_buffer(hov.bufnr)
-        if buf then
-          buf.is_hovered = false
-        end
-        if hov.kind == "buffer" then
-          if buf and hov.on_mouse_leave then
-            hov.on_mouse_leave(buf)
+    vim.on_key(function(k)
+      local data = M.mouse_pos(drag, k)
+      if data then
+        vim.schedule_wrap(function(key)
+          if key == mouse_move then
+            on_hover(data)
+          elseif drag[key] then
+            on_drag(data)
           end
-        elseif hov.on_mouse_leave then
-          hov.on_mouse_leave()
-        end
-        M.clear_hovered()
+        end)(k)
       end
-      on_drag(data)
-    end
-  end)
+    end)
+  elseif vim.o.mousemoveevent then
+    vim.keymap.set({ "n", "" }, "<MouseMove>", function()
+      local data = M.mouse_pos()
+      if data then
+        on_hover(data)
+      end
+    end)
+    vim.keymap.set({ "n", "" }, "<LeftDrag>", function()
+      local data = M.mouse_pos("l")
+      if data then
+        on_drag(data)
+      end
+    end)
+  end
 end
 
 return M
