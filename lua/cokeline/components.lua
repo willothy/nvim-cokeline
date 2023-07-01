@@ -145,7 +145,7 @@ Component.shorten = function(self, to_width, direction)
     local fmt = (direction == "left" and "%s…")
       or (direction == "right" and "…%s")
       or "%s "
-    self.text = fmt:format(rep(" "), to_width ~= nil and to_width - 1 or 0)
+    self.text = fmt:format(rep(" ", to_width ~= nil and to_width - 1 or 0))
   end
 
   self.width = fn.strwidth(self.text)
