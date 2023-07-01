@@ -4,6 +4,7 @@ local config = require("cokeline/config")
 local mappings = require("cokeline/mappings")
 local rendering = require("cokeline/rendering")
 local hover = require("cokeline/hover")
+local history = require("cokeline/history")
 
 local opt = vim.opt
 
@@ -33,12 +34,19 @@ _G.cokeline = {
   ---@type table<bufnr, valid_index>
   buf_order = {},
 
+  ---@type Cokeline.History
+  history = nil,
+
   __handlers = require("cokeline/handlers"),
 }
 
 ---@param preferences table|nil
 local setup = function(preferences)
   _G.cokeline.config = config.get(preferences or {})
+  if _G.cokeline.config.history.enabled then
+    history.setup(_G.cokeline.config.history.size)
+    _G.cokeline.history = history
+  end
   augroups.setup()
   mappings.setup()
   hover.setup()

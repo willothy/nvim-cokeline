@@ -88,6 +88,12 @@ The valid keys are:
       disable_mouse = true | false,
     },
 
+    -- Maintains a history of focused buffers using a ringbuffer
+    history = {
+      enabled = true | false (default: true)
+      size = int (default: 2)
+    },
+
     rendering = {
       -- The maximum number of characters a rendered buffer is allowed to take
       -- up. The buffer will be truncated if its width is bigger than this

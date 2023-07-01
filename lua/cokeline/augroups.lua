@@ -56,17 +56,26 @@ local setup = function()
     vim.api.nvim_create_autocmd, vim.api.nvim_create_augroup
 
   autocmd({ "VimEnter", "BufAdd" }, {
-    group = augroup("cokline_toggle", { clear = true }),
+    group = augroup("cokeline_toggle", { clear = true }),
     callback = function()
       require("cokeline/augroups").toggle()
     end,
   })
   autocmd({ "BufDelete", "BufWipeout" }, {
-    group = augroup("cokline_release_taken_letter", { clear = true }),
+    group = augroup("cokeline_release_taken_letter", { clear = true }),
     callback = function(args)
       require("cokeline/buffers").release_taken_letter(args.buf)
     end,
   })
+  if _G.cokeline.config.history.enabled and _G.cokeline.history then
+    autocmd("BufLeave", {
+      group = augroup("cokeline_buf_history", { clear = true }),
+      callback = function()
+        local buf = vim.api.nvim_get_current_buf()
+        _G.cokeline.history:push(buf)
+      end,
+    })
+  end
 end
 
 return {

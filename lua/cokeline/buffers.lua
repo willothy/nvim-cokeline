@@ -467,6 +467,15 @@ function M.get_buffer(bufnr)
   end, M.get_visible())[1]
 end
 
+---Wrapper around `vim.api.nvim_get_current_buf`, returns Buffer object
+---@return Buffer|nil
+function M.get_current()
+  local bufnr = vim.api.nvim_get_current_buf()
+  if bufnr then
+    return M.get_buffer(bufnr)
+  end
+end
+
 M.Buffer = Buffer
 
 return M
