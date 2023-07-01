@@ -115,29 +115,43 @@ local get_pick_letter = function(filename, bufnr)
 
   -- If the config option pick.use_filename is true, and the initial letter
   -- of the filename is valid and it hasn't already been assigned return that.
-  if _G.cokeline.config.pick.use_filename then
+  if _G.cokeline.config.pick.use_filename and filename ~= "" then
     local init_letter = vim.fn.strcharpart(filename, 0, 1)
     local idx = valid_pick_letters:find(init_letter, nil, true)
-    if idx and not taken_pick_indices[idx] then
-      if valid_pick_letters[first_valid] == init_letter then
-        repeat
-          first_valid = first_valid + 1
-        until taken_pick_indices[first_valid]
-      end
-      taken_pick_letters[bufnr] = init_letter
-      taken_pick_indices[idx] = true
 
-      return init_letter
+    if idx == nil or taken_pick_indices[idx] then
+      while
+        taken_pick_indices[first_valid]
+        and first_valid <= vim.fn.strcharlen(valid_pick_letters)
+      do
+        first_valid = first_valid + 1
+      end
+      idx = first_valid
+    end
+    if idx then
+      local letter = vim.fn.strcharpart(valid_pick_letters, idx - 1, 1)
+      if letter and letter ~= "" then
+        taken_pick_letters[bufnr] = letter
+        taken_pick_indices[idx] = true
+
+        return letter
+      end
     end
   end
 
   -- Return the first valid letter if there is one.
-  if #valid_pick_letters > 0 then
-    local first = vim.fn.strcharpart(valid_pick_letters, first_valid - 1, 1)
-    taken_pick_letters[bufnr] = first
-    taken_pick_indices[first_valid - 1] = true
+  while
+    taken_pick_indices[first_valid]
+    and first_valid <= vim.fn.strcharlen(valid_pick_letters)
+  do
     first_valid = first_valid + 1
-    return first
+  end
+  if first_valid <= vim.fn.strcharlen(valid_pick_letters) then
+    local letter = vim.fn.strcharpart(valid_pick_letters, first_valid - 1, 1)
+    taken_pick_letters[bufnr] = letter
+    taken_pick_indices[first_valid] = true
+    first_valid = first_valid + 1
+    return letter
   end
 
   -- Finally, just return a '?' (this is rarely reached, you'd need to have
@@ -203,15 +217,12 @@ Buffer.new = function(b)
 
   local filename = (type == "quickfix" and "quickfix")
     or (#path > 0 and fn.fnamemodify(path, ":t"))
-    or "[No Name]"
 
   local filetype = not (b.variables and b.variables.netrw_browser_active)
       and opts.filetype
     or "netrw"
 
-  local pick_letter = filename ~= "[No Name]"
-      and get_pick_letter(filename, number)
-    or "?"
+  local pick_letter = get_pick_letter(filename or "", number)
 
   local devicon = has_devicons
       and get_devicon(path, filename, buftype, filetype)
@@ -230,7 +241,7 @@ Buffer.new = function(b)
     is_hovered = false,
     path = b.name,
     unique_prefix = "",
-    filename = filename,
+    filename = filename or "[No Name]",
     filetype = filetype,
     pick_letter = pick_letter,
     devicon = devicon,
@@ -473,7 +484,7 @@ function M.get_visible()
   for i, buffer in ipairs(_G.cokeline.visible_buffers) do
     buffer.index = i
     if not _G.cokeline.config.pick.use_filename then
-      buffer.pick_letter = vim.fn.strcharpart(valid_pick_letters, i - 1, 1)
+      buffer.pick_letter = get_pick_letter(buffer.filename, buffer.number)
     end
   end
 
