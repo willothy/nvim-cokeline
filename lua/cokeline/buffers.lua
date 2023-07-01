@@ -349,7 +349,6 @@ end
 ---@return nil
 function M.release_taken_letter(bufnr)
   if taken_pick_letters[bufnr] then
-    -- valid_pick_letters = valid_pick_letters .. taken_pick_letters[bufnr]
     local idx = valid_pick_letters:find(taken_pick_letters[bufnr])
     taken_pick_indices[idx] = nil
     taken_pick_letters[bufnr] = nil

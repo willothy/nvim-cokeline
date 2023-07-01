@@ -63,9 +63,8 @@ local setup = function()
   })
   autocmd({ "BufDelete", "BufWipeout" }, {
     group = augroup("cokline_release_taken_letter", { clear = true }),
-    callback = function()
-      local buf = vim.api.nvim_get_current_buf()
-      require("cokeline/buffers").release_taken_letter(buf)
+    callback = function(args)
+      require("cokeline/buffers").release_taken_letter(args.buf)
     end,
   })
 end
