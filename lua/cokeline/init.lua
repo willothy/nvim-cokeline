@@ -28,6 +28,9 @@ _G.cokeline = {
   ---@type Buffer[]
   valid_buffers = {},
 
+  ---@type table<bufnr, Buffer>
+  valid_lookup = {},
+
   ---@type Buffer[]
   visible_buffers = {},
 

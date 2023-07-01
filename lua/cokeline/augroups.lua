@@ -70,9 +70,10 @@ local setup = function()
   if _G.cokeline.config.history.enabled and _G.cokeline.history then
     autocmd("BufLeave", {
       group = augroup("cokeline_buf_history", { clear = true }),
-      callback = function()
-        local buf = vim.api.nvim_get_current_buf()
-        _G.cokeline.history:push(buf)
+      callback = function(args)
+        if _G.cokeline.valid_lookup[args.buf] then
+          _G.cokeline.history:push(args.buf)
+        end
       end,
     })
   end

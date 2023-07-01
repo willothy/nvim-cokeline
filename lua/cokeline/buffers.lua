@@ -6,10 +6,10 @@ local sort = table.sort
 local bo = vim.bo
 local cmd = vim.cmd
 local diagnostic = vim.diagnostic or vim.lsp.diagnostic
-local filter = vim.tbl_filter
 local fn = vim.fn
-local map = vim.tbl_map
 local split = vim.split
+local filter = vim.tbl_filter
+local map = vim.tbl_map
 
 local util = require("cokeline.utils")
 
@@ -385,16 +385,33 @@ function M.get_valid_buffers()
   if not _G.cokeline.buf_order then
     _G.cokeline.buf_order = {}
   end
-  local buffers = map(function(b)
-    return Buffer.new(b)
-  end, fn.getbufinfo({ buflisted = 1 }))
 
-  buffers = filter(function(buffer)
-    return buffer.filetype ~= "netrw"
-  end, buffers)
+  local buffers
+  local info = fn.getbufinfo({ buflisted = 1 })
+  if vim.iter then
+    buffers = vim
+      .iter(info)
+      :map(Buffer.new)
+      :filter(function(buffer)
+        return buffer.filetype ~= "netrw"
+      end)
+      :filter(
+        type(_G.cokeline.config.buffers.filter_valid) == "function"
+            and _G.cokeline.config.buffers.filter_valid
+          or function()
+            return true
+          end
+      )
+      :totable()
+  else
+    buffers = map(Buffer.new, info)
+    buffers = filter(function(buffer)
+      return buffer.filetype ~= "netrw"
+    end, buffers)
 
-  if _G.cokeline.config.buffers.filter_valid then
-    buffers = filter(_G.cokeline.config.buffers.filter_valid, buffers)
+    if _G.cokeline.config.buffers.filter_valid then
+      buffers = filter(_G.cokeline.config.buffers.filter_valid, buffers)
+    end
   end
 
   buffers = compute_unique_prefixes(buffers)
@@ -436,6 +453,10 @@ end
 ---@return Buffer[]
 function M.get_visible()
   _G.cokeline.valid_buffers = M.get_valid_buffers()
+  _G.cokeline.valid_lookup = {}
+  for _, buffer in ipairs(_G.cokeline.valid_buffers) do
+    _G.cokeline.valid_lookup[buffer.number] = buffer
+  end
 
   _G.cokeline.visible_buffers = not _G.cokeline.config.buffers.filter_visible
       and _G.cokeline.valid_buffers
@@ -463,9 +484,7 @@ end
 ---@param bufnr number
 ---@return Buffer|nil
 function M.get_buffer(bufnr)
-  return vim.tbl_filter(function(buffer)
-    return buffer.number == bufnr
-  end, M.get_visible())[1]
+  return _G.cokeline.valid_lookup[bufnr]
 end
 
 ---Wrapper around `vim.api.nvim_get_current_buf`, returns Buffer object
@@ -475,6 +494,28 @@ function M.get_current()
   if bufnr then
     return M.get_buffer(bufnr)
   end
+end
+
+---@param bufnr bufnr
+---@return boolean
+function M.is_visible(bufnr)
+  local buf = M.get_buffer(bufnr)
+  if not buf then
+    return false
+  end
+  if
+    _G.cokeline.config.buf.filter_valid
+    and not _G.cokeline.config.buffers.filter_valid(buf)
+  then
+    return false
+  end
+  if
+    _G.cokeline.config.buffers.filter_visible
+    and not _G.cokeline.config.buffers.filter_visible(buf)
+  then
+    return false
+  end
+  return true
 end
 
 M.Buffer = Buffer
