@@ -18,7 +18,10 @@ local current_valid_index
 
 local valid_pick_letters = false
 
+local first_valid = 1
+
 local taken_pick_letters = {}
+local taken_pick_indices = {}
 
 local M = {}
 
@@ -114,20 +117,27 @@ local get_pick_letter = function(filename, bufnr)
   -- of the filename is valid and it hasn't already been assigned return that.
   if _G.cokeline.config.pick.use_filename then
     local init_letter = vim.fn.strcharpart(filename, 0, 1)
-    if valid_pick_letters:find(init_letter, nil, true) then
-      valid_pick_letters = valid_pick_letters:gsub(init_letter, "")
+    local idx = valid_pick_letters:find(init_letter, nil, true)
+    if idx and not taken_pick_indices[idx] then
+      if valid_pick_letters[first_valid] == init_letter then
+        repeat
+          first_valid = first_valid + 1
+        until taken_pick_indices[first_valid]
+      end
       taken_pick_letters[bufnr] = init_letter
+      taken_pick_indices[idx] = true
+
       return init_letter
     end
   end
 
   -- Return the first valid letter if there is one.
   if #valid_pick_letters > 0 then
-    local first_valid = vim.fn.strcharpart(valid_pick_letters, 0, 1)
-    valid_pick_letters =
-      vim.fn.strcharpart(valid_pick_letters, 1, #valid_pick_letters - 1)
-    taken_pick_letters[bufnr] = first_valid
-    return first_valid
+    local first = vim.fn.strcharpart(valid_pick_letters, first_valid - 1, 1)
+    taken_pick_letters[bufnr] = first
+    taken_pick_indices[first_valid - 1] = true
+    first_valid = first_valid + 1
+    return first
   end
 
   -- Finally, just return a '?' (this is rarely reached, you'd need to have
@@ -339,7 +349,8 @@ end
 ---@return nil
 function M.release_taken_letter(bufnr)
   if taken_pick_letters[bufnr] then
-    valid_pick_letters = valid_pick_letters .. taken_pick_letters[bufnr]
+    local idx = valid_pick_letters:find(taken_pick_letters[bufnr])
+    taken_pick_indices[idx] = nil
     taken_pick_letters[bufnr] = nil
   end
 end
@@ -368,7 +379,6 @@ function M.move_buffer(buffer, target_valid_index)
   cmd("redrawtabline")
 end
 
----@param unsorted bool
 ---@return Buffer[]
 function M.get_valid_buffers()
   if not _G.cokeline.buf_order then
@@ -440,6 +450,9 @@ function M.get_visible()
 
   for i, buffer in ipairs(_G.cokeline.visible_buffers) do
     buffer.index = i
+    if not _G.cokeline.config.pick.use_filename then
+      buffer.pick_letter = vim.fn.strcharpart(valid_pick_letters, i - 1, 1)
+    end
   end
 
   return _G.cokeline.visible_buffers
