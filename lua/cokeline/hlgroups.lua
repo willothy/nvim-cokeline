@@ -16,10 +16,10 @@ Hlgroup.__index = Hlgroup
 ---@param guibg string
 ---@return Hlgroup
 Hlgroup.new = function(name, gui, guifg, guibg)
-  if guifg:sub(1, 1) ~= "#" then
+  if vim.fn.hlexists(guifg) == 1 then
     guifg = get_hex(guifg, "fg")
   end
-  if guibg:sub(1, 1) ~= "#" then
+  if vim.fn.hlexists(guibg) == 1 then
     guibg = get_hex(guibg, "bg")
   end
 
