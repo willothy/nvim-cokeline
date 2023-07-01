@@ -242,6 +242,7 @@ end
 ---Deletes the buffer
 function Buffer:delete()
   util.buf_delete(self.number)
+  vim.cmd.redrawtabline()
 end
 
 ---@param self Buffer

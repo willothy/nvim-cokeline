@@ -1,5 +1,4 @@
 local buffers = require("cokeline/buffers")
-local utils = require("cokeline.utils")
 
 local cmd = vim.cmd
 local filter = vim.tbl_filter
@@ -34,10 +33,10 @@ local by_index = function(goal, index)
 
     buffers.move_buffer(focused_buffer, target_buffer._valid_index)
   elseif goal == "focus" then
+    target_buffer:focus()
     cmd("b" .. target_buffer.number)
   elseif goal == "close" then
-    utils.buf_delete(target_buffer.number)
-    vim.cmd.redrawtabline()
+    target_buffer:delete()
   end
 end
 
@@ -48,27 +47,29 @@ local by_step = function(goal, step)
     return buffer.is_focused
   end, _G.cokeline.valid_buffers)[1]
 
-  if not focused_buffer then
+  local target_buf
+  local target_idx
+  if focused_buffer then
+    target_idx = focused_buffer._valid_index + step
+    if target_idx < 1 or target_idx > #_G.cokeline.valid_buffers then
+      if not _G.cokeline.config.mappings.cycle_prev_next then
+        return
+      end
+      target_idx = (target_idx - 1) % #_G.cokeline.valid_buffers + 1
+    end
+    target_buf = _G.cokeline.valid_buffers[target_idx]
+  elseif goal == "focus" and _G.cokeline.config.history.enabled then
+    target_buf = _G.cokeline.history:last()
+  else
     return
   end
 
-  local target_index = focused_buffer._valid_index + step
-  if target_index < 1 or target_index > #_G.cokeline.valid_buffers then
-    if not _G.cokeline.config.mappings.cycle_prev_next then
-      return
-    end
-    target_index = (target_index - 1) % #_G.cokeline.valid_buffers + 1
-  end
-
-  local target_buf = _G.cokeline.valid_buffers[target_index].number
-
   if goal == "switch" then
-    buffers.move_buffer(focused_buffer, target_index)
+    buffers.move_buffer(focused_buffer, target_idx)
   elseif goal == "focus" then
-    cmd("b" .. target_buf)
+    target_buf:focus()
   elseif goal == "close" then
-    utils.buf_delete(target_buf)
-    vim.cmd.redrawtabline()
+    target_buf:delete()
   end
 end
 
@@ -95,10 +96,9 @@ local pick = function(goal)
   end
 
   if goal == "focus" then
-    vim.api.nvim_set_current_buf(target_buffer.number)
+    target_buffer:focus()
   elseif goal == "close" then
-    utils.buf_delete(target_buffer.number)
-    vim.cmd.redrawtabline()
+    target_buffer:delete()
   end
 end
 
