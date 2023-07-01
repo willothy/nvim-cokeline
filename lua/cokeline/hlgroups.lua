@@ -1,3 +1,4 @@
+local get_hex = require("cokeline.utils").get_hex
 local cmd = vim.cmd
 
 ---@class Hlgroup
@@ -15,6 +16,13 @@ Hlgroup.__index = Hlgroup
 ---@param guibg string
 ---@return Hlgroup
 Hlgroup.new = function(name, gui, guifg, guibg)
+  if guifg:sub(1, 1) ~= "#" then
+    guifg = get_hex(guifg, "fg")
+  end
+  if guibg:sub(1, 1) ~= "#" then
+    guibg = get_hex(guibg, "bg")
+  end
+
   -- Clear the highlight group before (re)defining it.
   cmd(("highlight clear %s"):format(name))
   cmd(

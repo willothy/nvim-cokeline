@@ -563,12 +563,12 @@ require('cokeline').setup({
   default_hl = {
     -- default: `ColorColumn`'s background color for focused buffers,
     -- `Normal`'s foreground color for unfocused ones.
-    fg = '#rrggbb' | function(buffer) -> '#rrggbb',
+    fg = ('hlgroup' | '#rrggbb') | function(buffer) -> ('#rrggbb' | 'hlgroup'),
 
     -- default: `Normal`'s foreground color for focused buffers,
     -- `ColorColumn`'s background color for unfocused ones.
     -- default: `Normal`'s foreground color.
-    bg = '#rrggbb' | function(buffer) -> '#rrggbb',
+    bg = ('hlgroup' | '#rrggbb') | function(buffer) -> ('hlgroup' | '#rrggbb'),
 
     -- default: `'NONE'`.
     style = 'attr1,attr2,...' | function(buffer) -> 'attr1,attr2,...',
