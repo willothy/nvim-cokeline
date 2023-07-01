@@ -52,17 +52,20 @@ local remember_bufnr = function(bufnr)
 end
 
 local setup = function()
-  local autocmd, augroup = vim.api.nvim_create_autocmd, vim.api.nvim_create_augroup
+  local autocmd, augroup =
+    vim.api.nvim_create_autocmd, vim.api.nvim_create_augroup
 
-  autocmd({ 'VimEnter', 'BufAdd'}, {
-    group = augroup('cokline_toggle', { clear = true }),
-    callback = function() require('cokeline/augroups').toggle() end
+  autocmd({ "VimEnter", "BufAdd" }, {
+    group = augroup("cokline_toggle", { clear = true }),
+    callback = function()
+      require("cokeline/augroups").toggle()
+    end,
   })
-  autocmd({ 'BufDelete', 'BufWipeout'}, {
-    group = augroup('cokline_release_taken_letter', { clear = true }),
+  autocmd({ "BufDelete", "BufWipeout" }, {
+    group = augroup("cokline_release_taken_letter", { clear = true }),
     callback = function(args)
-      require('cokeline/buffers').release_taken_letter(args.buf)
-    end
+      require("cokeline/buffers").release_taken_letter(args.buf)
+    end,
   })
 end
 

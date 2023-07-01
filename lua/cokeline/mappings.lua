@@ -76,9 +76,9 @@ end
 local pick = function(goal)
   is_picking[goal] = true
   cmd("redrawtabline")
-  is_picking[goal] = false
 
   local valid_char, char = pcall(fn.getchar)
+  is_picking[goal] = false
   -- bail out on keyboard interrupt
   if not valid_char then
     char = 0
