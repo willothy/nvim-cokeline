@@ -10,14 +10,17 @@ local opt = vim.opt
 
 ---Global table used to manage the plugin's state.
 _G.cokeline = {
-  ---@type Component[]
+  ---@type Component<Buffer>[]
   components = {},
 
-  ---@type Component[]
+  ---@type Component<RhsContext>[]
   rhs = {},
 
-  ---@type Component[]
+  ---@type Component<SidebarContext>[]
   sidebar = {},
+
+  ---@type Component<TabPage>[]
+  tabs = {},
 
   ---@type table
   config = {},
@@ -25,16 +28,22 @@ _G.cokeline = {
   ---@type fun(): string
   tabline = nil,
 
+  ---@type TabPage[]
+  tab_cache = {},
+
+  ---@type table<tabpage, TabPage>
+  tab_lookup = {},
+
   ---@type Buffer[]
   valid_buffers = {},
 
-  ---@type table<bufnr, Buffer>
+  ---@type table<buffer, Buffer>
   valid_lookup = {},
 
   ---@type Buffer[]
   visible_buffers = {},
 
-  ---@type table<bufnr, valid_index>
+  ---@type table<buffer, valid_index>
   buf_order = {},
 
   ---@type Cokeline.History
@@ -43,7 +52,8 @@ _G.cokeline = {
   __handlers = require("cokeline/handlers"),
 }
 
----@param preferences table|nil
+--@param preferences table|nil
+---@param preferences Component<TabPage>
 local setup = function(preferences)
   _G.cokeline.config = config.get(preferences or {})
   if _G.cokeline.config.history.enabled then

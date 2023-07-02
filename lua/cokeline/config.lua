@@ -94,6 +94,21 @@ local defaults = {
     },
   },
 
+  tabs = {
+    placement = "left",
+    components = {
+      {
+        ---@param tabpage TabPage
+        text = function(tabpage)
+          return string.format("%s", tabpage.number)
+        end,
+        on_click = function(tabpage)
+          vim.api.nvim_set_current_tabpage(tabpage.tabnr)
+        end,
+      },
+    },
+  },
+
   rhs = false,
 
   sidebar = false,
@@ -141,6 +156,7 @@ local get = function(preferences)
   _G.cokeline.components = {}
   _G.cokeline.rhs = {}
   _G.cokeline.sidebar = {}
+  _G.cokeline.tabs = {}
   local id = 1
   for _, component in ipairs(config.components) do
     local new_component = Component.new(component, id, config.default_hl)
@@ -166,6 +182,17 @@ local get = function(preferences)
       component.kind = "sidebar"
       local new_component = Component.new(component, id, config.default_hl)
       insert(_G.cokeline.sidebar, new_component)
+      if new_component.on_click ~= nil then
+        require("cokeline/handlers").click:register(id, new_component.on_click)
+      end
+      id = id + 1
+    end
+  end
+  if config.tabs and config.tabs.components then
+    for _, component in ipairs(config.tabs.components) do
+      component.kind = "tab"
+      local new_component = Component.new(component, id, config.default_hl)
+      insert(_G.cokeline.tabs, new_component)
       if new_component.on_click ~= nil then
         require("cokeline/handlers").click:register(id, new_component.on_click)
       end

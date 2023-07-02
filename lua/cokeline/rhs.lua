@@ -10,7 +10,7 @@ function M.get_components()
     local is_hovered = hovered and hovered.index == c.index
     table.insert(
       rhs,
-      c:render(RenderContext:new({
+      c:render(RenderContext:rhs({
         is_hovered = is_hovered,
       }, "rhs"))
     )

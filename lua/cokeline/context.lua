@@ -1,17 +1,40 @@
----@alias ContextKind '"buffer"' | '"tab"' | '"rhs"'
+---@alias ContextKind "buffer" | "tab" | "rhs" | "sidebar"
 
 ---@class RenderContext
 ---@field kind ContextKind
----@field provider Buffer | Tab
-local RenderContext = {
-  kind = "buffer",
-}
+---@field provider Buffer | TabPage | RhsContext | SidebarContext
+local RenderContext = {}
 
----@param kind ContextKind
----@param provider Buffer | Tab | RhsContext
----@return RenderContext
-function RenderContext:new(provider, kind)
-  return setmetatable({ provider = provider, kind = kind }, { __index = self })
+---@param tab TabPage
+function RenderContext:tab(tab)
+  return {
+    provider = tab,
+    kind = "tab",
+  }
+end
+
+---@param rhs RhsContext
+function RenderContext:rhs(rhs)
+  return {
+    provider = rhs,
+    kind = "rhs",
+  }
+end
+
+---@param buffer Buffer
+function RenderContext:buffer(buffer)
+  return {
+    provider = buffer,
+    kind = "buffer",
+  }
+end
+
+---@param sidebar SidebarContext
+function RenderContext:sidebar(sidebar)
+  return {
+    provider = sidebar,
+    kind = "sidebar",
+  }
 end
 
 return RenderContext
