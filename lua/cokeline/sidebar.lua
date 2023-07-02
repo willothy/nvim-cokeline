@@ -12,19 +12,13 @@ local bo = vim.bo
 local fn = vim.fn
 local o = vim.o
 
----@return Component<SidebarContext>[]
-local get_components = function()
-  if not _G.cokeline.config.sidebar then
-    return {}
-  end
-
-  local hover = require("cokeline/hover").hovered()
+local get_win = function(side)
   local layout = fn.winlayout()
 
   -- If the first split level is not given by vertically split windows we
   -- return early.
   if layout[1] ~= "row" then
-    return {}
+    return nil
   end
 
   -- The second element of the `layout` table is a nested list representing the
@@ -48,15 +42,44 @@ local get_components = function()
   --
   -- However, with edgy.nvim, a sidebar can contain multiple splits nested one level in.
   -- So if the first window found is a leaf, we check the first window of the container.
-  local first_split = window_tree[1]
-  local winid = first_split[2]
-  if first_split[1] ~= "leaf" then
-    local win = first_split[2][1]
-    if win and win[1] == "leaf" then
-      winid = win[2]
-    else
-      return {}
+  local first_split
+  local winid
+  if side == nil or side == "left" then
+    first_split = window_tree[1]
+    winid = first_split[2]
+    if first_split[1] ~= "leaf" then
+      local win = first_split[2][1]
+      if win and win[1] == "leaf" then
+        winid = win[2]
+      else
+        return nil
+      end
     end
+  else
+    first_split = window_tree[#window_tree]
+    winid = first_split[2]
+    if first_split[1] ~= "leaf" then
+      local win = first_split[2][#first_split[2]]
+      if win and win[1] == "leaf" then
+        winid = win[2]
+      else
+        return nil
+      end
+    end
+  end
+  return winid
+end
+
+---@param side "left" | "right"
+---@return Component<SidebarContext>[]
+local get_components = function(side)
+  if not _G.cokeline.config.sidebar then
+    return {}
+  end
+
+  local winid = get_win(side)
+  if not winid then
+    return {}
   end
 
   local bufnr = api.nvim_win_get_buf(winid)
@@ -85,8 +108,12 @@ local get_components = function()
   local sidebar_components = {}
   local width = 0
   local id = #_G.cokeline.components + #_G.cokeline.rhs + 1
+  local hover = require("cokeline/hover").hovered()
   for _, c in ipairs(_G.cokeline.sidebar) do
-    buffer.is_hovered = hover and hover.index == id
+    c.sidebar = side
+    buffer.is_hovered = hover ~= nil
+      and hover.index == id
+      and hover.bufnr == buffer.number
     local component = c:render(RenderContext:buffer(buffer))
     buffer.is_hovered = false
     -- We need at least one component, otherwise we can't add padding to the
@@ -117,5 +144,6 @@ local get_components = function()
 end
 
 return {
+  get_win = get_win,
   get_components = get_components,
 }
