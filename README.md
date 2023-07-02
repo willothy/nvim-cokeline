@@ -472,6 +472,9 @@ EOF
 
 ## :wrench: Configuration
 
+> **note**<br>
+> Check out the [wiki](https://github.com/willothy/nvim-cokeline/wiki) for more details and API documentation.
+
 All the configuration is done by changing the contents of the Lua table passed to
 the `setup` function.
 
