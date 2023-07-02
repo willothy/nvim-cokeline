@@ -3,13 +3,13 @@ local sidebar = require("cokeline/sidebar")
 local rhs = require("cokeline/rhs")
 local tabs = require("cokeline.tabs")
 local RenderContext = require("cokeline/context")
+local iter = require("plenary.iterators").iter
 
 local insert = table.insert
 local sort = table.sort
 local unpack = unpack or table.unpack
 
 local extend = vim.list_extend
-local filter = vim.tbl_filter
 local o = vim.o
 
 ---@type index
@@ -19,9 +19,9 @@ local current_index
 ---@param previous_buffer_index  index
 ---@return Buffer
 local find_current_buffer = function(buffers, previous_buffer_index)
-  local focused_buffer = filter(function(buffer)
+  local focused_buffer = iter(buffers):find(function(buffer)
     return buffer.is_focused
-  end, buffers)[1]
+  end)
 
   return focused_buffer or buffers[previous_buffer_index] or buffers[#buffers]
 end

@@ -5,6 +5,8 @@ local version = vim.version()
 local buffers = require("cokeline.buffers")
 local tabs = require("cokeline.tabs")
 local rendering = require("cokeline.rendering")
+local iter = require("plenary.iterators").iter
+local fold = require("cokeline.utils").fold
 local last_position = nil
 
 function M.hovered()
@@ -183,17 +185,19 @@ local function on_hover(current)
 end
 
 local function width(bufs, buf)
-  return vim
-    .iter(bufs)
-    :filter(function(v)
-      return v.bufnr == buf
-    end)
-    :map(function(v)
-      return v.width
-    end)
-    :fold(0, function(acc, v)
+  return fold(
+    iter(bufs)
+      :filter(function(v)
+        return v.bufnr == buf
+      end)
+      :map(function(v)
+        return v.width
+      end),
+    0,
+    function(acc, v)
       return acc + v
-    end)
+    end
+  )
 end
 
 local function start_pos(bufs, buf)

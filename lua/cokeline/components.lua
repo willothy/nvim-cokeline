@@ -1,12 +1,12 @@
 local Hlgroup = require("cokeline/hlgroups").Hlgroup
 
 local rep = string.rep
-local concat = table.concat
 local insert = table.insert
 local remove = table.remove
 
+local fold = require("cokeline.utils").fold
+local iter = require("plenary.iterators").iter
 local fn = vim.fn
-local map = vim.tbl_map
 
 ---@generic Cx
 ---@class Component<Cx>
@@ -162,11 +162,9 @@ end
 ---@param components  Component[]
 ---@return number
 local width_of_components = function(components)
-  local width = 0
-  for _, component in pairs(components) do
-    width = width + component.width
-  end
-  return width
+  return fold(iter(components), 0, function(a, c)
+    return a + c.width
+  end)
 end
 
 -- Takes a list of components, returns a new list of components `to_width` wide
@@ -177,10 +175,7 @@ end
 ---@param direction  '"left"' | '"right"' | nil
 ---@return Component<Cx>[]
 local shorten_components = function(components, to_width, direction)
-  local current_width = 0
-  for _, component in pairs(components) do
-    current_width = current_width + component.width
-  end
+  local current_width = width_of_components(components)
 
   -- `extra` is the width of the extra characters that are appended when a
   -- component is shortened, an ellipses if we're shortening within a buffer
@@ -256,11 +251,12 @@ local render_components = function(components)
     end
   end
 
-  return concat(map(function(component)
-    return embed(component)
-  end, components))
-end
+  local concat = function(a, b)
+    return a .. b
+  end
 
+  return fold(iter(components):map(embed), "", concat)
+end
 
 return {
   Component = Component,

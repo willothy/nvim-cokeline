@@ -425,7 +425,8 @@ plugin and a patched font (see [Nerd Fonts](https://www.nerdfonts.com/)).
 {
   "willothy/nvim-cokeline",
   dependencies = {
-    "kyazdani42/nvim-web-devicons",
+    "nvim-lua/plenary.nvim",        -- Required for v0.4.0+
+    "kyazdani42/nvim-web-devicons", -- If you want devicons
   },
   config = true
 }
@@ -440,9 +441,12 @@ require('packer').startup(function()
   -- ...
   use({
     'willothy/nvim-cokeline',
-    requires = 'kyazdani42/nvim-web-devicons', -- If you want devicons
+    requires = {
+      "nvim-lua/plenary.nvim",        -- Required for v0.4.0+
+      "kyazdani42/nvim-web-devicons", -- If you want devicons
+    },
     config = function()
-      require('cokeline').setup()
+      require("cokeline").setup()
     end
   })
   -- ...
@@ -457,6 +461,7 @@ If your config is still written in Vimscript and you use
 ```vim
 call plug#begin('~/.config/nvim/plugged')
   " ...
+  Plug 'nvim-lua/plenary.nvim'        " Required for v0.4.0+
   Plug 'kyazdani42/nvim-web-devicons' " If you want devicons
   Plug 'willothy/nvim-cokeline'
   " ...

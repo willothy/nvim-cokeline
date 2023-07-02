@@ -8,10 +8,11 @@ local cmd = vim.cmd
 local diagnostic = vim.diagnostic or vim.lsp.diagnostic
 local fn = vim.fn
 local split = vim.split
-local filter = vim.tbl_filter
-local map = vim.tbl_map
 
 local util = require("cokeline.utils")
+local it = require("plenary.iterators")
+local iter = it.iter
+local enumerate = util.enumerate
 
 ---@type bufnr
 local current_valid_index
@@ -49,29 +50,27 @@ local M = {}
 local Buffer = {}
 Buffer.__index = Buffer
 
----@param buffers  Buffer[]
----@return Buffer[]
+---@param buffers  Iter<Buffer>
+---@return Iter<Buffer>
 local compute_unique_prefixes = function(buffers)
   local is_windows = fn.has("win32") == 1
 
-  -- FIXME: it appears in windows sometimes directories are separated by '/'
-  -- instead of '\\'??
-  if is_windows then
-    buffers = map(function(buffer)
-      buffer.path = buffer.path:gsub("/", "\\")
-      return buffer
-    end, buffers)
-  end
-
   local path_separator = not is_windows and "/" or "\\"
 
-  local paths = map(function(buffer)
-    return fn.reverse(split(buffer.path, path_separator))
-  end, buffers)
-
-  local prefixes = map(function()
-    return {}
-  end, buffers)
+  local prefixes = {}
+  local paths = {}
+  buffers = buffers
+    :map(function(buffer)
+      prefixes[#prefixes + 1] = {}
+      paths[#paths + 1] = fn.reverse(
+        split(
+          is_windows and buffer.path:gsub("/", "\\") or buffer.path,
+          path_separator
+        )
+      )
+      return buffer
+    end)
+    :tolist()
 
   for i = 1, #paths do
     for j = i + 1, #paths do
@@ -88,15 +87,14 @@ local compute_unique_prefixes = function(buffers)
     end
   end
 
-  for i, buffer in ipairs(buffers) do
+  return enumerate(iter(buffers)):map(function(i, buffer)
     buffer.unique_prefix = concat({
       #prefixes[i] == #paths[i] and path_separator or "",
       fn.join(fn.reverse(prefixes[i]), path_separator),
       #prefixes[i] > 0 and path_separator or "",
     })
-  end
-
-  return buffers
+    return i, buffer
+  end)
 end
 
 ---@param filename  string
@@ -397,45 +395,38 @@ function M.get_valid_buffers()
     _G.cokeline.buf_order = {}
   end
 
-  local buffers
   local info = fn.getbufinfo({ buflisted = 1 })
-  if vim.iter then
-    buffers = vim
-      .iter(info)
-      :map(Buffer.new)
-      :filter(function(buffer)
-        return buffer.filetype ~= "netrw"
-      end)
-      :filter(
-        type(_G.cokeline.config.buffers.filter_valid) == "function"
-            and _G.cokeline.config.buffers.filter_valid
-          or function()
-            return true
-          end
-      )
-      :totable()
-  else
-    buffers = map(Buffer.new, info)
-    buffers = filter(function(buffer)
-      return buffer.filetype ~= "netrw"
-    end, buffers)
+  ---@type Iter<Buffer>
+  local buffers = iter(info):map(Buffer.new):filter(function(buffer)
+    return buffer.filetype ~= "netrw"
+  end)
 
-    if _G.cokeline.config.buffers.filter_valid then
-      buffers = filter(_G.cokeline.config.buffers.filter_valid, buffers)
-    end
+  if _G.cokeline.config.buffers.filter_valid then
+    ---@type Iter<Buffer>
+    buffers = buffers:filter(_G.cokeline.config.buffers.filter_valid)
   end
 
+  ---@type Buffer[]
   buffers = compute_unique_prefixes(buffers)
 
   if current_valid_index == nil then
     _G.cokeline.buf_order = {}
-    for i, buffer in ipairs(buffers) do
-      buffer._valid_index = i
-      _G.cokeline.buf_order[buffer.number] = buffer._valid_index
-      if buffer.is_focused then
-        current_valid_index = i
-      end
-    end
+    buffers = buffers
+      :map(function(i, buffer)
+        buffer._valid_index = i
+        _G.cokeline.buf_order[buffer.number] = buffer._valid_index
+        if buffer.is_focused then
+          current_valid_index = i
+        end
+        return buffer
+      end)
+      :tolist()
+  else
+    buffers = buffers
+      :map(function(_, buf)
+        return buf
+      end)
+      :tolist()
   end
 
   if _G.cokeline.config.buffers.new_buffers_position == "last" then
@@ -465,27 +456,33 @@ end
 function M.get_visible()
   _G.cokeline.valid_buffers = M.get_valid_buffers()
   _G.cokeline.valid_lookup = {}
-  for _, buffer in ipairs(_G.cokeline.valid_buffers) do
+
+  local bufs = iter(_G.cokeline.valid_buffers):map(function(buffer)
     _G.cokeline.valid_lookup[buffer.number] = buffer
+    return buffer
+  end)
+
+  if _G.cokeline.config.buffers.filter_visible then
+    bufs = bufs:filter(_G.cokeline.config.buffers.filter_visible)
   end
 
-  _G.cokeline.visible_buffers = not _G.cokeline.config.buffers.filter_visible
-      and _G.cokeline.valid_buffers
-    or filter(
-      _G.cokeline.config.buffers.filter_visible,
-      _G.cokeline.valid_buffers
-    )
+  bufs = enumerate(bufs):map(function(i, buf)
+    buf.index = i
+    return buf
+  end)
+
+  if not _G.cokeline.config.pick.use_filename then
+    bufs = bufs:map(function(buf)
+      buf.pick_letter = get_pick_letter(buf.filename, buf.number)
+      return buf
+    end)
+  end
+
+  _G.cokeline.visible_buffers = bufs:tolist()
 
   if #_G.cokeline.visible_buffers > 0 then
     _G.cokeline.visible_buffers[1].is_first = true
     _G.cokeline.visible_buffers[#_G.cokeline.visible_buffers].is_last = true
-  end
-
-  for i, buffer in ipairs(_G.cokeline.visible_buffers) do
-    buffer.index = i
-    if not _G.cokeline.config.pick.use_filename then
-      buffer.pick_letter = get_pick_letter(buffer.filename, buffer.number)
-    end
   end
 
   return _G.cokeline.visible_buffers

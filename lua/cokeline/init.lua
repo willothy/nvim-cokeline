@@ -55,6 +55,13 @@ _G.cokeline = {
 --@param preferences table|nil
 ---@param preferences Component<TabPage>
 local setup = function(preferences)
+  local ok, _ = pcall(require, "plenary")
+  if not ok then
+    vim.api.nvim_err_writeln(
+      "nvim-cokeline: plenary.nvim is required to use this plugin as of v0.4.0"
+    )
+    return
+  end
   _G.cokeline.config = config.get(preferences or {})
   if _G.cokeline.config.history.enabled then
     history.setup(_G.cokeline.config.history.size)
