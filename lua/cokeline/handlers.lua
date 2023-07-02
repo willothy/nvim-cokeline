@@ -1,14 +1,17 @@
 local utils = require("cokeline/utils")
 local buffers = require("cokeline/buffers")
+local tabs = require("cokeline/tabs")
 
----@alias ClickHandler fun(button_id: number, clicks: number, button: string, modifiers: string, buffer: Buffer): void
----@alias WrappedClickHandler fun(buffer: Buffer): ClickHandler
----@alias MouseEnterHandler fun(buffer: Buffer)
----@alias MouseLeaveHandler fun(buffer: Buffer)
+---@alias ClickHandler<Cx> fun(button_id: number, clicks: number, button: string, modifiers: string, cx: Cx): void
+---@alias MouseEnterHandler fun(cx: Cx)
+---@alias MouseLeaveHandler fun(cx: Cx)
+---@alias Handler<Cx> ClickHandler<Cx> | MouseEnterHandler<Cx> | MouseLeaveHandler<Cx>
+---@alias WrappedHandler<Cx> fun(cx: Cx): Handler<Cx>
 
+---@generic Cx
 ---@class Handlers Singleton event handler manager
----@field click WrappedClickHandler[]
----@field private private table<string, WrappedClickHandler[]>
+---@field click (fun(cx: Cx): Handler<Cx>)[]
+---@field private private table<string, WrappedHandler<Cx>[]>
 local Handlers = {
   click = {},
   private = {
@@ -45,19 +48,18 @@ end
 
 ---Default click handler
 ---@param bufnr bufnr
-local function default_click(buffer)
+local function default_click(cx, kind)
   return function(_, _, button)
     if button == "l" then
-      if buffer then
-        vim.api.nvim_set_current_buf(buffer.number)
+      if kind == "tab" or kind == "buffer" then
+        cx:focus()
       end
     elseif
-      button == "r" and _G.cokeline.config.buffers.delete_on_right_click
+      kind == "buffer"
+      and button == "r"
+      and _G.cokeline.config.buffers.delete_on_right_click
     then
-      utils.buf_delete(
-        buffer.number,
-        _G.cokeline.config.buffers.focus_on_delete
-      )
+      utils.buf_delete(cx.number, _G.cokeline.config.buffers.focus_on_delete)
     end
   end
 end
@@ -87,16 +89,22 @@ return setmetatable({}, {
     --- If there's no helper, evaluate the key to get a handler
     local prefix = string.sub(key, 1, 5)
     if prefix == "click" then
-      local c_id, bufnr = string.match(key, "click_(%d+)_(%d+)")
-      if bufnr == nil then
+      local kind, id, number = string.match(key, "click_(%a+)_(%d+)_(%d+)")
+      if number == nil then
         return
       end
-      local buffer = buffers.get_buffer(tonumber(bufnr))
-      if c_id ~= nil then
-        local handler = Handlers.private["click"][tonumber(c_id)]
-        return handler and handler(buffer) or default_click(buffer)
+      local cx
+      if kind == "tab" then
+        cx = tabs.get_tabpage(tonumber(number))
       else
-        return default_click(buffer)
+        cx = buffers.get_buffer(tonumber(number))
+      end
+
+      if id ~= nil then
+        local handler = Handlers.private["click"][tonumber(id)]
+        return handler and handler(cx) or default_click(cx, kind)
+      else
+        return default_click(cx, kind)
       end
     elseif prefix == "close" then
       local bufnr = string.match(key, "close_(%d+)")

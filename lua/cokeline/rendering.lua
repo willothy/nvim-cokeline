@@ -1,6 +1,7 @@
 local components = require("cokeline/components")
 local sidebar = require("cokeline/sidebar")
 local rhs = require("cokeline/rhs")
+local tabs = require("cokeline.tabs")
 local RenderContext = require("cokeline/context")
 
 local insert = table.insert
@@ -25,15 +26,15 @@ local find_current_buffer = function(buffers, previous_buffer_index)
   return focused_buffer or buffers[previous_buffer_index] or buffers[#buffers]
 end
 
----@param c1  Component
----@param c2  Component
+---@param c1  Component<Buffer>
+---@param c2  Component<Buffer>
 ---@return boolean
 local by_decreasing_priority = function(c1, c2)
   return c1.truncation.priority < c2.truncation.priority
 end
 
----@param c1  Component
----@param c2  Component
+---@param c1  Component<Buffer>
+---@param c2  Component<Buffer>
 ---@return boolean
 local by_increasing_index = function(c1, c2)
   return c1.index < c2.index
@@ -42,7 +43,7 @@ end
 -- Takes in either a single buffer or a list of buffers, and it returns a list
 -- of all the rendered components together with their total combined width.
 ---@param buffers Buffer|Buffer[]
----@return Component, number
+---@return Component<Buffer>, number
 local function to_components(buffers)
   local hovered = _G.cokeline.__hovered
   -- A simple heuristic to check if we're dealing with single buffer or a list
@@ -50,7 +51,7 @@ local function to_components(buffers)
   if buffers.number then
     local cs = {}
     for _, c in ipairs(_G.cokeline.components) do
-      local cx = RenderContext:new(buffers)
+      local cx = RenderContext:buffer(buffers)
       cx.provider.is_hovered = hovered ~= nil
         and hovered.bufnr == buffers.number
         and hovered.index == c.index
@@ -93,9 +94,16 @@ end
 local prepare = function(visible_buffers)
   local sidebar_components = sidebar.get_components()
   local rhs_components = rhs.get_components()
+  local tab_components = tabs.get_components()
   local available_width = o.columns - components.width(sidebar_components)
   if available_width == 0 then
     return components.render(sidebar_components)
+  end
+
+  available_width = available_width - components.width(tab_components)
+  if available_width == 0 then
+    return components.render(sidebar_components)
+      .. components.render(tab_components)
   end
 
   local current_buffer = find_current_buffer(visible_buffers, current_index)
@@ -117,12 +125,14 @@ local prepare = function(visible_buffers)
       sidebar = sidebar_components,
       buffers = current_components,
       rhs = rhs_components,
+      tabs = tab_components,
       gap = math.max(
         0,
         available_width
           - (
             components.width(current_components)
             + components.width(rhs_components)
+            + components.width(tab_components)
           )
       ),
     }
@@ -166,11 +176,13 @@ local prepare = function(visible_buffers)
   end
 
   local bufs_width = components.width(buffer_components)
+  local tabs_width = components.width(tab_components)
   return {
     sidebar = sidebar_components,
     buffers = buffer_components,
     rhs = rhs_components,
-    gap = math.max(0, available_width - (bufs_width + rhs_width)),
+    tabs = tab_components,
+    gap = math.max(0, available_width - (bufs_width + rhs_width + tabs_width)),
   }
 end
 
@@ -183,6 +195,7 @@ end
 local render = function(visible_buffers, fill_hl)
   local cx = prepare(visible_buffers)
   return components.render(cx.sidebar)
+    .. components.render(cx.tabs)
     .. components.render(cx.buffers)
     .. "%#" .. fill_hl .. "#"
     .. string.rep(" ", cx.gap)

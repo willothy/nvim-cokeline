@@ -8,16 +8,17 @@ local remove = table.remove
 local fn = vim.fn
 local map = vim.tbl_map
 
----@class Component
+---@generic Cx
+---@class Component<Cx>
 ---@field index  number
----@field text  string|fun(buffer: Buffer): string
----@field style  string|fun(buffer:Buffer): string
----@field fg  string|fun(buffer:Buffer): string
----@field bg  string|fun(buffer:Buffer): string
----@field highlight  string|fun(buffer:Buffer): string
----@field on_click ClickHandler | nil
----@field on_mouse_enter MouseEnterHandler | nil
----@field on_mouse_leave MouseLeaveHandler | nil
+---@field text  string|fun(cx: Cx): string
+---@field style  string|fun(cx: Cx): string
+---@field fg  string|fun(cx: Cx): string
+---@field bg  string|fun(cx: Cx): string
+---@field highlight  string|fun(cx: Cx): string
+---@field on_click ClickHandler<Cx> | nil
+---@field on_mouse_enter MouseEnterHandler<Cx> | nil
+---@field on_mouse_leave MouseLeaveHandler<Cx> | nil
 ---@field delete_buffer_on_left_click  boolean Use the component as a close button ()
 ---@field truncation  table
 ---@field idx  number
@@ -27,9 +28,10 @@ local map = vim.tbl_map
 local Component = {}
 Component.__index = Component
 
----@param c table | Component
+---@generic Cx
+---@param c table | Component<Cx>
 ---@param i number
----@return Component
+---@return Component<Cx>
 Component.new = function(c, i, default_hl)
   -- `default_hl` is `nil` when called by `components.lua#63`
   default_hl = default_hl or _G.cokeline.config.default_hl
@@ -60,7 +62,8 @@ Component.new = function(c, i, default_hl)
 end
 
 -- Renders a component for a specific buffer.
----@param self   Component
+---@generic Cx
+---@param self   Component<Cx>
 ---@param context RenderContext
 ---@return Component
 Component.render = function(self, context)
@@ -74,7 +77,11 @@ Component.render = function(self, context)
   component.text = evaluate(self.text)
   component.width = fn.strwidth(component.text)
 
-  if context.kind == "buffer" or context.kind == "sidebar" then
+  if
+    context.kind == "buffer"
+    or context.kind == "sidebar"
+    or context.kind == "tab"
+  then
     component.bufnr = context.provider.number
   end
 
@@ -104,7 +111,8 @@ Component.render = function(self, context)
   return component
 end
 
----@param self      Component
+---@generic Cx
+---@param self      Component<Cx>
 ---@param to_width  number
 ---@param direction '"left"' | '"right"' | nil
 Component.shorten = function(self, to_width, direction)
@@ -151,12 +159,23 @@ Component.shorten = function(self, to_width, direction)
   self.width = fn.strwidth(self.text)
 end
 
+---@param components  Component[]
+---@return number
+local width_of_components = function(components)
+  local width = 0
+  for _, component in pairs(components) do
+    width = width + component.width
+  end
+  return width
+end
+
 -- Takes a list of components, returns a new list of components `to_width` wide
 -- obtained by trimming the original `components` in the given `direction`.
----@param components Component[]
+---@generic Cx
+---@param components Component<Cx>[]
 ---@param to_width   number
 ---@param direction  '"left"' | '"right"' | nil
----@return Component[]
+---@return Component<Cx>[]
 local shorten_components = function(components, to_width, direction)
   local current_width = 0
   for _, component in pairs(components) do
@@ -212,7 +231,8 @@ end
 
 -- Takes in a list of components, returns the concatenation of their rendered
 -- strings.
----@param components  Component[]
+---@generic Cx
+---@param components  Component<Cx>[]
 ---@return string
 local render_components = function(components)
   local embed = function(component)
@@ -226,7 +246,8 @@ local render_components = function(components)
           string.format("v:lua.cokeline.__handlers.close_%d", component.bufnr)
       else
         on_click = string.format(
-          "v:lua.cokeline.__handlers.click_%d_%d",
+          "v:lua.cokeline.__handlers.click_%s_%d_%d",
+          component.kind,
           component.index,
           component.bufnr or 0
         )
@@ -240,15 +261,6 @@ local render_components = function(components)
   end, components))
 end
 
----@param components  Component[]
----@return number
-local width_of_components = function(components)
-  local width = 0
-  for _, component in pairs(components) do
-    width = width + component.width
-  end
-  return width
-end
 
 return {
   Component = Component,

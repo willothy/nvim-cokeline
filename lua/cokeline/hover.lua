@@ -44,6 +44,12 @@ function M.get_current(col)
       return component, cx.sidebar
     end
   end
+  for _, component in ipairs(cx.tabs) do
+    current_width = current_width + component.width
+    if current_width >= col then
+      return component, cx.tabs
+    end
+  end
   for _, component in ipairs(cx.buffers) do
     current_width = current_width + component.width
     if current_width >= col then

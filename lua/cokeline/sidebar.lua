@@ -12,7 +12,7 @@ local bo = vim.bo
 local fn = vim.fn
 local o = vim.o
 
----@return Component[]
+---@return Component<SidebarContext>[]
 local get_components = function()
   if not _G.cokeline.config.sidebar then
     return {}
@@ -87,7 +87,7 @@ local get_components = function()
   local id = #_G.cokeline.components + #_G.cokeline.rhs + 1
   for _, c in ipairs(_G.cokeline.sidebar) do
     buffer.is_hovered = hover and hover.index == id
-    local component = c:render(RenderContext:new(buffer))
+    local component = c:render(RenderContext:buffer(buffer))
     buffer.is_hovered = false
     -- We need at least one component, otherwise we can't add padding to the
     -- last component if needed.
