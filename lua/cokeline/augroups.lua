@@ -1,3 +1,6 @@
+local buffers = require("cokeline/buffers")
+local tabs = require("cokeline/tabs")
+
 local cmd = vim.cmd
 local filter = vim.tbl_filter
 local fn = vim.fn
@@ -65,6 +68,53 @@ local setup = function()
     group = augroup("cokeline_release_taken_letter", { clear = true }),
     callback = function(args)
       require("cokeline/buffers").release_taken_letter(args.buf)
+    end,
+  })
+  autocmd(
+    { "WinNew", "WinClosed", "TabNew", "TabClosed", "TermOpen", "TermClose" },
+    {
+      group = augroup("cokeline_fetch_tabs", { clear = true }),
+      callback = function(args)
+        local bt = (vim.bo[args.buf] or {}).buftype
+        if bt and bt ~= "" and bt ~= "terminal" then
+          return
+        end
+        tabs.fetch_tabs()
+      end,
+    }
+  )
+  autocmd("WinEnter", {
+    group = augroup("cokeline_update_tab_focus", { clear = true }),
+    callback = function()
+      local win = vim.api.nvim_get_current_win()
+      local tab = vim.api.nvim_win_get_tabpage(win)
+      if not _G.cokeline.tab_lookup[tab] then
+        tabs.fetch_tabs()
+        return
+      end
+      for _, w in ipairs(_G.cokeline.tab_lookup[tab].windows) do
+        if w.number == win then
+          _G.cokeline.tab_lookup[tab].focused = w
+          break
+        end
+      end
+    end,
+  })
+  autocmd("BufEnter", {
+    group = augroup("cokeline_update_tab_win_buf", { clear = true }),
+    callback = function(args)
+      local win = vim.api.nvim_get_current_win()
+      local tab = vim.api.nvim_win_get_tabpage(win)
+      if not _G.cokeline.tab_lookup[tab] then
+        tabs.fetch_tabs()
+        return
+      end
+      for _, w in ipairs(_G.cokeline.tab_lookup[tab].windows) do
+        if w.number == win then
+          w.buffer = buffers.get_buffer(args.buf)
+          break
+        end
+      end
     end,
   })
   if _G.cokeline.config.history.enabled and _G.cokeline.history then
