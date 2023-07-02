@@ -189,7 +189,7 @@ local prepare = function(visible_buffers)
     )
   end
   if right_width > available_width_right then
-    components.shorten(buffer_components, available_width, "right")
+    components.shorten(buffer_components, available_width - rhs_width, "right")
   end
 
   local bufs_width = components.width(buffer_components)
