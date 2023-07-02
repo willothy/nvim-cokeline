@@ -1,7 +1,5 @@
 local buffers = require("cokeline.buffers")
 local Buffer = buffers.Buffer
-local components = require("cokeline/components")
-local RenderContext = require("cokeline.context")
 
 local M = {}
 
@@ -22,7 +20,7 @@ function Window.new(winnr)
 end
 
 function Window:close()
-  vim.api.nvim_win_close(self.number)
+  pcall(vim.api.nvim_win_close, self.number, false)
 end
 
 function Window:focus()
@@ -103,24 +101,6 @@ end
 
 function M.get_tabpage(tabnr)
   return _G.cokeline.tab_lookup[tabnr]
-end
-
----@return Component<TabPage>[]
-function M.get_components()
-  local hovered = require("cokeline/hover").hovered()
-  local tabs = M.get_tabs()
-  local comps = {}
-  for i, tab in ipairs(tabs) do
-    for _, c in ipairs(_G.cokeline.tabs) do
-      tab.is_hovered = hovered and hovered.index == c.index
-      comps[i] = c:render(RenderContext:tab(tab))
-    end
-  end
-  return comps
-end
-
-function M.width()
-  return components.width(M.get_components())
 end
 
 return M
