@@ -405,8 +405,6 @@ require("cokeline.history"):last():focus()
 ## :mountain: Plans and Ideas
 
 - Statusline
-- Tapbage components
-  - Scope buffers to tabs
 
 If you have an idea or feature request, don't hesitate to open an issue!
 
