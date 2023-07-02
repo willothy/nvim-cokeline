@@ -55,6 +55,12 @@ _G.cokeline = {
 --@param preferences table|nil
 ---@param preferences Component<TabPage>
 local setup = function(preferences)
+  _G.cokeline.config = config.get(preferences or {})
+  if _G.cokeline.config.history.enabled then
+    history.setup(_G.cokeline.config.history.size)
+    _G.cokeline.history = history
+  end
+
   local ok, _ = pcall(require, "plenary")
   if not ok then
     vim.api.nvim_err_writeln(
@@ -62,11 +68,7 @@ local setup = function(preferences)
     )
     return
   end
-  _G.cokeline.config = config.get(preferences or {})
-  if _G.cokeline.config.history.enabled then
-    history.setup(_G.cokeline.config.history.size)
-    _G.cokeline.history = history
-  end
+
   augroups.setup()
   mappings.setup()
   hover.setup()
