@@ -103,6 +103,7 @@ local setup = function()
           tabs.fetch_tabs()
           return
         end
+        tabs.update_current(tab)
         for _, w in ipairs(_G.cokeline.tab_lookup[tab].windows) do
           if w.number == win then
             _G.cokeline.tab_lookup[tab].focused = w

@@ -31,10 +31,13 @@ end
 ---@field number tabpage
 ---@field windows Window[]
 ---@field focused Window
+---@field is_first boolean
+---@field is_last boolean
+---@field is_active boolean
 local TabPage = {}
 TabPage.__index = TabPage
 
-function TabPage.new(tabnr)
+function TabPage.new(tabnr, is_first, is_last, is_active)
   local active_win = vim.api.nvim_tabpage_get_win(tabnr)
   local windows = vim.api.nvim_tabpage_list_wins(tabnr)
 
@@ -50,6 +53,9 @@ function TabPage.new(tabnr)
     number = tabnr,
     windows = windows,
     focused = focused,
+    is_active = is_active,
+    is_first = is_first,
+    is_last = is_last,
   }
   return setmetatable(tab, TabPage)
 end
@@ -64,15 +70,29 @@ function TabPage:close()
   end
 end
 
+function M.update_current(tabnr)
+  for _, t in ipairs(_G.cokeline.tab_cache) do
+    if t.number == tabnr then
+      t.is_active = true
+    else
+      t.is_active = false
+    end
+  end
+end
+
 function M.fetch_tabs()
   local tabs = {}
   local tabnrs = vim.api.nvim_list_tabpages()
+  local active_tab = vim.api.nvim_get_current_tabpage()
   table.sort(tabnrs, function(a, b)
     return a < b
   end)
   for t, tabnr in ipairs(tabnrs) do
     if _G.cokeline.tab_lookup[tabnr] ~= nil then
       tabs[t] = _G.cokeline.tab_lookup[tabnr]
+      tabs[t].is_active = tabnr == active_tab
+      tabs[t].is_first = t == 1
+      tabs[t].is_last = t == #tabnrs
       local windows = vim.api.nvim_tabpage_list_wins(tabnr)
       for i, winnr in ipairs(windows) do
         if
@@ -85,7 +105,7 @@ function M.fetch_tabs()
         end
       end
     else
-      tabs[t] = TabPage.new(tabnr)
+      tabs[t] = TabPage.new(tabnr, t == 1, t == #tabnrs, tabnr == active_tab)
       _G.cokeline.tab_lookup[tabnr] = tabs[t]
     end
   end
