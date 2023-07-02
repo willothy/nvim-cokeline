@@ -291,9 +291,7 @@ end
 
 function M.setup()
   if
-    _G.cokeline.config.mappings.disable_mouse
-    or version.minor < 8
-    or not vim.o.mousemoveevent
+    _G.cokeline.config.mappings.disable_mouse == true or version.minor < 8
   then
     return
   end
