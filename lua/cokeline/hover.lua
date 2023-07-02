@@ -3,6 +3,7 @@ local M = {}
 local version = vim.version()
 
 local buffers = require("cokeline.buffers")
+local tabs = require("cokeline.tabs")
 local rendering = require("cokeline.rendering")
 local last_position = nil
 
@@ -44,10 +45,14 @@ function M.get_current(col)
       return component, cx.sidebar
     end
   end
-  for _, component in ipairs(cx.tabs) do
-    current_width = current_width + component.width
-    if current_width >= col then
-      return component, cx.tabs
+  if
+    _G.cokeline.config.tabs and _G.cokeline.config.tabs.placement == "left"
+  then
+    for _, component in ipairs(cx.tabs) do
+      current_width = current_width + component.width
+      if current_width >= col then
+        return component, cx.tabs
+      end
     end
   end
   for _, component in ipairs(cx.buffers) do
@@ -66,6 +71,59 @@ function M.get_current(col)
       return component, cx.rhs
     end
   end
+  if
+    _G.cokeline.config.tabs and _G.cokeline.config.tabs.placement == "right"
+  then
+    for _, component in ipairs(cx.tabs) do
+      current_width = current_width + component.width
+      if current_width >= col then
+        return component, cx.tabs
+      end
+    end
+  end
+end
+
+local function mouse_leave(hovered)
+  local cx
+  if hovered.kind == "buffer" then
+    cx = buffers.get_buffer(hovered.bufnr)
+  elseif hovered.kind == "tab" then
+    cx = tabs.get_tabpage(hovered.bufnr)
+  end
+  if cx then
+    cx.is_hovered = false
+  end
+  if hovered.on_mouse_leave then
+    if (hovered.kind ~= "buffer" and hovered.kind ~= "tab") or cx ~= nil then
+      hovered.on_mouse_leave(cx)
+    end
+  end
+  M.clear_hovered()
+end
+
+local function mouse_enter(component, current)
+  local cx
+  if component.kind == "buffer" then
+    cx = buffers.get_buffer(component.bufnr)
+  elseif component.kind == "tab" then
+    cx = tabs.get_tabpage(component.bufnr)
+  end
+  if cx then
+    cx.is_hovered = true
+  end
+  if component.on_mouse_enter then
+    if
+      (component.kind ~= "buffer" and component.kind ~= "tab") or cx ~= nil
+    then
+      component.on_mouse_enter(cx, current.screencol)
+    end
+  end
+  M.set_hovered({
+    index = component.index,
+    bufnr = cx and cx.number,
+    on_mouse_leave = component.on_mouse_leave,
+    kind = component.kind,
+  })
 end
 
 local function on_hover(current)
@@ -94,61 +152,17 @@ local function on_hover(current)
     end
 
     if hovered ~= nil then
-      local buf = buffers.get_buffer(hovered.bufnr)
-      if buf then
-        buf.is_hovered = false
-      end
-      if hovered.on_mouse_leave then
-        if hovered.kind == "buffer" then
-          if buf ~= nil then
-            hovered.on_mouse_leave(buf)
-          end
-        else
-          hovered.on_mouse_leave(buf)
-        end
-      end
-      M.clear_hovered()
+      mouse_leave(hovered)
     end
     if not component then
       vim.cmd.redrawtabline()
       return
     end
 
-    local buf = buffers.get_buffer(component.bufnr)
-    if buf then
-      buf.is_hovered = true
-    end
-    if component.on_mouse_enter then
-      if component.kind == "buffer" then
-        if buf ~= nil then
-          component.on_mouse_enter(buf, current.screencol)
-        end
-      else
-        component.on_mouse_enter(buf, current.screencol)
-      end
-    end
-    M.set_hovered({
-      index = component.index,
-      bufnr = buf and buf.number or nil,
-      on_mouse_leave = component.on_mouse_leave,
-      kind = component.kind,
-    })
+    mouse_enter(component, current)
     vim.cmd.redrawtabline()
   elseif hovered ~= nil then
-    local buf = buffers.get_buffer(hovered.bufnr)
-    if buf then
-      buf.is_hovered = false
-    end
-    if hovered.on_mouse_leave then
-      if hovered.kind == "buffer" then
-        if buf ~= nil then
-          hovered.on_mouse_leave(buf)
-        end
-      else
-        hovered.on_mouse_leave(buf)
-      end
-    end
-    M.clear_hovered()
+    mouse_leave(hovered)
     vim.cmd.redrawtabline()
   end
   last_position = current

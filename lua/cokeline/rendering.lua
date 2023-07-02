@@ -42,22 +42,27 @@ end
 
 -- Takes in either a single buffer or a list of buffers, and it returns a list
 -- of all the rendered components together with their total combined width.
----@param buffers Buffer|Buffer[]
----@return Component<Buffer>, number
-local function to_components(buffers)
+---@param context Buffer|Buffer[]|TabPage|TabPage[]
+---@param complist Component<Buffer|TabPage>[]
+---@return Component<Buffer|TabPage>, number
+local function to_components(context, complist)
   local hovered = _G.cokeline.__hovered
   -- A simple heuristic to check if we're dealing with single buffer or a list
   -- of them is to just check if one of they keys is defined.
-  if buffers.number then
+  if context.number then
     local cs = {}
-    for _, c in ipairs(_G.cokeline.components) do
-      local cx = RenderContext:buffer(buffers)
-      cx.provider.is_hovered = hovered ~= nil
-        and hovered.bufnr == buffers.number
+    for _, c in ipairs(complist) do
+      local render_cx
+      if context.filetype then
+        render_cx = RenderContext:buffer(context)
+      else
+        render_cx = RenderContext:tab(context)
+      end
+      render_cx.provider.is_hovered = hovered ~= nil
+        and hovered.bufnr == context.number
         and hovered.index == c.index
-      local rendered = c:render(cx)
-      cx.provider.is_hovered = false
-      -- rendered.bufnr = buffers.number
+      local rendered = c:render(render_cx)
+      render_cx.provider.is_hovered = false
       if rendered.width > 0 then
         insert(cs, rendered)
       end
@@ -75,8 +80,8 @@ local function to_components(buffers)
   else
     local cs = {}
     local width = 0
-    for _, buffer in ipairs(buffers) do
-      local buf_components, buf_width = to_components(buffer)
+    for _, buffer in ipairs(context) do
+      local buf_components, buf_width = to_components(buffer, complist)
       width = width + buf_width
       for _, component in pairs(buf_components) do
         insert(cs, component)
@@ -94,22 +99,30 @@ end
 local prepare = function(visible_buffers)
   local sidebar_components = sidebar.get_components()
   local rhs_components = rhs.get_components()
-  local tab_components = tabs.get_components()
   local available_width = o.columns - components.width(sidebar_components)
   if available_width == 0 then
     return components.render(sidebar_components)
   end
 
-  available_width = available_width - components.width(tab_components)
-  if available_width == 0 then
-    return components.render(sidebar_components)
-      .. components.render(tab_components)
+  local tab_placement
+  local tab_components
+  local tabs_width
+  if _G.cokeline.config.tabs then
+    tab_placement = _G.cokeline.config.tabs.placement or "left"
+    tab_components = to_components(tabs.get_tabs(), _G.cokeline.tabs)
+    tabs_width = components.width(tab_components)
+    available_width = available_width - tabs_width
+    if available_width == 0 then
+      return components.render(sidebar_components)
+        .. components.render(tab_components)
+    end
   end
 
   local current_buffer = find_current_buffer(visible_buffers, current_index)
   current_index = current_buffer.index
 
-  local current_components, current_width = to_components(current_buffer)
+  local current_components, current_width =
+    to_components(current_buffer, _G.cokeline.components)
   if current_width >= available_width then
     sort(current_components, by_decreasing_priority)
     components.shorten(current_components, available_width)
@@ -132,7 +145,6 @@ local prepare = function(visible_buffers)
           - (
             components.width(current_components)
             + components.width(rhs_components)
-            + components.width(tab_components)
           )
       ),
     }
@@ -140,16 +152,21 @@ local prepare = function(visible_buffers)
 
   local left_components, left_width = to_components({
     unpack(visible_buffers, 1, current_buffer.index - 1),
-  })
+  }, _G.cokeline.components)
 
   local right_components, right_width = to_components({
     unpack(visible_buffers, current_buffer.index + 1, #visible_buffers),
-  })
+  }, _G.cokeline.components)
 
   local rhs_width = components.width(rhs_components)
   local available_width_left, available_width_right =
     _G.cokeline.config.rendering.slider(
-      available_width - current_width - rhs_width,
+      available_width
+        - current_width
+        - rhs_width
+        - (
+          (tabs_width ~= nil and tab_placement == "right") and tabs_width or 0
+        ),
       left_width,
       right_width
     )
@@ -176,13 +193,12 @@ local prepare = function(visible_buffers)
   end
 
   local bufs_width = components.width(buffer_components)
-  local tabs_width = components.width(tab_components)
   return {
     sidebar = sidebar_components,
     buffers = buffer_components,
     rhs = rhs_components,
     tabs = tab_components,
-    gap = math.max(0, available_width - (bufs_width + rhs_width + tabs_width)),
+    gap = math.max(0, available_width - (bufs_width + rhs_width)),
   }
 end
 
@@ -194,13 +210,25 @@ end
 ---@return string
 local render = function(visible_buffers, fill_hl)
   local cx = prepare(visible_buffers)
-  return components.render(cx.sidebar)
-    .. components.render(cx.tabs)
+  local rendered = components.render(cx.sidebar) .. "%#" .. fill_hl .. "#"
+  if
+    _G.cokeline.config.tabs and _G.cokeline.config.tabs.placement == "left"
+  then
+    rendered = rendered .. components.render(cx.tabs) .. "%#" .. fill_hl .. "#"
+  end
+  rendered = rendered
     .. components.render(cx.buffers)
-    .. "%#" .. fill_hl .. "#"
+    .. "%#"
+    .. fill_hl
+    .. "#"
     .. string.rep(" ", cx.gap)
     .. components.render(cx.rhs)
-    .. "%#" .. fill_hl .. "#"
+  if
+    _G.cokeline.config.tabs and _G.cokeline.config.tabs.placement == "right"
+  then
+    rendered = rendered .. "%#" .. fill_hl .. "#" .. components.render(cx.tabs)
+  end
+  return rendered
 end
 
 return {

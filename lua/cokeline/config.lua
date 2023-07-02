@@ -94,20 +94,7 @@ local defaults = {
     },
   },
 
-  tabs = {
-    placement = "left",
-    components = {
-      {
-        ---@param tabpage TabPage
-        text = function(tabpage)
-          return string.format("%s", tabpage.number)
-        end,
-        on_click = function(tabpage)
-          vim.api.nvim_set_current_tabpage(tabpage.tabnr)
-        end,
-      },
-    },
-  },
+  tabs = false,
 
   rhs = false,
 
@@ -143,6 +130,7 @@ local function update(settings, preferences, key)
         type(v) == "table"
         and not islist(v)
         and not k:find("sidebar")
+        and not k:find("tabs")
       )
           and update(settings[k], v, key_tree)
         or v
