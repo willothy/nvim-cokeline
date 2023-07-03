@@ -55,8 +55,12 @@ local function to_components(context, complist)
       local render_cx
       if context.filetype then
         render_cx = RenderContext:buffer(context)
+        render_cx.provider.buf_hovered = hovered ~= nil
+          and hovered.bufnr == context.number
       else
         render_cx = RenderContext:tab(context)
+        render_cx.provider.tab_hovered = hovered ~= nil
+          and hovered.bufnr == context.number
       end
       render_cx.provider.is_hovered = hovered ~= nil
         and hovered.bufnr == context.number

@@ -34,6 +34,8 @@ end
 ---@field is_first boolean
 ---@field is_last boolean
 ---@field is_active boolean
+---@field is_hovered boolean  Whether the current component is hovered
+---@field tab_hovered boolean Whether the tab is hovered
 local TabPage = {}
 TabPage.__index = TabPage
 

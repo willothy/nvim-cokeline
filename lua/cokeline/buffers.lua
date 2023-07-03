@@ -40,6 +40,8 @@ local M = {}
 ---@field is_focused    boolean
 ---@field is_modified   boolean
 ---@field is_readonly   boolean
+---@field is_hovered    boolean Whether the current component is hovered
+---@field buf_hovered   boolean Whether any component in the buffer is hovered
 ---@field path          string
 ---@field unique_prefix string
 ---@field filename      string
@@ -237,6 +239,7 @@ Buffer.new = function(b)
     is_modified = opts.modified,
     is_readonly = opts.readonly,
     is_hovered = false,
+    buf_hovered = false,
     path = b.name,
     unique_prefix = "",
     filename = filename or "[No Name]",
