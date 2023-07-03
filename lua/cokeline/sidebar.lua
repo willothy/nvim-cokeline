@@ -109,6 +109,7 @@ local get_components = function(side)
   local width = 0
   local id = #_G.cokeline.components + #_G.cokeline.rhs + 1
   local hover = require("cokeline/hover").hovered()
+  buffer.buf_hovered = hover ~= nil and hover.bufnr == buffer.number
   for _, c in ipairs(_G.cokeline.sidebar) do
     c.sidebar = side
     buffer.is_hovered = hover ~= nil

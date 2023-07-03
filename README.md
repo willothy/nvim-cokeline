@@ -595,6 +595,14 @@ require('cokeline').setup({
   -- If you want a rhs component to be stateful, you can wrap it in a closure containing state.
   rhs = {..},
 
+  -- Tabpages can be displayed on either the left or right of the bufferline.
+  -- They act the same as other components, except they are passed TabPage objects instead of
+  -- buffer objects.
+  tabs = {
+    placement = "left" | "right",
+    components = {..}
+  },
+
   -- Left sidebar to integrate nicely with file explorer plugins.
   -- This is a table containing a `filetype` key and a list of `components` to
   -- be rendered in the sidebar.
@@ -609,15 +617,15 @@ require('cokeline').setup({
 
 #### So what's `function(buffer)`?
 
-Some of the configuration options can be functions that take a `buffer` as a
+Some of the configuration options can be functions that take a [`Buffer`](https://github.com/willothy/nvim-cokeline/wiki/Buffer) as a
 single parameter. This is useful as it allows users to set the values of
 components dynamically based on the buffer that component is being rendered
 for.
 
-The `buffer` parameter is just a Lua table with the following keys:
+The `Buffer` type is just a Lua table with the following keys:
 
 ```lua
-buffer = {
+Buffer = {
   -- The buffer's order in the bufferline (1 for the first buffer, 2 for the
   -- second one, etc.).
   index = int,
@@ -637,12 +645,14 @@ buffer = {
   -- The buffer is the last visible buffer in the tab bar
   is_last     = true | false,
 
-  -- The mouse is hovering over the buffer
+  -- The mouse is hovering over the current component in the buffer
   -- This is a special variable in that it will only be true for the hovered *component*
   -- on render. This is to allow components to respond to hover events individually without managing
   -- component state.
-  -- If you just need the hovered bufnr, you can use `require('cokeline.hover').hovered().bufnr`
   is_hovered  = true | false
+
+  -- The mouse is hovering over the buffer (true for all components)
+  buf_hovered = true | false
 
   -- The buffer's type as reported by `:echo &buftype`.
   type = 'string',
@@ -714,7 +724,30 @@ function Buffer:text()
 function Buffer:is_valid()
 ```
 
-#### What about `components`?
+#### What about [`TabPage`](https://github.com/willothy/nvim-cokeline/wiki/TabPage)s?
+
+Each method on a tab component is passed a `TabPage` object as an argument.
+
+`TabPage`, like `Buffer`, is simply a Lua table with some relevant data attached.
+
+```lua
+TabPage = {
+  -- The tabpage number, as reported by `nvim_list_tabpages`
+  number = integer,
+  -- A list of Window objects contained in the TabPage (see wiki for more info)
+  windows = Window[],
+  -- The currently focused window in the TabPage
+  focused = Window,
+  -- True if the TabPage is the current TabPage
+  is_active = boolean,
+  -- True if the TabPage is first in the list
+  is_first = boolean,
+  -- True if the TabPage is last in the list
+  is_last = boolean
+}
+```
+
+#### And [`components`](https://github.com/willothy/nvim-cokeline/wiki/Component)?
 
 You can configure what each buffer in your bufferline will be composed of by
 passing a list of components to the `setup` function.
@@ -830,7 +863,7 @@ like in the following example (where it's set to `'left'`):
 
 ![buffer-truncation](https://user-images.githubusercontent.com/38540736/226447798-6aee2e0f-f957-42ab-96dd-3618e78ba4ba.png)
 
-#### What about `history`?
+#### What about [`history`](https://github.com/willothy/nvim-cokeline/wiki/History)?
 
 The History keeps track of the buffers you access using a ringbuffer, and provides
 an API for accessing Buffer objects from the history.
