@@ -120,24 +120,7 @@ local function buf_delete(bufnr, focus, wipeout)
   end
 end
 
-local fold = function(iterable, acc, f)
-  iterable:for_each(function(v)
-    acc = f(acc, v)
-  end)
-  return acc
-end
-
-local enumerate = function(iterable)
-  local i = 0
-  return iterable:map(function(...)
-    i = i + 1
-    return i, ...
-  end)
-end
-
 return {
   get_hex = get_hex,
   buf_delete = buf_delete,
-  fold = fold,
-  enumerate = enumerate,
 }

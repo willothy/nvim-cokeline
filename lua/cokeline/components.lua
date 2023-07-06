@@ -4,7 +4,6 @@ local rep = string.rep
 local insert = table.insert
 local remove = table.remove
 
-local fold = require("cokeline.utils").fold
 local iter = require("plenary.iterators").iter
 local fn = vim.fn
 
@@ -162,7 +161,7 @@ end
 ---@param components  Component[]
 ---@return number
 local width_of_components = function(components)
-  return fold(iter(components), 0, function(a, c)
+  return iter(components):fold(0, function(a, c)
     return a + c.width
   end)
 end
@@ -255,7 +254,7 @@ local render_components = function(components)
     return a .. b
   end
 
-  return fold(iter(components):map(embed), "", concat)
+  return iter(components):map(embed):fold("", concat)
 end
 
 return {

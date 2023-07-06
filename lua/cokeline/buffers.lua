@@ -10,9 +10,7 @@ local fn = vim.fn
 local split = vim.split
 
 local util = require("cokeline.utils")
-local it = require("plenary.iterators")
-local iter = it.iter
-local enumerate = util.enumerate
+local iter = require("plenary.iterators").iter
 
 ---@type bufnr
 local current_valid_index
@@ -89,7 +87,7 @@ local compute_unique_prefixes = function(buffers)
     end
   end
 
-  return enumerate(iter(buffers)):map(function(i, buffer)
+  return iter(buffers):enumerate():map(function(i, buffer)
     buffer.unique_prefix = concat({
       #prefixes[i] == #paths[i] and path_separator or "",
       fn.join(fn.reverse(prefixes[i]), path_separator),
@@ -469,7 +467,7 @@ function M.get_visible()
     bufs = bufs:filter(_G.cokeline.config.buffers.filter_visible)
   end
 
-  bufs = enumerate(bufs):map(function(i, buf)
+  bufs = bufs:enumerate():map(function(i, buf)
     buf.index = i
     return buf
   end)
