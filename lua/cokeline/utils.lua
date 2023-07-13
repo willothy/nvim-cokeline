@@ -44,7 +44,7 @@ local function buf_del_impl(bufnr, focus_next, wipeout, force)
       end
     else
       -- If there's no possible switch target, create a new buffer and switch to it
-      switch_target = vim.api.nvim_create_buf(true, false)
+      switch_target = vim.api.nvim_create_buf(false, true)
       if switch_target == 0 then
         vim.api.nvim_err_writeln("Failed to create new buffer")
       end
