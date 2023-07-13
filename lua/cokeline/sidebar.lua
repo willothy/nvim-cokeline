@@ -12,12 +12,15 @@ local bo = vim.bo
 local fn = vim.fn
 local o = vim.o
 
+local width_cache = {}
+
 local get_win = function(side)
   local layout = fn.winlayout()
 
   -- If the first split level is not given by vertically split windows we
-  -- return early.
+  -- return early and invalidate the width cache.
   if layout[1] ~= "row" then
+    width_cache = {}
     return nil
   end
 
@@ -52,6 +55,7 @@ local get_win = function(side)
       if win and win[1] == "leaf" then
         winid = win[2]
       else
+        width_cache[side] = nil
         return nil
       end
     end
@@ -63,10 +67,12 @@ local get_win = function(side)
       if win and win[1] == "leaf" then
         winid = win[2]
       else
+        width_cache[side] = nil
         return nil
       end
     end
   end
+  width_cache[side] = api.nvim_win_get_width(winid)
   return winid
 end
 
@@ -147,4 +153,8 @@ end
 return {
   get_win = get_win,
   get_components = get_components,
+  ---@return integer
+  get_width = function(side)
+    return width_cache[side] or 0
+  end,
 }
