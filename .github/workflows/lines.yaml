@@ -1,5 +1,5 @@
 name: "Check line width"
-on: [ push, pull_request ]
+on: [push, pull_request]
 jobs:
   # line-number:
   #   name: Sloc < 1000
@@ -14,5 +14,5 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - run: cargo install ripgrep
+      - run: cargo install --locked ripgrep
       - run: max_line_width=$(rg --glob '*.{lua,vim}' --no-heading --no-filename --no-line-number . | awk '{print length}' | sort -n | tail -n 1); if [ ${max_line_width} -gt 79 ]; then exit 1; fi
