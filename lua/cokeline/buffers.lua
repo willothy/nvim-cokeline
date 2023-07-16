@@ -430,7 +430,9 @@ function M.get_valid_buffers()
       :tolist()
   end
 
-  if _G.cokeline.config.buffers.new_buffers_position == "last" then
+  if type(_G.cokeline.config.buffers.new_buffers_position) == "function" then
+    sort(buffers, _G.cokeline.config.buffers.new_buffers_position)
+  elseif _G.cokeline.config.buffers.new_buffers_position == "last" then
     sort(buffers, sort_by_new_after_last)
   elseif _G.cokeline.config.buffers.new_buffers_position == "next" then
     sort(buffers, sort_by_new_after_current)
