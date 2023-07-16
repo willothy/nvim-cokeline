@@ -145,6 +145,13 @@ local get = function(preferences)
   _G.cokeline.rhs = {}
   _G.cokeline.sidebar = {}
   _G.cokeline.tabs = {}
+  if preferences.buffers and preferences.buffers.new_buffers_position then
+    if not _G.cokeline.config.buffers then
+      _G.cokeline.config.buffers = {}
+    end
+    _G.cokeline.config.buffers.new_buffers_position =
+      preferences.buffers.new_buffers_position
+  end
   local id = 1
   for _, component in ipairs(config.components) do
     local new_component = Component.new(component, id, config.default_hl)
