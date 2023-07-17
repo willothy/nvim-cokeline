@@ -515,7 +515,7 @@ require('cokeline').setup({
     -- if set to `directory` buffers are sorted by their full path.
     -- if set to `number` buffers are sorted by bufnr, as in default Neovim
     -- default: 'last'.
-    new_buffers_position = 'last' | 'next' | 'directory' | 'number',
+    new_buffers_position = 'last' | 'next' | 'directory' | 'number' | function(buffer_a, buffer_b) -> true | false,
 
     -- If true, right clicking a buffer will close it
     -- The close button will still work normally
