@@ -180,7 +180,9 @@ require('cokeline').setup({
     },
     {
       text = '',
-      delete_buffer_on_left_click = true,
+      on_click = function(buffer)
+        buffer:delete()
+      end
     },
     {
       text = '  ',
@@ -276,7 +278,9 @@ require('cokeline').setup({
     },
     {
       text = '',
-      delete_buffer_on_left_click = true,
+      on_click = function(buffer)
+        buffer:delete()
+      end,
     },
     {
       text = '  ',
@@ -353,7 +357,9 @@ require('cokeline').setup({
     },
     {
       text = '',
-      delete_buffer_on_left_click = true,
+      on_click = function(buffer)
+        buffer:delete()
+      end,
     },
     {
       text = '  ',
@@ -770,8 +776,10 @@ require('cokeline').setup({
       text = function(buffer) return ' ' .. buffer.filename .. ' ' end,
     },
     {
-      text = '',
-      delete_buffer_on_left_click = true,
+      text = '󰅖',
+      on_click = function(buffer)
+        buffer:delete()
+      end
     },
     {
       text = ' ',
