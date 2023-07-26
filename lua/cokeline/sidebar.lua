@@ -137,7 +137,7 @@ local get_components = function(side)
   if width > sidebar_width then
     sort(sidebar_components, rendering.by_decreasing_priority)
     components.shorten(sidebar_components, sidebar_width)
-    sort(sidebar_components, rendering.by_decreasing_index)
+    sort(sidebar_components, rendering.by_increasing_index)
   elseif width < sidebar_width then
     local space_left = sidebar_width - width
     local last = #sidebar_components
