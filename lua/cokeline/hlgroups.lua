@@ -1,8 +1,29 @@
 local M = {}
 
+-- These functions are called a LOT.
+-- Cache the results to avoid repeat API calls
+local cache = {
+  hex = {},
+  groups = {},
+}
+
+-- Invalidate the cache on colorscheme change
+vim.api.nvim_create_autocmd("Colorscheme", {
+  group = vim.api.nvim_create_augroup(
+    "cokeline_color_cache",
+    { clear = true }
+  ),
+  callback = function()
+    cache.groups = {}
+  end,
+})
+
 ---@param rgb integer
 ---@return string hex
 function M.hex(rgb)
+  if cache.hex[rgb] then
+    return cache.hex[rgb]
+  end
   local band, lsr = bit.band, bit.rshift
 
   local r = lsr(band(rgb, 0xff00000), 16)
@@ -13,6 +34,9 @@ function M.hex(rgb)
 end
 
 function M.get_hl(name)
+  if cache.groups[name] then
+    return cache.groups[name]
+  end
   local hl = vim.api.nvim_get_hl(0, { name = name })
   if not hl then
     return
@@ -26,10 +50,14 @@ function M.get_hl(name)
   if hl.sp then
     hl.sp = M.hex(hl.sp)
   end
+  cache.groups[name] = hl
   return hl
 end
 
 function M.get_hl_attr(name, attr)
+  if cache.hex[name] and cache.hex[name][attr] then
+    return cache.hex[name][attr]
+  end
   local hl = M.get_hl(name)
   if not hl then
     return
