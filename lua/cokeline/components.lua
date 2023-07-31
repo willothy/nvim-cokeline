@@ -32,14 +32,28 @@ Component.__index = Component
 ---@param i number
 ---@return Component<Cx>
 Component.new = function(c, i, default_hl)
+  local function attr(name, default)
+    if c[name] ~= nil then
+      return c[name]
+    end
+    if default_hl[name] ~= nil then
+      return default_hl[name]
+    end
+    return default
+  end
   -- `default_hl` is `nil` when called by `components.lua#63`
   default_hl = default_hl or _G.cokeline.config.default_hl
   local component = {
     index = i,
     text = c.text,
-    fg = c.fg or default_hl.fg or "NONE",
-    bg = c.bg or default_hl.bg or "NONE",
-    style = c.style or default_hl.style or "NONE",
+    fg = attr("fg", "NONE"),
+    bg = attr("bg", "NONE"),
+    sp = attr("sp", "NONE"),
+    bold = attr("bold"),
+    italic = attr("italic"),
+    underline = attr("underline"),
+    undercurl = attr("undercurl"),
+    strikethrough = attr("strikethrough"),
     highlight = c.highlight,
     delete_buffer_on_left_click = c.delete_buffer_on_left_click or false,
     on_click = c.on_click,
@@ -68,8 +82,13 @@ end
 Component.render = function(self, context)
   ---@return string
   local evaluate = function(field)
-    return (type(field) == "string" and field)
-      or (type(field) == "function" and field(context.provider))
+    if field == nil then
+      return
+    end
+    if type(field) == "function" then
+      return field(context.provider)
+    end
+    return field
   end
 
   local component = vim.deepcopy(self)
@@ -84,26 +103,41 @@ Component.render = function(self, context)
     component.bufnr = context.provider.number
   end
 
-  -- `evaluate(self.hl.*)` might return `nil`, in that case we fallback to the
-  -- default highlight first and to NONE if that's `nil` too.
-  local style = evaluate(self.style)
-    or evaluate(_G.cokeline.config.default_hl.style)
-    or "NONE"
-  local fg = evaluate(self.fg)
-    or evaluate(_G.cokeline.config.default_hl.fg)
-    or "NONE"
-  local bg = evaluate(self.bg)
-    or evaluate(_G.cokeline.config.default_hl.bg)
-    or "NONE"
-
   if component.highlight then
     component.hlgroup = Hlgroup.new_existing(evaluate(component.highlight))
   else
+    -- `evaluate(self.hl.*)` might return `nil`, in that case we fallback to the
+    -- default highlight first and to NONE if that's `nil` too.
+    -- local style = evaluate(self.style)
+    --   or evaluate(_G.cokeline.config.default_hl.style)
+    --   or "NONE"
+    local fg = evaluate(self.fg)
+      or evaluate(_G.cokeline.config.default_hl.fg)
+      or "NONE"
+    local bg = evaluate(self.bg)
+      or evaluate(_G.cokeline.config.default_hl.bg)
+      or "NONE"
+    local sp = evaluate(self.sp)
+      or evaluate(_G.cokeline.config.default_hl.sp)
+      or "NONE"
+    local attrs = {}
+    attrs.bold = evaluate(self.bold)
+      or evaluate(_G.cokeline.config.default_hl.bold)
+    attrs.italic = evaluate(self.italic)
+      or evaluate(_G.cokeline.config.default_hl.italic)
+    attrs.underline = evaluate(self.underline)
+      or evaluate(_G.cokeline.config.default_hl.underline)
+    attrs.undercurl = evaluate(self.undercurl)
+      or evaluate(_G.cokeline.config.default_hl.undercurl)
+    attrs.strikethrough = evaluate(self.strikethrough)
+      or evaluate(_G.cokeline.config.default_hl.strikethrough)
+
     component.hlgroup = Hlgroup.new(
       ("Cokeline_%s_%s"):format(component.bufnr or context.kind, self.index),
-      style,
       fg,
-      bg
+      bg,
+      sp,
+      attrs
     )
   end
 

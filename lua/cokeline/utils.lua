@@ -2,6 +2,7 @@ local vim_fn = vim.fn
 
 ---Returns the color set by the current colorscheme for the `attr` attribute of
 ---the `hlgroup_name` highlight group in hexadecimal format.
+---@deprecated
 ---@param hlgroup_name  string
 ---@param attr  '"fg"' | '"bg"'
 ---@return string
