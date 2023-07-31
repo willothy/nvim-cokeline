@@ -66,20 +66,18 @@ require('cokeline').setup({
     {
       text = function(buffer) return buffer.unique_prefix end,
       fg = get_hex('Comment', 'fg'),
-      style = 'italic',
+      italic = true
     },
     {
       text = function(buffer) return buffer.filename .. ' ' end,
-      style = function(buffer)
-        if buffer.is_hovered and not buffer.is_focused then
-          return 'underline'
-	end
+      underline = function(buffer)
+        return buffer.is_hovered and not buffer.is_focused
       end
     },
     {
       text = '',
       on_click = function(_, _, _, _, buffer)
-	buffer:delete()
+        buffer:delete()
       end
     },
     {
@@ -131,11 +129,11 @@ require('cokeline').setup({
     {
       text = function(buffer) return buffer.unique_prefix end,
       fg = get_hex('Comment', 'fg'),
-      style = 'italic',
+      italic = true,
     },
     {
       text = function(buffer) return buffer.filename .. ' ' end,
-      style = function(buffer) return buffer.is_focused and 'bold' or nil end,
+      bold = function(buffer) return buffer.is_focused end,
     },
     {
       text = ' ',
