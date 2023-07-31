@@ -26,11 +26,13 @@ function M.hex(rgb)
   end
   local band, lsr = bit.band, bit.rshift
 
-  local r = lsr(band(rgb, 0xff00000), 16)
+  local r = lsr(band(rgb, 0xff0000), 16)
   local g = lsr(band(rgb, 0x00ff00), 8)
   local b = band(rgb, 0x0000ff)
 
-  return ("#%02x%02x%02x"):format(r, g, b)
+  local res = ("#%02x%02x%02x"):format(r, g, b)
+  cache.hex[rgb] = res
+  return res
 end
 
 function M.get_hl(name)
@@ -41,13 +43,13 @@ function M.get_hl(name)
   if not hl then
     return
   end
-  if hl.fg then
+  if hl.fg and type(hl.fg) == "number" then
     hl.fg = M.hex(hl.fg)
   end
-  if hl.bg then
+  if hl.bg and type(hl.bg) == "number" then
     hl.bg = M.hex(hl.bg)
   end
-  if hl.sp then
+  if hl.sp and type(hl.sp) == "number" then
     hl.sp = M.hex(hl.sp)
   end
   cache.groups[name] = hl
@@ -55,8 +57,8 @@ function M.get_hl(name)
 end
 
 function M.get_hl_attr(name, attr)
-  if cache.hex[name] and cache.hex[name][attr] then
-    return cache.hex[name][attr]
+  if cache.groups[name] and cache.groups[name][attr] then
+    return cache.groups[name][attr]
   end
   local hl = M.get_hl(name)
   if not hl then
@@ -82,30 +84,29 @@ Hlgroup.__index = Hlgroup
 ---@return Hlgroup
 Hlgroup.new = function(name, fg, bg, sp, gui_attrs)
   local hlgroup = {}
-  if vim.fn.hlexists(fg) == 1 then
+  if fg ~= "NONE" and vim.fn.hlexists(fg) == 1 then
     hlgroup.fg = M.get_hl_attr(fg, "fg")
   else
-    hlgroup.fg = fg
+    hlgroup.fg = fg or "NONE"
   end
-  if vim.fn.hlexists(bg) == 1 then
+  if bg ~= "NONE" and vim.fn.hlexists(bg) == 1 then
     hlgroup.bg = M.get_hl_attr(bg, "bg")
   else
-    hlgroup.bg = bg
+    hlgroup.bg = bg or "NONE"
   end
-  if sp and vim.fn.hlexists(sp) == 1 then
+  if sp and sp ~= "NONE" and vim.fn.hlexists(sp) == 1 then
     hlgroup.sp = M.get_hl_attr(sp, "sp")
   else
-    hlgroup.sp = sp
+    hlgroup.sp = sp or "NONE"
   end
 
   for attr, val in pairs(gui_attrs) do
     if type(val) == "boolean" then
       hlgroup[attr] = val
-    elseif type(val) == "string" and vim.fn.hlexists(val) == 1 then
-      hlgroup[attr] = M.get_hl_attr(val, attr)
     end
   end
 
+  hlgroup.default = false
   vim.api.nvim_set_hl(0, name, hlgroup)
 
   hlgroup.name = name

@@ -224,7 +224,10 @@ local render = function(visible_buffers, fill_hl)
   then
     rendered = rendered .. components.render(cx.tabs) .. "%#" .. fill_hl .. "#"
   end
-  rendered = rendered
+  rendered = "%#"
+    .. fill_hl
+    .. "#"
+    .. rendered
     .. components.render(cx.buffers)
     .. "%#"
     .. fill_hl
