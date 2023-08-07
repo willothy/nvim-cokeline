@@ -231,7 +231,7 @@ local yellow = vim.g.terminal_color_3
 
 require('cokeline').setup({
   default_hl = {
-    focused = function(buffer)
+    fg = function(buffer)
       return
         buffer.is_focused
         and get_hex('Normal', 'fg')
@@ -308,7 +308,7 @@ local yellow = vim.g.terminal_color_3
 
 require('cokeline').setup({
   default_hl = {
-    focused = function(buffer)
+    fg = function(buffer)
       return
         buffer.is_focused
         and get_hex('Normal', 'fg')
