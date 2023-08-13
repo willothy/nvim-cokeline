@@ -1,6 +1,6 @@
-local utils = require("cokeline/utils")
-local buffers = require("cokeline/buffers")
-local tabs = require("cokeline/tabs")
+local utils = require("cokeline.utils")
+local buffers = require("cokeline.buffers")
+local tabs = require("cokeline.tabs")
 
 ---@alias ClickHandler<Cx> fun(button_id: number, clicks: number, button: string, modifiers: string, cx: Cx): void
 ---@alias MouseEnterHandler fun(cx: Cx)

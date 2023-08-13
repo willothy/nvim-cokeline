@@ -1,4 +1,4 @@
-local Hlgroup = require("cokeline/hlgroups").Hlgroup
+local Hlgroup = require("cokeline.hlgroups").Hlgroup
 
 local rep = string.rep
 local insert = table.insert

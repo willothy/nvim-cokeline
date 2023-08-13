@@ -1,6 +1,6 @@
-local Buffer = require("cokeline/buffers").Buffer
-local components = require("cokeline/components")
-local RenderContext = require("cokeline/context")
+local Buffer = require("cokeline.buffers").Buffer
+local components = require("cokeline.components")
+local RenderContext = require("cokeline.context")
 
 local min = math.min
 local rep = string.rep
@@ -114,7 +114,7 @@ local get_components = function(side)
   local sidebar_components = {}
   local width = 0
   local id = #_G.cokeline.components + #_G.cokeline.rhs + 1
-  local hover = require("cokeline/hover").hovered()
+  local hover = require("cokeline.hover").hovered()
   buffer.buf_hovered = hover ~= nil and hover.bufnr == buffer.number
   for _, c in ipairs(_G.cokeline.sidebar) do
     c.sidebar = side
@@ -132,7 +132,7 @@ local get_components = function(side)
     id = id + 1
   end
 
-  local rendering = require("cokeline/rendering")
+  local rendering = require("cokeline.rendering")
 
   if width > sidebar_width then
     sort(sidebar_components, rendering.by_decreasing_priority)

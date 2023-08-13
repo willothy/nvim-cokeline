@@ -1,10 +1,10 @@
-local components = require("cokeline/components")
-local RenderContext = require("cokeline/context")
+local components = require("cokeline.components")
+local RenderContext = require("cokeline.context")
 
 local M = {}
 
 function M.get_components()
-  local hovered = require("cokeline/hover").hovered()
+  local hovered = require("cokeline.hover").hovered()
   local rhs = {}
   for _, c in ipairs(_G.cokeline.rhs) do
     local is_hovered = hovered and hovered.index == c.index

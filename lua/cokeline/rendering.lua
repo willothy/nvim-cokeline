@@ -1,8 +1,8 @@
-local components = require("cokeline/components")
-local sidebar = require("cokeline/sidebar")
-local rhs = require("cokeline/rhs")
+local components = require("cokeline.components")
+local sidebar = require("cokeline.sidebar")
+local rhs = require("cokeline.rhs")
 local tabs = require("cokeline.tabs")
-local RenderContext = require("cokeline/context")
+local RenderContext = require("cokeline.context")
 local iter = require("plenary.iterators").iter
 
 local insert = table.insert

@@ -1,10 +1,10 @@
-local augroups = require("cokeline/augroups")
-local buffers = require("cokeline/buffers")
-local config = require("cokeline/config")
-local mappings = require("cokeline/mappings")
-local rendering = require("cokeline/rendering")
-local hover = require("cokeline/hover")
-local history = require("cokeline/history")
+local augroups = require("cokeline.augroups")
+local buffers = require("cokeline.buffers")
+local config = require("cokeline.config")
+local mappings = require("cokeline.mappings")
+local rendering = require("cokeline.rendering")
+local hover = require("cokeline.hover")
+local history = require("cokeline.history")
 
 local opt = vim.opt
 
@@ -49,7 +49,7 @@ _G.cokeline = {
   ---@type Cokeline.History
   history = nil,
 
-  __handlers = require("cokeline/handlers"),
+  __handlers = require("cokeline.handlers"),
 }
 
 --@param preferences table|nil

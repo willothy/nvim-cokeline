@@ -1,5 +1,5 @@
-local buffers = require("cokeline/buffers")
-local tabs = require("cokeline/tabs")
+local buffers = require("cokeline.buffers")
+local tabs = require("cokeline.tabs")
 
 local cmd = vim.cmd
 local filter = vim.tbl_filter
@@ -61,13 +61,13 @@ local setup = function()
   autocmd({ "VimEnter", "BufAdd" }, {
     group = augroup("cokeline_toggle", { clear = true }),
     callback = function()
-      require("cokeline/augroups").toggle()
+      require("cokeline.augroups").toggle()
     end,
   })
   autocmd({ "BufDelete", "BufWipeout" }, {
     group = augroup("cokeline_release_taken_letter", { clear = true }),
     callback = function(args)
-      require("cokeline/buffers").release_taken_letter(args.buf)
+      require("cokeline.buffers").release_taken_letter(args.buf)
     end,
   })
   if _G.cokeline.config.history.enabled and _G.cokeline.history then

@@ -1,4 +1,4 @@
-local buffers = require("cokeline/buffers")
+local buffers = require("cokeline.buffers")
 
 local cmd = vim.cmd
 local filter = vim.tbl_filter

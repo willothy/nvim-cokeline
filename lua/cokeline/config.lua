@@ -1,6 +1,6 @@
-local Component = require("cokeline/components").Component
-local sliders = require("cokeline/sliders")
-local utils = require("cokeline/utils")
+local Component = require("cokeline.components").Component
+local sliders = require("cokeline.sliders")
+local utils = require("cokeline.utils")
 
 local insert = table.insert
 
@@ -157,7 +157,7 @@ local get = function(preferences)
     local new_component = Component.new(component, id, config.default_hl)
     insert(_G.cokeline.components, new_component)
     if new_component.on_click ~= nil then
-      require("cokeline/handlers").click:register(id, new_component.on_click)
+      require("cokeline.handlers").click:register(id, new_component.on_click)
     end
     id = id + 1
   end
@@ -167,7 +167,7 @@ local get = function(preferences)
       local new_component = Component.new(component, id, config.default_hl)
       insert(_G.cokeline.rhs, new_component)
       if new_component.on_click ~= nil then
-        require("cokeline/handlers").click:register(id, new_component.on_click)
+        require("cokeline.handlers").click:register(id, new_component.on_click)
       end
       id = id + 1
     end
@@ -178,7 +178,7 @@ local get = function(preferences)
       local new_component = Component.new(component, id, config.default_hl)
       insert(_G.cokeline.sidebar, new_component)
       if new_component.on_click ~= nil then
-        require("cokeline/handlers").click:register(id, new_component.on_click)
+        require("cokeline.handlers").click:register(id, new_component.on_click)
       end
       id = id + 1
     end
@@ -189,7 +189,7 @@ local get = function(preferences)
       local new_component = Component.new(component, id, config.default_hl)
       insert(_G.cokeline.tabs, new_component)
       if new_component.on_click ~= nil then
-        require("cokeline/handlers").click:register(id, new_component.on_click)
+        require("cokeline.handlers").click:register(id, new_component.on_click)
       end
       id = id + 1
     end
