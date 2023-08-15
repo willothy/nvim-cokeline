@@ -29,6 +29,7 @@ end
 
 ---@class TabPage
 ---@field number tabpage
+---@field index number
 ---@field windows Window[]
 ---@field focused Window
 ---@field is_first boolean
@@ -39,7 +40,7 @@ end
 local TabPage = {}
 TabPage.__index = TabPage
 
-function TabPage.new(tabnr, is_first, is_last, is_active)
+function TabPage.new(tabnr, index, is_first, is_last, is_active)
   local active_win = vim.api.nvim_tabpage_get_win(tabnr)
   local windows = vim.api.nvim_tabpage_list_wins(tabnr)
 
@@ -53,6 +54,7 @@ function TabPage.new(tabnr, is_first, is_last, is_active)
 
   local tab = {
     number = tabnr,
+    index = index,
     windows = windows,
     focused = focused,
     is_active = is_active,
@@ -95,6 +97,7 @@ function M.fetch_tabs()
       tabs[t].is_active = tabnr == active_tab
       tabs[t].is_first = t == 1
       tabs[t].is_last = t == #tabnrs
+      tabs[t].index = t
       local windows = vim.api.nvim_tabpage_list_wins(tabnr)
       for i, winnr in ipairs(windows) do
         if
@@ -107,7 +110,8 @@ function M.fetch_tabs()
         end
       end
     else
-      tabs[t] = TabPage.new(tabnr, t == 1, t == #tabnrs, tabnr == active_tab)
+      tabs[t] =
+        TabPage.new(tabnr, t, t == 1, t == #tabnrs, tabnr == active_tab)
       _G.cokeline.tab_lookup[tabnr] = tabs[t]
     end
   end
