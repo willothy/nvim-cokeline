@@ -119,7 +119,12 @@ function M.fetch_tabs()
 end
 
 function M.get_tabs()
-  if not _G.cokeline.tab_cache or #_G.cokeline.tab_cache == 0 then
+  local cache_count = _G.cokeline.tab_cache and #_G.cokeline.tab_cache or nil
+  if
+    cache_count == nil
+    or cache_count == 0
+    or cache_count ~= #vim.api.nvim_list_tabpages()
+  then
     M.fetch_tabs()
   end
   return _G.cokeline.tab_cache

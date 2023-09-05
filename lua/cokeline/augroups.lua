@@ -81,19 +81,12 @@ local setup = function()
     })
   end
   if _G.cokeline.config.tabs then
-    autocmd(
-      { "WinNew", "WinClosed", "TabNew", "TabClosed", "TermOpen", "TermClose" },
-      {
-        group = augroup("cokeline_fetch_tabs", { clear = true }),
-        callback = function(args)
-          local bt = (vim.bo[args.buf] or {}).buftype
-          if bt and bt ~= "" and bt ~= "terminal" then
-            return
-          end
-          tabs.fetch_tabs()
-        end,
-      }
-    )
+    autocmd({ "TabNew", "TabClosed" }, {
+      group = augroup("cokeline_fetch_tabs", { clear = true }),
+      callback = function()
+        tabs.fetch_tabs()
+      end,
+    })
     autocmd("WinEnter", {
       group = augroup("cokeline_update_tab_focus", { clear = true }),
       callback = function()
