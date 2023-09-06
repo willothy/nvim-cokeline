@@ -1,8 +1,11 @@
-local components = require("cokeline.components")
-local sidebar = require("cokeline.sidebar")
-local rhs = require("cokeline.rhs")
-local tabs = require("cokeline.tabs")
-local RenderContext = require("cokeline.context")
+local lazy = require("cokeline.lazy")
+local state = lazy("cokeline.state")
+local config = lazy("cokeline.config")
+local components = lazy("cokeline.components")
+local sidebar = lazy("cokeline.sidebar")
+local rhs = lazy("cokeline.rhs")
+local tabs = lazy("cokeline.tabs")
+local RenderContext = lazy("cokeline.context")
 local iter = require("plenary.iterators").iter
 
 local insert = table.insert
@@ -73,13 +76,13 @@ local function to_components(context, complist)
     end
 
     local width = components.width(cs)
-    if width <= _G.cokeline.config.rendering.max_buffer_width then
+    if width <= config.rendering.max_buffer_width then
       return cs, width
     else
       sort(cs, by_decreasing_priority)
-      components.shorten(cs, _G.cokeline.config.rendering.max_buffer_width)
+      components.shorten(cs, config.rendering.max_buffer_width)
       sort(cs, by_increasing_index)
-      return cs, _G.cokeline.config.rendering.max_buffer_width
+      return cs, config.rendering.max_buffer_width
     end
   else
     local cs = {}
@@ -112,9 +115,9 @@ local prepare = function(visible_buffers)
   local tab_placement
   local tab_components
   local tabs_width
-  if _G.cokeline.config.tabs then
-    tab_placement = _G.cokeline.config.tabs.placement or "left"
-    tab_components = to_components(tabs.get_tabs(), _G.cokeline.tabs)
+  if config.tabs then
+    tab_placement = config.tabs.placement or "left"
+    tab_components = to_components(tabs.get_tabs(), state.tabs)
     tabs_width = components.width(tab_components)
     available_width = available_width - tabs_width
     if available_width == 0 then
@@ -127,7 +130,7 @@ local prepare = function(visible_buffers)
   current_index = current_buffer.index
 
   local current_components, current_width =
-    to_components(current_buffer, _G.cokeline.components)
+    to_components(current_buffer, state.components)
   if current_width >= available_width then
     sort(current_components, by_decreasing_priority)
     components.shorten(current_components, available_width)
@@ -158,25 +161,22 @@ local prepare = function(visible_buffers)
 
   local left_components, left_width = to_components({
     unpack(visible_buffers, 1, current_buffer.index - 1),
-  }, _G.cokeline.components)
+  }, state.components)
 
   local right_components, right_width = to_components({
     unpack(visible_buffers, current_buffer.index + 1, #visible_buffers),
-  }, _G.cokeline.components)
+  }, state.components)
 
   local rhs_width = components.width(rhs_components)
     + components.width(sidebar_components_r)
-  local available_width_left, available_width_right =
-    _G.cokeline.config.rendering.slider(
-      available_width
-        - current_width
-        - rhs_width
-        - (
-          (tabs_width ~= nil and tab_placement == "right") and tabs_width or 0
-        ),
-      left_width,
-      right_width
-    )
+  local available_width_left, available_width_right = config.rendering.slider(
+    available_width
+      - current_width
+      - rhs_width
+      - ((tabs_width ~= nil and tab_placement == "right") and tabs_width or 0),
+    left_width,
+    right_width
+  )
 
   -- If we handled left, current and right components separately we might have
   -- to shorten the left or right components with a `to_width` parameter of 1,
@@ -219,9 +219,7 @@ end
 local render = function(visible_buffers, fill_hl)
   local cx = prepare(visible_buffers)
   local rendered = components.render(cx.sidebar_left) .. "%#" .. fill_hl .. "#"
-  if
-    _G.cokeline.config.tabs and _G.cokeline.config.tabs.placement == "left"
-  then
+  if config.tabs and config.tabs.placement == "left" then
     rendered = rendered .. components.render(cx.tabs) .. "%#" .. fill_hl .. "#"
   end
   rendered = "%#"
@@ -234,9 +232,7 @@ local render = function(visible_buffers, fill_hl)
     .. "#"
     .. string.rep(" ", cx.gap)
     .. components.render(cx.rhs)
-  if
-    _G.cokeline.config.tabs and _G.cokeline.config.tabs.placement == "right"
-  then
+  if config.tabs and config.tabs.placement == "right" then
     rendered = rendered .. "%#" .. fill_hl .. "#" .. components.render(cx.tabs)
   end
   rendered = rendered .. components.render(cx.sidebar_right)

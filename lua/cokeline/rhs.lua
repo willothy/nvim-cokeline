@@ -1,12 +1,17 @@
-local components = require("cokeline.components")
-local RenderContext = require("cokeline.context")
+local lazy = require("cokeline.lazy")
+local state = lazy("cokeline.state")
+local components = lazy("cokeline.components")
+local RenderContext = lazy("cokeline.context")
 
 local M = {}
 
+---@class RhsContext
+---@field is_hovered boolean
+
 function M.get_components()
-  local hovered = require("cokeline.hover").hovered()
+  local hovered = lazy("cokeline.hover").hovered()
   local rhs = {}
-  for _, c in ipairs(_G.cokeline.rhs) do
+  for _, c in ipairs(state.rhs) do
     local is_hovered = hovered and hovered.index == c.index
     table.insert(
       rhs,

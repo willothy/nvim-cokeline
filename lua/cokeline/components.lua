@@ -1,4 +1,6 @@
+local lazy = require("cokeline.lazy")
 local Hlgroup = require("cokeline.hlgroups").Hlgroup
+local config = lazy("cokeline.config")
 
 local rep = string.rep
 local insert = table.insert
@@ -42,7 +44,7 @@ Component.new = function(c, i, default_hl)
     return default
   end
   -- `default_hl` is `nil` when called by `components.lua#63`
-  default_hl = default_hl or _G.cokeline.config.default_hl
+  default_hl = default_hl or config.default_hl
   local component = {
     index = i,
     text = c.text,
@@ -109,28 +111,20 @@ Component.render = function(self, context)
     -- `evaluate(self.hl.*)` might return `nil`, in that case we fallback to the
     -- default highlight first and to NONE if that's `nil` too.
     -- local style = evaluate(self.style)
-    --   or evaluate(_G.cokeline.config.default_hl.style)
+    --   or evaluate(config.default_hl.style)
     --   or "NONE"
-    local fg = evaluate(self.fg)
-      or evaluate(_G.cokeline.config.default_hl.fg)
-      or "NONE"
-    local bg = evaluate(self.bg)
-      or evaluate(_G.cokeline.config.default_hl.bg)
-      or "NONE"
-    local sp = evaluate(self.sp)
-      or evaluate(_G.cokeline.config.default_hl.sp)
-      or "NONE"
+    local fg = evaluate(self.fg) or evaluate(config.default_hl.fg) or "NONE"
+    local bg = evaluate(self.bg) or evaluate(config.default_hl.bg) or "NONE"
+    local sp = evaluate(self.sp) or evaluate(config.default_hl.sp) or "NONE"
     local attrs = {}
-    attrs.bold = evaluate(self.bold)
-      or evaluate(_G.cokeline.config.default_hl.bold)
-    attrs.italic = evaluate(self.italic)
-      or evaluate(_G.cokeline.config.default_hl.italic)
+    attrs.bold = evaluate(self.bold) or evaluate(config.default_hl.bold)
+    attrs.italic = evaluate(self.italic) or evaluate(config.default_hl.italic)
     attrs.underline = evaluate(self.underline)
-      or evaluate(_G.cokeline.config.default_hl.underline)
+      or evaluate(config.default_hl.underline)
     attrs.undercurl = evaluate(self.undercurl)
-      or evaluate(_G.cokeline.config.default_hl.undercurl)
+      or evaluate(config.default_hl.undercurl)
     attrs.strikethrough = evaluate(self.strikethrough)
-      or evaluate(_G.cokeline.config.default_hl.strikethrough)
+      or evaluate(config.default_hl.strikethrough)
 
     component.hlgroup = Hlgroup.new(
       ("Cokeline_%s_%s"):format(component.bufnr or context.kind, self.index),
@@ -270,11 +264,13 @@ local render_components = function(components)
     else
       local on_click
       if component.delete_buffer_on_left_click then
-        on_click =
-          string.format("v:lua.cokeline.__handlers.close_%d", component.bufnr)
+        on_click = string.format(
+          "v:lua.require'cokeline.handlers'.close_%d",
+          component.bufnr
+        )
       else
         on_click = string.format(
-          "v:lua.cokeline.__handlers.click_%s_%d_%d",
+          "v:lua.require'cokeline.handlers'.click_%s_%d_%d",
           component.kind,
           component.index,
           component.bufnr or 0
