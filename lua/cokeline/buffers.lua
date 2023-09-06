@@ -1,3 +1,7 @@
+local lazy = require("cokeline.lazy")
+local config = lazy("cokeline.config")
+local state = lazy("cokeline.state")
+
 local has_devicons, rq_devicons = pcall(require, "nvim-web-devicons")
 
 local concat = table.concat
@@ -9,22 +13,22 @@ local diagnostic = vim.diagnostic or vim.lsp.diagnostic
 local fn = vim.fn
 local split = vim.split
 
-local util = require("cokeline.utils")
+local util = lazy("cokeline.utils")
 local iter = require("plenary.iterators").iter
 
 ---@type bufnr
 local current_valid_index
 
-local valid_pick_letters = false
+---@type string?
+local valid_pick_letters
 
 local first_valid = 1
 
 local taken_pick_letters = {}
 local taken_pick_indices = {}
+local buf_order = {}
 
 local M = {}
-
----@diagnostic disable: duplicate-doc-class
 
 ---@alias valid_index  number
 ---@alias index  number
@@ -50,8 +54,8 @@ local M = {}
 local Buffer = {}
 Buffer.__index = Buffer
 
----@param buffers  Iter<Buffer>
----@return Iter<Buffer>
+---@param buffers  Iterator|table
+---@return Iterator|table
 local compute_unique_prefixes = function(buffers)
   local is_windows = fn.has("win32") == 1
 
@@ -90,6 +94,7 @@ local compute_unique_prefixes = function(buffers)
   return iter(buffers):enumerate():map(function(i, buffer)
     buffer.unique_prefix = concat({
       #prefixes[i] == #paths[i] and path_separator or "",
+      ---@diagnostic disable-next-line: param-type-mismatch
       fn.join(fn.reverse(prefixes[i]), path_separator),
       #prefixes[i] > 0 and path_separator or "",
     })
@@ -103,7 +108,7 @@ end
 local get_pick_letter = function(filename, bufnr)
   -- Initialize the valid letters string, if not already initialized
   if not valid_pick_letters then
-    valid_pick_letters = _G.cokeline.config.pick.letters
+    valid_pick_letters = config.pick.letters
   end
 
   -- If the bufnr has already a letter associated to it return that.
@@ -113,8 +118,8 @@ local get_pick_letter = function(filename, bufnr)
 
   -- If the config option pick.use_filename is true, and the initial letter
   -- of the filename is valid and it hasn't already been assigned return that.
-  if _G.cokeline.config.pick.use_filename and filename ~= "" then
-    local init_letter = vim.fn.strcharpart(filename, 0, 1)
+  if config.pick.use_filename and filename ~= "" then
+    local init_letter = vim.fn.strcharpart(filename, 0, 1) or ""
     local idx = valid_pick_letters:find(init_letter, nil, true)
 
     if idx == nil or taken_pick_indices[idx] then
@@ -149,6 +154,7 @@ local get_pick_letter = function(filename, bufnr)
     taken_pick_letters[bufnr] = letter
     taken_pick_indices[first_valid] = true
     first_valid = first_valid + 1
+    ---@cast letter string
     return letter
   end
 
@@ -215,6 +221,7 @@ Buffer.new = function(b)
 
   local filename = (type == "quickfix" and "quickfix")
     or (#path > 0 and fn.fnamemodify(path, ":t"))
+  ---@cast filename string
 
   local filetype = not (b.variables and b.variables.netrw_browser_active)
       and opts.filetype
@@ -227,11 +234,11 @@ Buffer.new = function(b)
     or { icon = "", color = "" }
 
   return setmetatable({
-    _valid_index = _G.cokeline.buf_order[b.bufnr] or -1,
+    _valid_index = buf_order[b.bufnr] or -1,
     index = -1,
     number = b.bufnr,
     type = opts.buftype,
-    is_focused = (b.bufnr == fn.bufnr("%")),
+    is_focused = (b.bufnr == vim.api.nvim_get_current_buf()),
     is_first = false,
     is_last = false,
     is_modified = opts.modified,
@@ -275,7 +282,6 @@ function Buffer:text()
   return vim.api.nvim_buf_get_lines(self.number, 0, -1, false)
 end
 
----@param buf Buffer
 ---@return boolean
 ---Returns true if the buffer is valid
 function Buffer:is_valid()
@@ -285,7 +291,7 @@ end
 ---@param buffer  Buffer
 ---@return boolean
 local is_old = function(buffer)
-  for _, buf in pairs(_G.cokeline.valid_buffers) do
+  for _, buf in pairs(state.valid_buffers) do
     if buffer.number == buf.number then
       return true
     end
@@ -360,9 +366,11 @@ end
 ---@return nil
 function M.release_taken_letter(bufnr)
   if taken_pick_letters[bufnr] then
-    local idx = valid_pick_letters:find(taken_pick_letters[bufnr])
-    taken_pick_indices[idx] = nil
-    taken_pick_letters[bufnr] = nil
+    local idx = (valid_pick_letters or ""):find(taken_pick_letters[bufnr])
+    if idx then
+      taken_pick_indices[idx] = nil
+      taken_pick_letters[bufnr] = nil
+    end
   end
 end
 
@@ -373,17 +381,15 @@ function M.move_buffer(buffer, target_valid_index)
     return
   end
 
-  _G.cokeline.buf_order[buffer.number] = target_valid_index
+  buf_order[buffer.number] = target_valid_index
 
   if buffer._valid_index < target_valid_index then
     for index = (buffer._valid_index + 1), target_valid_index do
-      _G.cokeline.buf_order[_G.cokeline.valid_buffers[index].number] = index
-        - 1
+      buf_order[state.valid_buffers[index].number] = index - 1
     end
   else
     for index = target_valid_index, (buffer._valid_index - 1) do
-      _G.cokeline.buf_order[_G.cokeline.valid_buffers[index].number] = index
-        + 1
+      buf_order[state.valid_buffers[index].number] = index + 1
     end
   end
 
@@ -392,30 +398,30 @@ end
 
 ---@return Buffer[]
 function M.get_valid_buffers()
-  if not _G.cokeline.buf_order then
-    _G.cokeline.buf_order = {}
+  if not buf_order then
+    buf_order = {}
   end
 
   local info = fn.getbufinfo({ buflisted = 1 })
-  ---@type Iter<Buffer>
+  ---@type Iterator|table
   local buffers = iter(info):map(Buffer.new):filter(function(buffer)
     return buffer.filetype ~= "netrw"
   end)
 
-  if _G.cokeline.config.buffers.filter_valid then
-    ---@type Iter<Buffer>
-    buffers = buffers:filter(_G.cokeline.config.buffers.filter_valid)
+  if config.buffers.filter_valid then
+    ---@type Iterator|table
+    buffers = buffers:filter(config.buffers.filter_valid)
   end
 
-  ---@type Buffer[]
+  ---@type Iterator|table
   buffers = compute_unique_prefixes(buffers)
 
   if current_valid_index == nil then
-    _G.cokeline.buf_order = {}
+    buf_order = {}
     buffers = buffers
       :map(function(i, buffer)
         buffer._valid_index = i
-        _G.cokeline.buf_order[buffer.number] = buffer._valid_index
+        buf_order[buffer.number] = buffer._valid_index
         if buffer.is_focused then
           current_valid_index = i
         end
@@ -430,22 +436,22 @@ function M.get_valid_buffers()
       :tolist()
   end
 
-  if type(_G.cokeline.config.buffers.new_buffers_position) == "function" then
-    sort(buffers, _G.cokeline.config.buffers.new_buffers_position)
-  elseif _G.cokeline.config.buffers.new_buffers_position == "last" then
+  if type(config.buffers.new_buffers_position) == "function" then
+    sort(buffers, config.buffers.new_buffers_position)
+  elseif config.buffers.new_buffers_position == "last" then
     sort(buffers, sort_by_new_after_last)
-  elseif _G.cokeline.config.buffers.new_buffers_position == "next" then
+  elseif config.buffers.new_buffers_position == "next" then
     sort(buffers, sort_by_new_after_current)
-  elseif _G.cokeline.config.buffers.new_buffers_position == "directory" then
+  elseif config.buffers.new_buffers_position == "directory" then
     sort(buffers, sort_by_directory)
-  elseif _G.cokeline.config.buffers.new_buffers_position == "number" then
+  elseif config.buffers.new_buffers_position == "number" then
     sort(buffers, sort_by_number)
   end
 
-  _G.cokeline.buf_order = {}
+  buf_order = {}
   for i, buffer in ipairs(buffers) do
     buffer._valid_index = i
-    _G.cokeline.buf_order[buffer.number] = buffer._valid_index
+    buf_order[buffer.number] = buffer._valid_index
     if buffer.is_focused then
       current_valid_index = i
     end
@@ -454,19 +460,18 @@ function M.get_valid_buffers()
   return buffers
 end
 
----@param unsorted boolean
 ---@return Buffer[]
 function M.get_visible()
-  _G.cokeline.valid_buffers = M.get_valid_buffers()
-  _G.cokeline.valid_lookup = {}
+  state.valid_buffers = M.get_valid_buffers()
+  state.valid_lookup = {}
 
-  local bufs = iter(_G.cokeline.valid_buffers):map(function(buffer)
-    _G.cokeline.valid_lookup[buffer.number] = buffer
+  local bufs = iter(state.valid_buffers):map(function(buffer)
+    state.valid_lookup[buffer.number] = buffer
     return buffer
   end)
 
-  if _G.cokeline.config.buffers.filter_visible then
-    bufs = bufs:filter(_G.cokeline.config.buffers.filter_visible)
+  if config.buffers.filter_visible then
+    bufs = bufs:filter(config.buffers.filter_visible)
   end
 
   bufs = bufs:enumerate():map(function(i, buf)
@@ -474,28 +479,28 @@ function M.get_visible()
     return buf
   end)
 
-  if not _G.cokeline.config.pick.use_filename then
+  if not config.pick.use_filename then
     bufs = bufs:map(function(buf)
       buf.pick_letter = get_pick_letter(buf.filename, buf.number)
       return buf
     end)
   end
 
-  _G.cokeline.visible_buffers = bufs:tolist()
+  state.visible_buffers = bufs:tolist()
 
-  if #_G.cokeline.visible_buffers > 0 then
-    _G.cokeline.visible_buffers[1].is_first = true
-    _G.cokeline.visible_buffers[#_G.cokeline.visible_buffers].is_last = true
+  if #state.visible_buffers > 0 then
+    state.visible_buffers[1].is_first = true
+    state.visible_buffers[#state.visible_buffers].is_last = true
   end
 
-  return _G.cokeline.visible_buffers
+  return state.visible_buffers
 end
 
 ---Get Buffer
 ---@param bufnr number
 ---@return Buffer|nil
 function M.get_buffer(bufnr)
-  return _G.cokeline.valid_lookup[bufnr]
+  return require("cokeline.state").valid_lookup[bufnr]
 end
 
 ---Wrapper around `vim.api.nvim_get_current_buf`, returns Buffer object
@@ -514,15 +519,12 @@ function M.is_visible(bufnr)
   if not buf then
     return false
   end
-  if
-    _G.cokeline.config.buf.filter_valid
-    and not _G.cokeline.config.buffers.filter_valid(buf)
-  then
+  if config.buf.filter_valid and not config.buffers.filter_valid(buf) then
     return false
   end
   if
-    _G.cokeline.config.buffers.filter_visible
-    and not _G.cokeline.config.buffers.filter_visible(buf)
+    config.buffers.filter_visible
+    and not config.buffers.filter_visible(buf)
   then
     return false
   end

@@ -1,17 +1,18 @@
-local utils = require("cokeline.utils")
-local buffers = require("cokeline.buffers")
-local tabs = require("cokeline.tabs")
+local lazy = require("cokeline.lazy")
+local config = lazy("cokeline.config")
+local utils = lazy("cokeline.utils")
+local buffers = lazy("cokeline.buffers")
+local tabs = lazy("cokeline.tabs")
 
----@alias ClickHandler<Cx> fun(button_id: number, clicks: number, button: string, modifiers: string, cx: Cx): void
----@alias MouseEnterHandler fun(cx: Cx)
----@alias MouseLeaveHandler fun(cx: Cx)
----@alias Handler<Cx> ClickHandler<Cx> | MouseEnterHandler<Cx> | MouseLeaveHandler<Cx>
----@alias WrappedHandler<Cx> fun(cx: Cx): Handler<Cx>
+---@alias ClickHandler fun(button_id: number, clicks: number, button: string, modifiers: string, cx: table)
+---@alias MouseEnterHandler fun(cx: table)
+---@alias MouseLeaveHandler fun(cx: table)
+---@alias Handler ClickHandler | MouseEnterHandler | MouseLeaveHandler
+---@alias WrappedHandler fun(cx: table): Handler
 
----@generic Cx
 ---@class Handlers Singleton event handler manager
----@field click (fun(cx: Cx): Handler<Cx>)[]
----@field private private table<string, WrappedHandler<Cx>[]>
+---@field click (fun(cx: table): Handler)[]
+---@field private private table<string, WrappedHandler[]>
 local Handlers = {
   click = {},
   private = {
@@ -22,6 +23,7 @@ local Handlers = {
 ---@param kind string
 ---@param idx number
 local function unregister(kind, idx)
+  ---@diagnostic disable: cast-local-type
   if idx == nil then
     idx = kind
     kind = nil
@@ -47,7 +49,8 @@ function Handlers.click:unregister(idx)
 end
 
 ---Default click handler
----@param bufnr bufnr
+---@param cx table
+---@param kind string
 local function default_click(cx, kind)
   return function(_, _, button)
     if button == "l" then
@@ -57,22 +60,19 @@ local function default_click(cx, kind)
     elseif
       kind == "buffer"
       and button == "r"
-      and _G.cokeline.config.buffers.delete_on_right_click
+      and config.buffers.delete_on_right_click
     then
-      utils.buf_delete(cx.number, _G.cokeline.config.buffers.focus_on_delete)
+      utils.buf_delete(cx.number, config.buffers.focus_on_delete)
     end
   end
 end
 
 ---Default close handler
----@param bufnr bufnr
+---@param buffer bufnr
 local function default_close(buffer)
   return function(_, _, button)
     if button == "l" then
-      utils.buf_delete(
-        buffer.number,
-        _G.cokeline.config.buffers.focus_on_delete
-      )
+      utils.buf_delete(buffer.number, config.buffers.focus_on_delete)
     end
   end
 end
@@ -117,6 +117,5 @@ return setmetatable({}, {
   end,
   __newindex = function()
     vim.api.nvim_err_writeln("Cannot set fields in cokeline.handlers")
-    return nil
   end,
 })

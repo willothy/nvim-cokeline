@@ -1,6 +1,9 @@
-local Buffer = require("cokeline.buffers").Buffer
-local components = require("cokeline.components")
-local RenderContext = require("cokeline.context")
+local lazy = require("cokeline.lazy")
+local config = lazy("cokeline.config")
+local state = lazy("cokeline.state")
+local Buffer = lazy("cokeline.buffers").Buffer
+local components = lazy("cokeline.components")
+local RenderContext = lazy("cokeline.context")
 
 local min = math.min
 local rep = string.rep
@@ -16,6 +19,9 @@ local width_cache = {}
 
 local get_win = function(side)
   local layout = fn.winlayout()
+  if not layout then
+    return
+  end
 
   -- If the first split level is not given by vertically split windows we
   -- return early and invalidate the width cache.
@@ -77,9 +83,9 @@ local get_win = function(side)
 end
 
 ---@param side "left" | "right"
----@return Component<SidebarContext>[]
+---@return Component<Buffer>[]
 local get_components = function(side)
-  if not _G.cokeline.config.sidebar then
+  if not config.sidebar then
     return {}
   end
 
@@ -90,17 +96,12 @@ local get_components = function(side)
 
   local bufnr = api.nvim_win_get_buf(winid)
 
-  if type(_G.cokeline.config.sidebar.filetype) == "table" then
-    if
-      not vim.tbl_contains(
-        _G.cokeline.config.sidebar.filetype,
-        bo[bufnr].filetype
-      )
-    then
+  if type(config.sidebar.filetype) == "table" then
+    if not vim.tbl_contains(config.sidebar.filetype, bo[bufnr].filetype) then
       return {}
     end
   else
-    if bo[bufnr].filetype ~= _G.cokeline.config.sidebar.filetype then
+    if bo[bufnr].filetype ~= config.sidebar.filetype then
       return {}
     end
   end
@@ -113,10 +114,10 @@ local get_components = function(side)
 
   local sidebar_components = {}
   local width = 0
-  local id = #_G.cokeline.components + #_G.cokeline.rhs + 1
-  local hover = require("cokeline.hover").hovered()
+  local id = #state.components + #state.rhs + 1
+  local hover = lazy("cokeline.hover").hovered()
   buffer.buf_hovered = hover ~= nil and hover.bufnr == buffer.number
-  for _, c in ipairs(_G.cokeline.sidebar) do
+  for _, c in ipairs(state.sidebar) do
     c.sidebar = side
     buffer.is_hovered = hover ~= nil
       and hover.index == id
@@ -132,7 +133,7 @@ local get_components = function(side)
     id = id + 1
   end
 
-  local rendering = require("cokeline.rendering")
+  local rendering = lazy("cokeline.rendering")
 
   if width > sidebar_width then
     sort(sidebar_components, rendering.by_decreasing_priority)

@@ -1,5 +1,8 @@
-local buffers = require("cokeline.buffers")
-local tabs = require("cokeline.tabs")
+local lazy = require("cokeline.lazy")
+local state = lazy("cokeline.state")
+local buffers = lazy("cokeline.buffers")
+local tabs = lazy("cokeline.tabs")
+local config = lazy("cokeline.config")
 
 local cmd = vim.cmd
 local filter = vim.tbl_filter
@@ -22,13 +25,13 @@ end
 
 ---@param bufnr  number
 local remember_bufnr = function(bufnr)
-  if #_G.cokeline.valid_buffers == 1 then
+  if #state.valid_buffers == 1 then
     return
   end
 
   local deleted_buffer = filter(function(buffer)
     return buffer.number == bufnr
-  end, _G.cokeline.valid_buffers)[1]
+  end, state.valid_buffers)[1]
 
   -- Neogit buffers do some weird stuff like closing themselves on buffer
   -- change and seem to cause problems. We just ignore them.
@@ -41,17 +44,17 @@ local remember_bufnr = function(bufnr)
 
   local target_index
 
-  if _G.cokeline.config.buffers.focus_on_delete == "prev" then
+  if config.buffers.focus_on_delete == "prev" then
     target_index = deleted_buffer._valid_index ~= 1
         and deleted_buffer._valid_index - 1
       or 2
-  elseif _G.cokeline.config.buffers.focus_on_delete == "next" then
-    target_index = deleted_buffer._valid_index ~= #_G.cokeline.valid_buffers
+  elseif config.buffers.focus_on_delete == "next" then
+    target_index = deleted_buffer._valid_index ~= #state.valid_buffers
         and deleted_buffer._valid_index + 1
-      or #_G.cokeline.valid_buffers - 1
+      or #state.valid_buffers - 1
   end
 
-  bufnr_to_close = _G.cokeline.valid_buffers[target_index].number
+  bufnr_to_close = state.valid_buffers[target_index].number
 end
 
 local setup = function()
@@ -70,17 +73,17 @@ local setup = function()
       require("cokeline.buffers").release_taken_letter(args.buf)
     end,
   })
-  if _G.cokeline.config.history.enabled and _G.cokeline.history then
+  if config.history.enabled then
     autocmd("BufLeave", {
       group = augroup("cokeline_buf_history", { clear = true }),
       callback = function(args)
-        if _G.cokeline.valid_lookup[args.buf] then
-          _G.cokeline.history:push(args.buf)
+        if vim.api.nvim_buf_is_valid(args.buf) then
+          require("cokeline.history"):push(args.buf)
         end
       end,
     })
   end
-  if _G.cokeline.config.tabs then
+  if config.tabs then
     autocmd({ "TabNew", "TabClosed" }, {
       group = augroup("cokeline_fetch_tabs", { clear = true }),
       callback = function()
@@ -92,14 +95,14 @@ local setup = function()
       callback = function()
         local win = vim.api.nvim_get_current_win()
         local tab = vim.api.nvim_win_get_tabpage(win)
-        if not _G.cokeline.tab_lookup[tab] then
+        if not state.tab_lookup[tab] then
           tabs.fetch_tabs()
           return
         end
         tabs.update_current(tab)
-        for _, w in ipairs(_G.cokeline.tab_lookup[tab].windows) do
+        for _, w in ipairs(state.tab_lookup[tab].windows) do
           if w.number == win then
-            _G.cokeline.tab_lookup[tab].focused = w
+            state.tab_lookup[tab].focused = w
             break
           end
         end
@@ -110,11 +113,11 @@ local setup = function()
       callback = function(args)
         local win = vim.api.nvim_get_current_win()
         local tab = vim.api.nvim_win_get_tabpage(win)
-        if not _G.cokeline.tab_lookup[tab] then
+        if not state.tab_lookup[tab] then
           tabs.fetch_tabs()
           return
         end
-        for _, w in ipairs(_G.cokeline.tab_lookup[tab].windows) do
+        for _, w in ipairs(state.tab_lookup[tab].windows) do
           if w.number == win then
             w.buffer = buffers.get_buffer(args.buf)
             break

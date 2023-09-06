@@ -1,4 +1,5 @@
-local buffers = require("cokeline.buffers")
+local lazy = require("cokeline.lazy")
+local buffers = lazy("cokeline.buffers")
 
 ---@class Cokeline.History
 ---@field len integer

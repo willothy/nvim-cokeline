@@ -1,6 +1,7 @@
-local Component = require("cokeline.components").Component
-local sliders = require("cokeline.sliders")
-local utils = require("cokeline.utils")
+local lazy = require("cokeline.lazy")
+local state = lazy("cokeline.state")
+local sliders = lazy("cokeline.sliders")
+local utils = lazy("cokeline.utils")
 
 local insert = table.insert
 
@@ -112,6 +113,8 @@ local echoerr = function(msg)
   }, true, {})
 end
 
+local config = vim.deepcopy(defaults)
+
 -- Updates the `settings` table with options from `preferences`, printing an
 -- error message if a configuration option in `preferences` is not defined in
 -- `settings`.
@@ -139,55 +142,55 @@ local function update(settings, preferences, key)
   return updated
 end
 
-local get = function(preferences)
-  local config = update(defaults, preferences)
-  _G.cokeline.components = {}
-  _G.cokeline.rhs = {}
-  _G.cokeline.sidebar = {}
-  _G.cokeline.tabs = {}
-  if preferences.buffers and preferences.buffers.new_buffers_position then
-    if not _G.cokeline.config.buffers then
-      _G.cokeline.config.buffers = {}
+local setup = function(opts)
+  config = update(config, opts)
+  state.components = {}
+  state.rhs = {}
+  state.sidebar = {}
+  state.tabs = {}
+  local Component = lazy("cokeline.components").Component
+  if opts.buffers and opts.buffers.new_buffers_position then
+    if not config.buffers then
+      config.buffers = {}
     end
-    _G.cokeline.config.buffers.new_buffers_position =
-      preferences.buffers.new_buffers_position
+    config.buffers.new_buffers_position = opts.buffers.new_buffers_position
   end
   local id = 1
-  for _, component in ipairs(config.components) do
-    local new_component = Component.new(component, id, config.default_hl)
-    insert(_G.cokeline.components, new_component)
+  for _, component in ipairs(opts.components) do
+    local new_component = Component.new(component, id, opts.default_hl)
+    insert(state.components, new_component)
     if new_component.on_click ~= nil then
       require("cokeline.handlers").click:register(id, new_component.on_click)
     end
     id = id + 1
   end
-  if config.rhs then
-    for _, component in ipairs(config.rhs) do
+  if opts.rhs then
+    for _, component in ipairs(opts.rhs) do
       component.kind = "rhs"
-      local new_component = Component.new(component, id, config.default_hl)
-      insert(_G.cokeline.rhs, new_component)
+      local new_component = Component.new(component, id, opts.default_hl)
+      insert(state.rhs, new_component)
       if new_component.on_click ~= nil then
         require("cokeline.handlers").click:register(id, new_component.on_click)
       end
       id = id + 1
     end
   end
-  if config.sidebar and config.sidebar.components then
-    for _, component in ipairs(config.sidebar.components) do
+  if opts.sidebar and opts.sidebar.components then
+    for _, component in ipairs(opts.sidebar.components) do
       component.kind = "sidebar"
-      local new_component = Component.new(component, id, config.default_hl)
-      insert(_G.cokeline.sidebar, new_component)
+      local new_component = Component.new(component, id, opts.default_hl)
+      insert(state.sidebar, new_component)
       if new_component.on_click ~= nil then
         require("cokeline.handlers").click:register(id, new_component.on_click)
       end
       id = id + 1
     end
   end
-  if config.tabs and config.tabs.components then
-    for _, component in ipairs(config.tabs.components) do
+  if opts.tabs and opts.tabs.components then
+    for _, component in ipairs(opts.tabs.components) do
       component.kind = "tab"
-      local new_component = Component.new(component, id, config.default_hl)
-      insert(_G.cokeline.tabs, new_component)
+      local new_component = Component.new(component, id, opts.default_hl)
+      insert(state.tabs, new_component)
       if new_component.on_click ~= nil then
         require("cokeline.handlers").click:register(id, new_component.on_click)
       end
@@ -197,6 +200,16 @@ local get = function(preferences)
   return config
 end
 
-return {
-  get = get,
-}
+return setmetatable({
+  setup = setup,
+  get = function()
+    return config
+  end,
+}, {
+  __index = function(_, k)
+    return config[k]
+  end,
+  __newindex = function(_, k, v)
+    config[k] = v
+  end,
+})

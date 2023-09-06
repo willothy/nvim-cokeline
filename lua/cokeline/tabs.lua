@@ -1,4 +1,6 @@
-local buffers = require("cokeline.buffers")
+local lazy = require("cokeline.lazy")
+local state = lazy("cokeline.state")
+local buffers = lazy("cokeline.buffers")
 local Buffer = buffers.Buffer
 
 local M = {}
@@ -75,7 +77,7 @@ function TabPage:close()
 end
 
 function M.update_current(tabnr)
-  for _, t in ipairs(_G.cokeline.tab_cache) do
+  for _, t in ipairs(state.tab_cache) do
     if t.number == tabnr then
       t.is_active = true
     else
@@ -92,8 +94,8 @@ function M.fetch_tabs()
     return a < b
   end)
   for t, tabnr in ipairs(tabnrs) do
-    if _G.cokeline.tab_lookup[tabnr] ~= nil then
-      tabs[t] = _G.cokeline.tab_lookup[tabnr]
+    if state.tab_lookup[tabnr] ~= nil then
+      tabs[t] = state.tab_lookup[tabnr]
       tabs[t].is_active = tabnr == active_tab
       tabs[t].is_first = t == 1
       tabs[t].is_last = t == #tabnrs
@@ -112,14 +114,14 @@ function M.fetch_tabs()
     else
       tabs[t] =
         TabPage.new(tabnr, t, t == 1, t == #tabnrs, tabnr == active_tab)
-      _G.cokeline.tab_lookup[tabnr] = tabs[t]
+      state.tab_lookup[tabnr] = tabs[t]
     end
   end
-  _G.cokeline.tab_cache = tabs
+  state.tab_cache = tabs
 end
 
 function M.get_tabs()
-  local cache_count = _G.cokeline.tab_cache and #_G.cokeline.tab_cache or nil
+  local cache_count = state.tab_cache and #state.tab_cache or nil
   if
     cache_count == nil
     or cache_count == 0
@@ -127,11 +129,11 @@ function M.get_tabs()
   then
     M.fetch_tabs()
   end
-  return _G.cokeline.tab_cache
+  return state.tab_cache
 end
 
 function M.get_tabpage(tabnr)
-  return _G.cokeline.tab_lookup[tabnr]
+  return state.tab_lookup[tabnr]
 end
 
 return M

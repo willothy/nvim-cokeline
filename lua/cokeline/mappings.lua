@@ -1,4 +1,6 @@
-local buffers = require("cokeline.buffers")
+local lazy = require("cokeline.lazy")
+local state = lazy("cokeline.state")
+local buffers = lazy("cokeline.buffers")
 
 local cmd = vim.cmd
 local filter = vim.tbl_filter
@@ -16,7 +18,7 @@ local is_picking = {
 local by_index = function(goal, index)
   local target_buffer = filter(function(buffer)
     return buffer.index == index
-  end, _G.cokeline.visible_buffers)[1]
+  end, state.visible_buffers)[1]
 
   if not target_buffer then
     return
@@ -25,7 +27,7 @@ local by_index = function(goal, index)
   if goal == "switch" then
     local focused_buffer = filter(function(buffer)
       return buffer.is_focused
-    end, _G.cokeline.valid_buffers)[1]
+    end, state.valid_buffers)[1]
 
     if not focused_buffer then
       return
@@ -41,35 +43,38 @@ local by_index = function(goal, index)
 end
 
 ---@param goal  '"switch"' | '"focus"' |'"close"'
----@param step  '-1' | '1'
+---@param step  -1 | 1
 local by_step = function(goal, step)
+  local config = lazy("cokeline.config")
   local focused_buffer = filter(function(buffer)
     return buffer.is_focused
-  end, _G.cokeline.valid_buffers)[1]
+  end, state.valid_buffers)[1]
 
   local target_buf
   local target_idx
   if focused_buffer then
     target_idx = focused_buffer._valid_index + step
-    if target_idx < 1 or target_idx > #_G.cokeline.valid_buffers then
-      if not _G.cokeline.config.mappings.cycle_prev_next then
+    if target_idx < 1 or target_idx > #state.valid_buffers then
+      if not config.mappings.cycle_prev_next then
         return
       end
-      target_idx = (target_idx - 1) % #_G.cokeline.valid_buffers + 1
+      target_idx = (target_idx - 1) % #state.valid_buffers + 1
     end
-    target_buf = _G.cokeline.valid_buffers[target_idx]
-  elseif goal == "focus" and _G.cokeline.config.history.enabled then
-    target_buf = _G.cokeline.history:last()
+    target_buf = state.valid_buffers[target_idx]
+  elseif goal == "focus" and config.history.enabled then
+    target_buf = require("cokeline.history"):last()
   else
     return
   end
 
-  if goal == "switch" then
-    buffers.move_buffer(focused_buffer, target_idx)
-  elseif goal == "focus" then
-    target_buf:focus()
-  elseif goal == "close" then
-    target_buf:delete()
+  if target_buf then
+    if goal == "switch" then
+      buffers.move_buffer(focused_buffer, target_idx)
+    elseif goal == "focus" then
+      target_buf:focus()
+    elseif goal == "close" then
+      target_buf:delete()
+    end
   end
 end
 
@@ -88,7 +93,7 @@ local pick = function(goal)
   local letter = fn.nr2char(char)
   local target_buffer = filter(function(buffer)
     return buffer.pick_letter == letter
-  end, _G.cokeline.visible_buffers)[1]
+  end, state.visible_buffers)[1]
 
   if not target_buffer or (goal == "focus" and target_buffer.is_focused) then
     cmd("redrawtabline")

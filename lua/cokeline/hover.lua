@@ -1,11 +1,13 @@
+local lazy = require("cokeline.lazy")
 local M = {}
 
 local version = vim.version()
 
-local buffers = require("cokeline.buffers")
-local tabs = require("cokeline.tabs")
-local rendering = require("cokeline.rendering")
-local iter = require("plenary.iterators").iter
+local buffers = lazy("cokeline.buffers")
+local config = lazy("cokeline.config")
+local tabs = lazy("cokeline.tabs")
+local rendering = lazy("cokeline.rendering")
+local iter = lazy("plenary.iterators").iter
 local last_position = nil
 
 function M.hovered()
@@ -46,9 +48,7 @@ function M.get_current(col)
       return component, cx.sidebar_left
     end
   end
-  if
-    _G.cokeline.config.tabs and _G.cokeline.config.tabs.placement == "left"
-  then
+  if config.tabs and config.tabs.placement == "left" then
     for _, component in ipairs(cx.tabs) do
       current_width = current_width + component.width
       if current_width >= col then
@@ -72,9 +72,7 @@ function M.get_current(col)
       return component, cx.rhs
     end
   end
-  if
-    _G.cokeline.config.tabs and _G.cokeline.config.tabs.placement == "right"
-  then
+  if config.tabs and config.tabs.placement == "right" then
     for _, component in ipairs(cx.tabs) do
       current_width = current_width + component.width
       if current_width >= col then
@@ -286,9 +284,7 @@ function M.mouse_pos(drag, key)
 end
 
 function M.setup()
-  if
-    _G.cokeline.config.mappings.disable_mouse == true or version.minor < 8
-  then
+  if config.mappings.disable_mouse == true or version.minor < 8 then
     return
   end
 
