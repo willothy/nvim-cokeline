@@ -13,7 +13,7 @@ local is_picking = {
   close = false,
 }
 
----@param goal  '"switch"' | '"focus"' | '"close"'
+---@param goal  '"switch"' | '"focus"' | '"close"' | fun(buf: Buffer)
 ---@param index  index
 local by_index = function(goal, index)
   local target_buffer = filter(function(buffer)
@@ -38,10 +38,12 @@ local by_index = function(goal, index)
     target_buffer:focus()
   elseif goal == "close" then
     target_buffer:delete()
+  elseif type(goal) == "function" then
+    goal(target_buffer)
   end
 end
 
----@param goal  '"switch"' | '"focus"' |'"close"'
+---@param goal  '"switch"' | '"focus"' |'"close"' | fun(buf: Buffer)
 ---@param step  -1 | 1
 local by_step = function(goal, step)
   local config = lazy("cokeline.config")
@@ -73,11 +75,13 @@ local by_step = function(goal, step)
       target_buf:focus()
     elseif goal == "close" then
       target_buf:delete()
+    elseif type(goal) == "function" then
+      goal(target_buf)
     end
   end
 end
 
----@param goal  '"focus"' | '"close"'
+---@param goal  '"focus"' | '"close"' | fun(buf: Buffer)
 local pick = function(goal)
   is_picking[goal] = true
   cmd("redrawtabline")
@@ -103,6 +107,8 @@ local pick = function(goal)
     target_buffer:focus()
   elseif goal == "close" then
     target_buffer:delete()
+  elseif type(goal) == "function" then
+    goal(target_buffer)
   end
 end
 
