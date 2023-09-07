@@ -36,7 +36,6 @@ local by_index = function(goal, index)
     buffers.move_buffer(focused_buffer, target_buffer._valid_index)
   elseif goal == "focus" then
     target_buffer:focus()
-    cmd("b" .. target_buffer.number)
   elseif goal == "close" then
     target_buffer:delete()
   end

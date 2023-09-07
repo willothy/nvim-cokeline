@@ -90,10 +90,23 @@ local function buf_delete(bufnr, focus, wipeout)
         "Buffer %s has unsaved changes.",
         vim.fn.fnamemodify(vim.fn.bufname(bufnr), ":f")
       ),
-    }, function(choice)
+    }, function(_, choice)
       if choice == 1 then
-        vim.api.nvim_buf_call(bufnr, vim.cmd.write)
-        buf_del_impl(bufnr, focus_next, wipeout, false)
+        if vim.api.nvim_buf_get_name(bufnr) == "" then
+          vim.ui.input({
+            prompt = "File name: ",
+            completion = "file",
+          }, function(name)
+            if name and name ~= "" then
+              vim.api.nvim_buf_set_name(bufnr, name)
+              vim.api.nvim_buf_call(bufnr, vim.cmd.write)
+              buf_del_impl(bufnr, focus_next, wipeout, false)
+            end
+          end)
+        else
+          vim.api.nvim_buf_call(bufnr, vim.cmd.write)
+          buf_del_impl(bufnr, focus_next, wipeout, false)
+        end
       elseif choice == 2 then
         buf_del_impl(bufnr, focus_next, wipeout, true)
       elseif choice == 3 then
