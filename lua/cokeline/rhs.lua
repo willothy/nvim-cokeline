@@ -17,6 +17,7 @@ function M.get_components()
       rhs,
       c:render(RenderContext:rhs({
         is_hovered = is_hovered,
+        index = 0,
       }, "rhs"))
     )
   end

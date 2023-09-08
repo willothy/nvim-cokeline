@@ -3,6 +3,7 @@ local M = {}
 
 local version = vim.version()
 
+local components = lazy("cokeline.components")
 local buffers = lazy("cokeline.buffers")
 local config = lazy("cokeline.config")
 local tabs = lazy("cokeline.tabs")
@@ -131,7 +132,9 @@ local function mouse_enter(component, current)
       component.on_mouse_enter(cx, current.screencol)
     end
   end
+  components.cache_clear(component.index, cx.number or component.index)
   M.set_hovered({
+    component = component,
     index = component.index,
     bufnr = cx and cx.number,
     on_mouse_leave = component.on_mouse_leave,

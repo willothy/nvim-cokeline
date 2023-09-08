@@ -9,6 +9,71 @@ local remove = table.remove
 local iter = require("plenary.iterators").iter
 local fn = vim.fn
 
+local au = vim.api.nvim_create_augroup("cokeline_cache", { clear = true })
+
+local cache = {}
+
+local function clear(component, id)
+  if component then
+    if id then
+      if cache[component] and cache[component][id] then
+        cache[component][id] = {}
+      end
+    else
+      if cache[component] then
+        cache[component] = {}
+      end
+    end
+  else
+    cache = {}
+  end
+end
+
+vim.api.nvim_create_autocmd({
+  "WinEnter",
+  "TabNew",
+  "TabEnter",
+  "TabClosed",
+  "DiagnosticChanged",
+}, {
+  group = au,
+  callback = clear,
+})
+
+vim.api.nvim_create_autocmd({
+  "BufDelete",
+  "BufUnload",
+  "BufHidden",
+  "BufWipeout",
+  "BufEnter",
+}, {
+  group = au,
+  callback = function(ev)
+    if vim.bo[ev.buf].buflisted then
+      clear()
+    end
+  end,
+})
+
+local function memo(component, f)
+  return function(cx)
+    if cache[component] == nil then
+      cache[component] = {}
+    end
+    local id = cx.number or component
+    if not id then
+      return f(cx)
+    end
+    if not cache[component][id] then
+      cache[component][id] = {}
+    end
+    if cache[component][id][f] == nil then
+      cache[component][id][f] = f(cx)
+    end
+    return cache[component][id][f]
+  end
+end
+
 ---@generic Cx
 ---@class Component<Cx>
 ---@field index  number
@@ -73,6 +138,12 @@ Component.new = function(c, i, default_hl)
     kind = c.kind or "buffer",
   }
   setmetatable(component, Component)
+
+  for k, v in pairs(component) do
+    if type(v) == "function" then
+      component[k] = memo(component.index, v)
+    end
+  end
   return component
 end
 
@@ -292,4 +363,5 @@ return {
   render = render_components,
   shorten = shorten_components,
   width = width_of_components,
+  cache_clear = clear,
 }
