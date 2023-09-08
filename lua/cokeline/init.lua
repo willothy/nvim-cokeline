@@ -10,17 +10,8 @@ _G.cokeline = {}
 ---@param opts table|nil
 local setup = function(opts)
   config.setup(opts or {})
-  config = config.get()
   if config.history and config.history.enabled then
     history.setup(config.history.size)
-  end
-
-  local ok, _ = pcall(require, "plenary")
-  if not ok then
-    vim.api.nvim_err_writeln(
-      "nvim-cokeline: plenary.nvim is required to use this plugin as of v0.4.0"
-    )
-    return
   end
 
   require("cokeline.augroups").setup()

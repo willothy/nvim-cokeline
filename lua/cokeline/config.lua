@@ -53,7 +53,6 @@ local defaults = {
 
   fill_hl = "TabLineFill",
 
-  ---@type Component[]
   components = {
     {
       text = function(buffer)
@@ -95,11 +94,17 @@ local defaults = {
     },
   },
 
-  tabs = false,
+  tabs = {
+    placement = "right",
+    components = {},
+  },
 
-  rhs = false,
+  rhs = {},
 
-  sidebar = false,
+  sidebar = {
+    filetype = { "NvimTree", "neo-tree", "SidebarNvim" },
+    components = {},
+  },
 }
 
 -- Formats an error message.
@@ -128,22 +133,17 @@ local function update(settings, preferences, key)
     local key_tree = key and ("%s.%s"):format(key, k) or k
     if settings[k] == nil then
       echoerr(key_tree)
+    elseif type(v) == "table" and not islist(v) then
+      updated[k] = update(settings[k], v, key_tree)
     else
-      updated[k] = (
-        type(v) == "table"
-        and not islist(v)
-        and not k:find("sidebar")
-        and not k:find("tabs")
-      )
-          and update(settings[k], v, key_tree)
-        or v
+      updated[k] = v
     end
   end
   return updated
 end
 
 local setup = function(opts)
-  config = update(config, opts)
+  config = update(defaults, opts)
   state.components = {}
   state.rhs = {}
   state.sidebar = {}
@@ -156,7 +156,7 @@ local setup = function(opts)
     config.buffers.new_buffers_position = opts.buffers.new_buffers_position
   end
   local id = 1
-  for _, component in ipairs(opts.components) do
+  for _, component in ipairs(config.components) do
     local new_component = Component.new(component, id, opts.default_hl)
     insert(state.components, new_component)
     if new_component.on_click ~= nil then
@@ -165,7 +165,7 @@ local setup = function(opts)
     id = id + 1
   end
   if opts.rhs then
-    for _, component in ipairs(opts.rhs) do
+    for _, component in ipairs(config.rhs) do
       component.kind = "rhs"
       local new_component = Component.new(component, id, opts.default_hl)
       insert(state.rhs, new_component)
@@ -175,8 +175,8 @@ local setup = function(opts)
       id = id + 1
     end
   end
-  if opts.sidebar and opts.sidebar.components then
-    for _, component in ipairs(opts.sidebar.components) do
+  if config.sidebar and config.sidebar.components then
+    for _, component in ipairs(config.sidebar.components) do
       component.kind = "sidebar"
       local new_component = Component.new(component, id, opts.default_hl)
       insert(state.sidebar, new_component)
@@ -186,8 +186,8 @@ local setup = function(opts)
       id = id + 1
     end
   end
-  if opts.tabs and opts.tabs.components then
-    for _, component in ipairs(opts.tabs.components) do
+  if config.tabs and config.tabs.components then
+    for _, component in ipairs(config.tabs.components) do
       component.kind = "tab"
       local new_component = Component.new(component, id, opts.default_hl)
       insert(state.tabs, new_component)
