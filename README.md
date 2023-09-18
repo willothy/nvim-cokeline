@@ -21,7 +21,6 @@ might look like.
 - [Installation](#package-installation)
 - [Configuration](#wrench-configuration)
 - [Mappings](#musical_keyboard-mappings)
-- [Example configs](#nail_care-example-configs)
 
 ## :sparkles: Features
 
@@ -33,14 +32,13 @@ be able to make it look that way. If you can't, open an issue and we'll try to
 make it happen!
 
 Here's a (very limited) showcase of what it can be configured to look like
-(check out [Example configs](#nail_care-showoff-of-user-configs) for more
-examples):
+(check out the wiki for more examples):
 
 <details>
 <summary>Click to see configuration</summary>
 
 ```lua
-local get_hex = require('cokeline.utils').get_hex
+local get_hex = require('cokeline.hlgroups').get_hl_attr
 
 require('cokeline').setup({
   default_hl = {
@@ -95,7 +93,7 @@ require('cokeline').setup({
 <summary>Click to see configuration</summary>
 
 ```lua
-local get_hex = require('cokeline.utils').get_hex
+local get_hex = require('cokeline.hlgroups').get_hl_attr
 
 local green = vim.g.terminal_color_2
 local yellow = vim.g.terminal_color_3
@@ -150,7 +148,7 @@ require('cokeline').setup({
 <summary>Click to see configuration</summary>
 
 ```lua
-local get_hex = require('cokeline.utils').get_hex
+local get_hex = require('cokeline.hlgroups').get_hl_attr
 
 require('cokeline').setup({
   default_hl = {
@@ -162,11 +160,10 @@ require('cokeline').setup({
     end,
     bg = 'NONE',
   },
-
   components = {
     {
       text = function(buffer) return (buffer.index ~= 1) and '▏' or '' end,
-      fg = get_hex('Normal', 'fg')
+      fg = function() return get_hex('Normal', 'fg') end
     },
     {
       text = function(buffer) return '    ' .. buffer.devicon.icon end,
@@ -174,10 +171,10 @@ require('cokeline').setup({
     },
     {
       text = function(buffer) return buffer.filename .. '    ' end,
-      style = function(buffer) return buffer.is_focused and 'bold' or nil end,
+      bold = function(buffer) return buffer.is_focused end
     },
     {
-      text = '',
+      text = '󰖭',
       on_click = function(buffer)
         buffer:delete()
       end
@@ -224,7 +221,7 @@ keyboard reachability if the letter is already assigned to another buffer.
 ```lua
 local is_picking_focus = require('cokeline.mappings').is_picking_focus
 local is_picking_close = require('cokeline.mappings').is_picking_close
-local get_hex = require('cokeline.utils').get_hex
+local get_hex = require('cokeline.hlgroups').get_hl_attr
 
 local red = vim.g.terminal_color_1
 local yellow = vim.g.terminal_color_3
@@ -237,7 +234,7 @@ require('cokeline').setup({
         and get_hex('Normal', 'fg')
          or get_hex('Comment', 'fg')
     end,
-    bg = get_hex('ColorColumn', 'bg'),
+    bg = function() return get_hex('ColorColumn', 'bg') end,
   },
 
   components = {
@@ -260,19 +257,21 @@ require('cokeline').setup({
           or (is_picking_close() and red)
           or buffer.devicon.color
       end,
-      style = function(_)
+      italic = function()
         return
           (is_picking_focus() or is_picking_close())
-          and 'italic,bold'
-           or nil
       end,
+      bold = function()
+        return
+          (is_picking_focus() or is_picking_close())
+      end
     },
     {
       text = ' ',
     },
     {
       text = function(buffer) return buffer.filename .. '  ' end,
-      style = function(buffer) return buffer.is_focused and 'bold' or nil end,
+      bold = function(buffer) return buffer.is_focused end,
     },
     {
       text = '',
@@ -302,7 +301,7 @@ You can add a left sidebar to integrate nicely with file explorer plugins like
 <summary>Click to see configuration</summary>
 
 ```lua
-local get_hex = require('cokeline.utils').get_hex
+local get_hex = require('cokeline.hlgroups').get_hl_attr
 
 local yellow = vim.g.terminal_color_3
 
@@ -314,17 +313,19 @@ require('cokeline').setup({
         and get_hex('Normal', 'fg')
          or get_hex('Comment', 'fg')
     end,
-    bg = get_hex('ColorColumn', 'bg'),
+    bg = function() return get_hex('ColorColumn', 'bg') end,
   },
 
   sidebar = {
-    filetype = 'NvimTree',
+    filetype = {'NvimTree', 'neo-tree'},
     components = {
       {
-        text = '  NvimTree',
+        text = function(buf)
+          return buf.filetype
+        end,
         fg = yellow,
-        bg = get_hex('NvimTreeNormal', 'bg'),
-        style = 'bold',
+        bg = function() return get_hex('NvimTreeNormal', 'bg') end,
+        bold = true,
       },
     }
   },
@@ -349,8 +350,8 @@ require('cokeline').setup({
     },
     {
       text = function(buffer) return buffer.filename .. '  ' end,
-      style = function(buffer)
-        return buffer.is_focused and 'bold' or nil
+      bold = function(buffer)
+        return buffer.is_focused
       end,
     },
     {
@@ -408,8 +409,6 @@ require("cokeline.history"):last():focus()
 
 ## :mountain: Plans and Ideas
 
-- Statusline
-
 If you have an idea or feature request, don't hesitate to open an issue!
 
 ## :electric_plug: Requirements
@@ -423,9 +422,9 @@ As of v0.4.0, [nvim-lua/plenary.nvim](https://github.com/nvim-lua/plenary.nvim) 
 
 ## :package: Installation
 
-#### Lua
+### Lua
 
-##### With lazy.nvim
+#### With lazy.nvim
 
 ```lua
 {
@@ -438,7 +437,7 @@ As of v0.4.0, [nvim-lua/plenary.nvim](https://github.com/nvim-lua/plenary.nvim) 
 }
 ```
 
-##### With packer.nvim
+#### With packer.nvim
 
 ```lua
 vim.opt.termguicolors = true
@@ -459,7 +458,7 @@ require('packer').startup(function()
 end)
 ```
 
-#### Vimscript
+### Vimscript
 
 If your config is still written in Vimscript and you use
 [vim-plug](https://github.com/junegunn/vim-plug):
@@ -519,7 +518,7 @@ require('cokeline').setup({
     -- if set to `directory` buffers are sorted by their full path.
     -- if set to `number` buffers are sorted by bufnr, as in default Neovim
     -- default: 'last'.
-    new_buffers_position = 'last' | 'next' | 'directory' | 'number' | function(buffer_a, buffer_b) -> true | false,
+    new_buffers_position = 'last' | 'next' | 'directory' | 'number' | fun(buffer_a, buffer_b) -> true | false,
 
     -- If true, right clicking a buffer will close it
     -- The close button will still work normally
@@ -567,11 +566,10 @@ require('cokeline').setup({
   },
 
   -- The default highlight group values.
-  -- The `fg` and `bg` keys are either colors in hexadecimal format or
+  -- The `fg`, `bg`, and `sp` keys are either colors in hexadecimal format or
   -- functions taking a `buffer` parameter and returning a color in
-  -- hexadecimal format. Similarly, the `style` key is either a string
-  -- containing a comma separated list of items in `:h attr-list` or a
-  -- function returning one.
+  -- hexadecimal format. Style attributes work the same way, but functions
+  -- should return boolean values.
   default_hl = {
     -- default: `ColorColumn`'s background color for focused buffers,
     -- `Normal`'s foreground color for unfocused ones.
@@ -582,8 +580,15 @@ require('cokeline').setup({
     -- default: `Normal`'s foreground color.
     bg = ('hlgroup' | '#rrggbb') | function(buffer) -> ('hlgroup' | '#rrggbb'),
 
-    -- default: `'NONE'`.
-    style = 'attr1,attr2,...' | function(buffer) -> 'attr1,attr2,...',
+
+    -- default: unset.
+    sp = ('hlgroup' | '#rrggbb') | function(buffer) -> ('hlgroup' | '#rrggbb'),
+
+    bold = = true | false | fun(buffer) -> true | false,
+    italic = = true | false | fun(buffer) -> true | false,
+    underline = = true | false | fun(buffer) -> true | false,
+    undercurl = = true | false | fun(buffer) -> true | false,
+    strikethrough = true | false | fun(buffer) -> true | false,
   },
 
   -- The highlight group used to fill the tabline space
@@ -801,11 +806,14 @@ Every component passed to the `components` list has to be a table of the form:
 {
   text = 'string' | function(buffer) -> 'string',
 
-  -- The foreground, backgrond and style of the component. `style` is a
-  -- comma-separated string of values defined in `:h attr-list`.
+  -- The foreground, backgrond and style of the component
   fg = '#rrggbb' | function(buffer) -> '#rrggbb',
   bg = '#rrggbb' | function(buffer) -> '#rrggbb',
-  style = 'attr1,attr2,...' | function(buffer) -> 'attr1,attr2,...',
+  bold = = true | false | fun(buffer) -> true | false,
+  italic = = true | false | fun(buffer) -> true | false,
+  underline = = true | false | fun(buffer) -> true | false,
+  undercurl = = true | false | fun(buffer) -> true | false,
+  strikethrough = true | false | fun(buffer) -> true | false,
 
   -- Or, alternatively, the name of the highlight group
   highlight = 'string' | function(buffer) -> string | nil,
