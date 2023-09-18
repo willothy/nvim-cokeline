@@ -1,7 +1,12 @@
 local lazy = require("cokeline.lazy")
+---@module cokeline.state
 local state = lazy("cokeline.state")
+---@module "cokeline.sliders"
 local sliders = lazy("cokeline.sliders")
+---@module "cokeline.utils"
 local utils = lazy("cokeline.utils")
+---@module "cokeline.hlgroups"
+local hlgroups = lazy("cokeline.hlgroups")
 
 local insert = table.insert
 
@@ -41,14 +46,13 @@ local defaults = {
 
   default_hl = {
     fg = function(buffer)
-      return buffer.is_focused and utils.get_hex("ColorColumn", "bg")
-        or utils.get_hex("Normal", "fg")
+      return buffer.is_focused and hlgroups.get_hl_attr("ColorColumn", "bg")
+        or hlgroups.get_hl_attr("Normal", "fg")
     end,
     bg = function(buffer)
-      return buffer.is_focused and utils.get_hex("Normal", "fg")
-        or utils.get_hex("ColorColumn", "bg")
+      return buffer.is_focused and hlgroups.get_hl_attr("Normal", "fg")
+        or hlgroups.get_hl_attr("ColorColumn", "bg")
     end,
-    style = "NONE",
   },
 
   fill_hl = "TabLineFill",
@@ -66,25 +70,35 @@ local defaults = {
       text = function(buffer)
         return buffer.unique_prefix
       end,
-      fg = utils.get_hex("Comment", "fg"),
-      style = "italic",
+      fg = function()
+        return hlgroups.get_hl_attr("Comment", "fg")
+      end,
+      italic = true,
     },
     {
       text = function(buffer)
         return buffer.filename
       end,
-      style = function(buffer)
+      underline = function(buffer)
         if buffer.is_hovered and not buffer.is_focused then
-          return "underline"
+          return true
         end
-        return nil
       end,
     },
     {
       text = " ",
     },
     {
-      text = "󰅖",
+      ---@param buffer Buffer
+      text = function(buffer)
+        if buffer.is_modified then
+          return ""
+        end
+        if buffer.is_hovered then
+          return "󰅙"
+        end
+        return "󰅖"
+      end,
       on_click = function(_, _, _, _, buffer)
         buffer:delete()
       end,
