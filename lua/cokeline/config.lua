@@ -3,8 +3,6 @@ local lazy = require("cokeline.lazy")
 local state = lazy("cokeline.state")
 ---@module "cokeline.sliders"
 local sliders = lazy("cokeline.sliders")
----@module "cokeline.utils"
-local utils = lazy("cokeline.utils")
 ---@module "cokeline.hlgroups"
 local hlgroups = lazy("cokeline.hlgroups")
 
