@@ -435,6 +435,9 @@ function M.get_valid_buffers()
       end)
       :tolist()
   end
+  if not current_valid_index then
+    current_valid_index = 0
+  end
 
   if type(config.buffers.new_buffers_position) == "function" then
     sort(buffers, config.buffers.new_buffers_position)
