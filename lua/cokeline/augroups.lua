@@ -61,6 +61,21 @@ local setup = function()
   local autocmd, augroup =
     vim.api.nvim_create_autocmd, vim.api.nvim_create_augroup
 
+  autocmd({
+    "BufAdd",
+    "BufNew",
+    "BufEnter",
+    "BufDelete",
+    "TabNew",
+    "TabEnter",
+    "TabClosed",
+    "VimResized",
+  }, {
+    group = augroup("cokeline_update_cache", { clear = true }),
+    callback = function()
+      require("cokeline.state").cache = nil
+    end,
+  })
   autocmd({ "VimEnter", "BufAdd" }, {
     group = augroup("cokeline_toggle", { clear = true }),
     callback = function()

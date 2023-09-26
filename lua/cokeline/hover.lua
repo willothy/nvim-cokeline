@@ -16,10 +16,12 @@ end
 
 function M.set_hovered(val)
   _G.cokeline.__hovered = val
+  require("cokeline.state").cache = nil
 end
 
 function M.clear_hovered()
   _G.cokeline.__hovered = nil
+  require("cokeline.state").cache = nil
 end
 
 function M.dragging()
@@ -28,10 +30,12 @@ end
 
 function M.set_dragging(val)
   _G.cokeline.__dragging = val
+  require("cokeline.state").cache = nil
 end
 
 function M.clear_dragging()
   _G.cokeline.__dragging = nil
+  require("cokeline.state").cache = nil
 end
 
 function M.get_current(col)

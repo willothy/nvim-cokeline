@@ -145,7 +145,7 @@ local function update(settings, preferences, key)
     local key_tree = key and ("%s.%s"):format(key, k) or k
     if settings[k] == nil and key ~= "default_hl" then
       echoerr(key_tree)
-    elseif type(v) == "table" and not islist(v) then
+    elseif type(v) == "table" and not v[1] then
       updated[k] = update(settings[k], v, key_tree)
     else
       updated[k] = v
