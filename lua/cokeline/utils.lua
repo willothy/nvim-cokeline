@@ -40,15 +40,11 @@ local function buf_del_impl(bufnr, focus_next, wipeout, force)
     vim.api.nvim_win_set_buf(win, switch_target)
   end
 
-  if wipeout then
-    if vim.api.nvim_buf_is_valid(bufnr) then
+  if vim.api.nvim_buf_is_valid(bufnr) then
+    if wipeout then
       vim.cmd.bwipeout({ count = bufnr })
-    end
-  else
-    if vim.api.nvim_buf_is_loaded(bufnr) then
-      vim.api.nvim_buf_delete(bufnr, {
-        force = force,
-      })
+    else
+      vim.api.nvim_buf_delete(bufnr, { force = force })
     end
   end
 end
