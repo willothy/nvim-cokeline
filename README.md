@@ -1,16 +1,20 @@
+<!-- panvimdoc-include-comment <br> -->
 <h1 align="center">
   &#128067; nvim-cokeline
 </h1>
+<!-- panvimdoc-include-comment <br> -->
 
 <p align="center">
 <i>A Neovim bufferline for people with addictive personalities</i>
 </p>
+<!-- panvimdoc-include-comment <br> -->
 
 The goal of this plugin is not to be an opinionated bufferline with (more or
 less) limited customization options. Rather, it tries to provide a general
 framework allowing you to build **_your_** ideal bufferline, whatever that
 might look like.
 
+<!-- panvimdoc-ignore-start -->
 ![preview](https://user-images.githubusercontent.com/38540736/226447816-c696153f-ccee-4e4a-8b6a-55e53ee737f8.png)
 
 ## :book: Table of Contents
@@ -22,6 +26,8 @@ might look like.
 - [Configuration](#wrench-configuration)
 - [Mappings](#musical_keyboard-mappings)
 
+<!-- panvimdoc-ignore-end -->
+
 ## :sparkles: Features
 
 ### Endlessly customizable
@@ -31,6 +37,7 @@ you have an idea in mind of what your bufferline should look like, you should
 be able to make it look that way. If you can't, open an issue and we'll try to
 make it happen!
 
+<!-- panvimdoc-ignore-start -->
 Here's a (very limited) showcase of what it can be configured to look like
 (check out the wiki for more examples):
 
@@ -190,6 +197,8 @@ require('cokeline').setup({
 
 ![cokeline-bufferline-lua](https://user-images.githubusercontent.com/38540736/226447803-13f3d3ee-454f-42be-81b4-9254f95503e4.png)
 
+<!-- panvimdoc-ignore-end -->
+
 ### Dynamic rendering
 
 <!-- ### Dynamic rendering (with sliders) -->
@@ -199,7 +208,11 @@ keep the focused buffer visible and in the middle of the bufferline. Also, if a
 buffer doesn't fit entirely we still try to include as much of it as possible
 before cutting off the rest.
 
+<!-- panvimdoc-ignore-start -->
+
 ![rendering](https://user-images.githubusercontent.com/38540736/226447817-4f3679c8-a10a-48ad-8329-b21c3ee54968.gif)
+
+<!-- panvimdoc-ignore-end -->
 
 ### LSP support
 
@@ -207,13 +220,19 @@ If a buffer has an LSP client attached to it, you can configure the style of a
 component to change based on how many errors, warnings, infos and hints are
 reported by the LSP.
 
+<!-- panvimdoc-ignore-start -->
+
 ![lsp-styling](https://user-images.githubusercontent.com/38540736/226447813-4ec42530-9e86-43f5-98ed-fd7b4012120b.gif)
+
+<!-- panvimdoc-ignore-end -->
 
 ### Buffer pick
 
 You can focus and close any buffer by typing its `pick_letter`. Letters are
 assigned by filename by default (e.g. `foo.txt` gets the letter `f`), and by
 keyboard reachability if the letter is already assigned to another buffer.
+
+<!-- panvimdoc-ignore-start -->
 
 <details>
 <summary>Click to see configuration</summary>
@@ -290,12 +309,16 @@ require('cokeline').setup({
 
 ![buffer-pick](https://user-images.githubusercontent.com/38540736/226447793-8e2341b3-e454-49dc-af84-72d3b56f40d3.gif)
 
+<!-- panvimdoc-ignore-end -->
+
 ### Sidebars
 
 You can add a left sidebar to integrate nicely with file explorer plugins like
 [nvim-tree.lua](https://github.com/kyazdani42/nvim-tree.lua),
 [CHADTree](https://github.com/ms-jpq/chadtree) or
 [NERDTree](https://github.com/preservim/nerdtree).
+
+<!-- panvimdoc-ignore-start -->
 
 <details>
 <summary>Click to see configuration</summary>
@@ -371,35 +394,57 @@ require('cokeline').setup({
 
 ![sidebars](https://user-images.githubusercontent.com/38540736/226447821-de543b87-909c-445f-ac6e-82f5f6bbf9aa.png)
 
+<!-- panvimdoc-ignore-end -->
+
 ### Unique buffer names
 
 When files with the same filename belonging to different directories are opened
 simultaneously, you can include a unique filetree prefix to distinguish between
 them:
 
+<!-- panvimdoc-ignore-start -->
+
 ![unique-prefix](https://user-images.githubusercontent.com/38540736/226447822-3315ad2f-35c9-4fc3-a777-c01cd8f2fe46.gif)
+
+<!-- panvimdoc-ignore-end -->
 
 ### Clickable buffers
 
 Left click on a buffer to focus it, and right click to delete it. Alternatively, define custom click handlers for each component that override the default behavior.
 
+<!-- panvimdoc-ignore-start -->
+
 ![clickable-buffers](https://user-images.githubusercontent.com/38540736/226447799-e845d266-0658-44e3-bd89-f706577844bf.gif)
+
+<!-- panvimdoc-ignore-end -->
 
 ### Hover events
 
 Each component has access to an is_hovered property, and can be given custom `on_mouse_enter` and `on_mouse_leave` handlers, allowing for implementations of close buttons, diagnostic previews, and more complex funcionality.
 
+<!-- panvimdoc-ignore-start -->
+
 ![hover-events](https://github.com/willothy/nvim-cokeline/assets/38540736/fb92475f-d775-44fe-9c95-a76c1cbaf560)
 
 ![hover-events-2](https://github.com/willothy/nvim-cokeline/assets/38540736/3b319c79-0bff-41dd-9a08-36fd627b3d08)
 
+<!-- panvimdoc-ignore-end -->
+
 ### Buffer re-ordering (including mouse-drag reordering)
+
+<!-- panvimdoc-ignore-start -->
 
 ![reordering](https://user-images.githubusercontent.com/38540736/226447818-bdf63d70-e153-4353-992d-d317a5764c09.gif)
 
+<!-- panvimdoc-ignore-end -->
+
 ### Close icons
 
+<!-- panvimdoc-ignore-start -->
+
 ![close-icons](https://user-images.githubusercontent.com/38540736/226447802-29b2919e-dd20-4789-8d6a-250d6d453c64.gif)
+
+<!-- panvimdoc-ignore-end -->
 
 ### Buffer history tracking
 
@@ -427,7 +472,8 @@ As of v0.4.0, [nvim-lua/plenary.nvim](https://github.com/nvim-lua/plenary.nvim) 
 #### With lazy.nvim
 
 ```lua
-{
+require("lazy").setup({
+  {
   "willothy/nvim-cokeline",
   dependencies = {
     "nvim-lua/plenary.nvim",        -- Required for v0.4.0+
@@ -435,6 +481,7 @@ As of v0.4.0, [nvim-lua/plenary.nvim](https://github.com/nvim-lua/plenary.nvim) 
   },
   config = true
 }
+})
 ```
 
 #### With packer.nvim
@@ -492,20 +539,23 @@ The valid keys are:
 require('cokeline').setup({
   -- Only show the bufferline when there are at least this many visible buffers.
   -- default: `1`.
-  show_if_buffers_are_at_least = int,
+  ---@type integer
+  show_if_buffers_are_at_least = 1,
 
   buffers = {
     -- A function to filter out unwanted buffers. Takes a buffer table as a
     -- parameter (see the following section for more infos) and has to return
     -- either `true` or `false`.
     -- default: `false`.
-    filter_valid = function(buffer) -> true | false,
+    ---@type false | fun(buf: Buffer):boolean
+    filter_valid = false,
 
     -- A looser version of `filter_valid`, use this function if you still
     -- want the `cokeline-{switch,focus}-{prev,next}` mappings to work for
     -- these buffers without displaying them in your bufferline.
     -- default: `false`.
-    filter_visible = function(buffer) -> true | false,
+    ---@type false | fun(buf: Buffer):boolean
+    filter_visible = false,
 
     -- Which buffer to focus when a buffer is deleted, `prev` focuses the
     -- buffer to the left of the deleted one while `next` focuses the one the
@@ -518,12 +568,14 @@ require('cokeline').setup({
     -- if set to `directory` buffers are sorted by their full path.
     -- if set to `number` buffers are sorted by bufnr, as in default Neovim
     -- default: 'last'.
-    new_buffers_position = 'last' | 'next' | 'directory' | 'number' | fun(buffer_a, buffer_b) -> true | false,
+    ---@type 'last' | 'next' | 'directory' | 'number' | fun(a: Buffer, b: Buffer):boolean
+    new_buffers_position = 'last',
 
     -- If true, right clicking a buffer will close it
     -- The close button will still work normally
     -- Default: true
-    delete_on_right_click = true | false,
+    ---@type boolean
+    delete_on_right_click = true,
   },
 
   mappings = {
@@ -531,17 +583,22 @@ require('cokeline').setup({
     -- try to focus/switch the previous (next) buffer. If `true` the last
     -- (first) buffers gets focused/switched, if `false` nothing happens.
     -- default: `true`.
-    cycle_prev_next = true | false,
+    ---@type boolean
+    cycle_prev_next = true,
 
     -- Disables mouse mappings
     -- default: `false`.
-    disable_mouse = true | false,
+    ---@type boolean
+    disable_mouse = false,
   },
 
   -- Maintains a history of focused buffers using a ringbuffer
   history = {
-    enabled = true | false (default: true)
-    size = int (default: 2)
+    ---@type boolean
+    enabled = true,
+    ---The number of buffers to save in the history
+    ---@type integer
+    size = 2
   },
 
   rendering = {
@@ -549,20 +606,23 @@ require('cokeline').setup({
     -- up. The buffer will be truncated if its width is bigger than this
     -- value.
     -- default: `999`.
-    max_buffer_width = int,
+    ---@type integer
+    max_buffer_width = 999,
   },
 
   pick = {
     -- Whether to use the filename's first letter first before
     -- picking a letter from the valid letters list in order.
     -- default: `true`
-    use_filename = true | false,
+    ---@type boolean
+    use_filename = true,
 
     -- The list of letters that are valid as pick letters. Sorted by
     -- keyboard reachability by default, but may require tweaking for
     -- non-QWERTY keyboard layouts.
     -- default: `'asdfjkl;ghnmxcvbziowerutyqpASDFJKLGHNMXCVBZIOWERTYQP'`
-    letters = 'string',
+    ---@type string
+    letters = 'asdfjkl;ghnmxcvbziowerutyqpASDFJKLGHNMXCVBZIOWERTYQP',
   },
 
   -- The default highlight group values.
@@ -573,22 +633,37 @@ require('cokeline').setup({
   default_hl = {
     -- default: `ColorColumn`'s background color for focused buffers,
     -- `Normal`'s foreground color for unfocused ones.
-    fg = ('hlgroup' | '#rrggbb') | function(buffer) -> ('#rrggbb' | 'hlgroup'),
+    ---@type nil | string | fun(buffer: Buffer): string
+    fg = function(buffer)
+      local hlgroups = require("cokeline.hlgroups")
+      return buffer.is_focused and hlgroups.get_hl_attr("ColorColumn", "bg")
+        or hlgroups.get_hl_attr("Normal", "fg")
+    end,
 
     -- default: `Normal`'s foreground color for focused buffers,
     -- `ColorColumn`'s background color for unfocused ones.
     -- default: `Normal`'s foreground color.
-    bg = ('hlgroup' | '#rrggbb') | function(buffer) -> ('hlgroup' | '#rrggbb'),
-
+    ---@type nil | string | function(buffer: Buffer): string,
+    bg = function(buffer)
+      local hlgroups = require("cokeline.hlgroups")
+      return buffer.is_focused and hlgroups.get_hl_attr("Normal", "fg")
+        or hlgroups.get_hl_attr("ColorColumn", "bg")
+    end,
 
     -- default: unset.
-    sp = ('hlgroup' | '#rrggbb') | function(buffer) -> ('hlgroup' | '#rrggbb'),
+    ---@type nil | string | function(buffer): string,
+    sp = nil,
 
-    bold = = true | false | fun(buffer) -> true | false,
-    italic = = true | false | fun(buffer) -> true | false,
-    underline = = true | false | fun(buffer) -> true | false,
-    undercurl = = true | false | fun(buffer) -> true | false,
-    strikethrough = true | false | fun(buffer) -> true | false,
+    ---@type nil | boolean | fun(buf: Buffer):boolean
+    bold = nil,
+    ---@type nil | boolean | fun(buf: Buffer):boolean
+    italic = nil,
+    ---@type nil | boolean | fun(buf: Buffer):boolean
+    underline = nil,
+    ---@type nil | boolean | fun(buf: Buffer):boolean
+    undercurl = nil,
+    ---@type nil | boolean | fun(buf: Buffer):boolean
+    strikethrough = nil,
   },
 
   -- The highlight group used to fill the tabline space
@@ -597,19 +672,23 @@ require('cokeline').setup({
   -- A list of components to be rendered for each buffer. Check out the section
   -- below explaining what this value can be set to.
   -- default: see `/lua/cokeline/defaults.lua`
-  components = {..},
+  ---@type Component[]
+  components = {},
 
   -- Custom areas can be displayed on the right hand side of the bufferline.
   -- They act identically to buffer components, except their methods don't take a Buffer object.
   -- If you want a rhs component to be stateful, you can wrap it in a closure containing state.
-  rhs = {..},
+  ---@type Component[] | false
+  rhs = {},
 
   -- Tabpages can be displayed on either the left or right of the bufferline.
   -- They act the same as other components, except they are passed TabPage objects instead of
   -- buffer objects.
+  ---@type table | false
   tabs = {
     placement = "left" | "right",
-    components = {..}
+    ---@type Component[]
+    components = {}
   },
 
   -- Left sidebar to integrate nicely with file explorer plugins.
@@ -617,14 +696,17 @@ require('cokeline').setup({
   -- be rendered in the sidebar.
   -- The last component will be automatically space padded if necessary
   -- to ensure the sidebar and the window below it have the same width.
+  ---@type table | false
   sidebar = {
-    filetype = '<filetype>',
-    components = {..},
+    ---@type string | string[]
+    filetype = { "NvimTree", "neo-tree", "SidebarNvim" },
+    ---@type Component[]
+    components = {},
   },
 })
 ```
 
-#### So what's `function(buffer)`?
+### So what's `function(buffer)`?
 
 Some of the configuration options can be functions that take a [`Buffer`](https://github.com/willothy/nvim-cokeline/wiki/Buffer) as a
 single parameter. This is useful as it allows users to set the values of
@@ -642,52 +724,67 @@ Buffer = {
   -- The buffer's internal number as reported by `:ls`.
   number = int,
 
-  is_focused = true | false,
+  ---@type boolean
+  is_focused = false,
 
-  is_modified = true | false,
+  ---@type boolean
+  is_modified = false,
 
-  is_readonly = true | false,
+  ---@type boolean
+  is_readonly = false,
 
   -- The buffer is the first visible buffer in the tab bar
-  is_first    = true | false,
+  ---@type boolean
+  is_first    = false,
 
   -- The buffer is the last visible buffer in the tab bar
-  is_last     = true | false,
+  ---@type boolean
+  is_last     = false,
 
   -- The mouse is hovering over the current component in the buffer
   -- This is a special variable in that it will only be true for the hovered *component*
   -- on render. This is to allow components to respond to hover events individually without managing
   -- component state.
-  is_hovered  = true | false
+  ---@type boolean
+  is_hovered  = false,
 
   -- The mouse is hovering over the buffer (true for all components)
-  buf_hovered = true | false
+  ---@type boolean
+  buf_hovered = false,
 
   -- The buffer's type as reported by `:echo &buftype`.
-  type = 'string',
+  ---@type string
+  ---@type string
+  type = '',
 
   -- The buffer's filetype as reported by `:echo &filetype`.
-  filetype = 'string',
+  ---@type string
+  filetype = '',
 
   -- The buffer's full path.
-  path = 'string',
+  ---@type string
+  path = '',
 
   -- The buffer's filename.
+  ---@type string
   filename = 'string',
 
   -- A unique prefix used to distinguish buffers with the same filename
   -- stored in different directories. For example, if we have two files
   -- `bar/foo.md` and `baz/foo.md`, then the first will have `bar/` as its
   -- unique prefix and the second one will have `baz/`.
-  unique_prefix = 'string',
+  ---@type string
+  unique_prefix = '',
 
   -- The letter that is displayed when picking a buffer to either focus or
   -- close it.
+  ---@type string
   pick_letter = 'char',
 
   -- This needs the `kyazdani42/nvim-web-devicons` plugin to be installed.
   devicon = {
     -- An icon representing the buffer's filetype.
+    ---@type string
     icon = 'string',
 
     -- The colors of the devicon in hexadecimal format (useful to be passed
@@ -698,10 +795,14 @@ Buffer = {
   -- The values in this table are the ones reported by Neovim's built in
   -- LSP interface.
   diagnostics = {
-    errors = int,
-    warnings = int,
-    infos = int,
-    hints = int,
+    ---@type integer
+    errors = 0,
+    ---@type integer
+    warnings = 0,
+    ---@type integer
+    infos = 0,
+    ---@type integer
+    hints = 0,
   },
 }
 ```
@@ -711,29 +812,29 @@ It also has methods that can be used in component event handlers:
 ```lua
 ---@param self Buffer
 ---Deletes the buffer
-function Buffer:delete()
+function Buffer:delete() end
 
 ---@param self Buffer
 ---Focuses the buffer
-function Buffer:focus()
+function Buffer:focus() end
 
 ---@param self Buffer
 ---@return number
 ---Returns the number of lines in the buffer
-function Buffer:lines()
+function Buffer:lines() end
 
 ---@param self Buffer
 ---@return string[]
 ---Returns the buffer's lines
-function Buffer:text()
+function Buffer:text() end
 
 ---@param buf Buffer
 ---@return boolean
 ---Returns true if the buffer is valid
-function Buffer:is_valid()
+function Buffer:is_valid() end
 ```
 
-#### What about [`TabPage`](https://github.com/willothy/nvim-cokeline/wiki/TabPage)s?
+### What about [`TabPage`](https://github.com/willothy/nvim-cokeline/wiki/TabPage)s?
 
 Each method on a tab component is passed a `TabPage` object as an argument.
 
@@ -742,21 +843,27 @@ Each method on a tab component is passed a `TabPage` object as an argument.
 ```lua
 TabPage = {
   -- The tabpage number, as reported by `nvim_list_tabpages`
-  number = integer,
+  ---@type integer
+  number = 0,
   -- A list of Window objects contained in the TabPage (see wiki for more info)
-  windows = Window[],
+  ---@type Window[]
+  windows = {},
   -- The currently focused window in the TabPage
-  focused = Window,
+  ---@type Window
+  focused = nil,
   -- True if the TabPage is the current TabPage
-  is_active = boolean,
+  ---@type boolean
+  is_active = true,
   -- True if the TabPage is first in the list
-  is_first = boolean,
+  ---@type boolean
+  is_first = false,
   -- True if the TabPage is last in the list
-  is_last = boolean
+  ---@type boolean
+  is_last = false
 }
 ```
 
-#### And [`components`](https://github.com/willothy/nvim-cokeline/wiki/Component)?
+### And [`components`](https://github.com/willothy/nvim-cokeline/wiki/Component)?
 
 You can configure what each buffer in your bufferline will be composed of by
 passing a list of components to the `setup` function.
@@ -770,7 +877,6 @@ Then in our `setup` function we'd have:
 ```lua
 require('cokeline').setup({
   -- ...
-
   components = {
     {
       text = function(buffer) return ' ' .. buffer.index end,
@@ -788,7 +894,7 @@ require('cokeline').setup({
       text = ' ',
     }
   }
-}
+})
 ```
 
 in this case every buffer would be composed of four components: the first
@@ -804,43 +910,61 @@ Every component passed to the `components` list has to be a table of the form:
 
 ```lua
 {
-  text = 'string' | function(buffer) -> 'string',
+
+  ---@type string | fun(buffer: Buffer): string
+  text = "",
 
   -- The foreground, backgrond and style of the component
-  fg = '#rrggbb' | function(buffer) -> '#rrggbb',
-  bg = '#rrggbb' | function(buffer) -> '#rrggbb',
-  bold = = true | false | fun(buffer) -> true | false,
-  italic = = true | false | fun(buffer) -> true | false,
-  underline = = true | false | fun(buffer) -> true | false,
-  undercurl = = true | false | fun(buffer) -> true | false,
-  strikethrough = true | false | fun(buffer) -> true | false,
+  ---@type nil | string | fun(buffer: Buffer): string
+  fg = '#rrggbb',
+  ---@type nil | string | fun(buffer: Buffer): string
+  bg = '#rrggbb',
+  ---@type nil | string | fun(buffer: Buffer): string
+  sp = '#rrggbb',
+  ---@type nil | boolean | fun(buffer: Buffer): boolean
+  bold = false,
+  ---@type nil | boolean | fun(buffer: Buffer): boolean
+  italic = false,
+  ---@type nil | boolean | fun(buffer: Buffer): boolean
+  underline = false,
+  ---@type nil | boolean | fun(buffer: Buffer): boolean
+  undercurl = false,
+  ---@type nil | boolean | fun(buffer: Buffer): boolean
+  strikethrough = false,
 
   -- Or, alternatively, the name of the highlight group
-  highlight = 'string' | function(buffer) -> string | nil,
+  ---@type nil | string | fun(buffer: Buffer): string
+  highlight = nil,
 
   -- If `true` the buffer will be deleted when this component is
   -- left-clicked (usually used to implement close buttons, overrides `on_click`).
   -- deprecated, it is recommended to use the Buffer:delete() method in an on_click event
   -- to implement close buttons instead.
-  delete_buffer_on_left_click = true | false,
+  ---@type boolean
+  delete_buffer_on_left_click = false,
 
   -- Handles click event for a component
   -- If not set, component will have the default click behavior
   -- buffer is a Buffer object, not a bufnr
-  on_click = nil | function(idx, clicks, buttons, modifiers, buffer)
+  ---@type nil | fun(idx: integer, clicks: integer, button: string, mods: string, buffer: Buffer)
+  on_click = nil,
 
   -- Called on a component when hovered
-  on_mouse_enter = nil | function(buffer, mouse_col)
+  ---@type nil | function(buffer: Buffer, mouse_col: integer)
+  on_mouse_enter = nil,
 
   -- Called on a component when unhovered
-  on_mouse_leave = nil | function(buffer)
+  ---@type nil | function(buffer: Buffer, mouse_col: integer)
+  on_mouse_leave = nil,
 
   truncation = {
     -- default: index of the component in the `components` table (1 for the
     -- first component, 2 for the second, etc.).
-    priority = int,
+    ---@type integer
+    priority = 1,
 
     -- default: `right`.
+    ---@type 'left' | 'middle' | 'right'
     direction = 'left' | 'middle' | 'right',
   },
 }
@@ -875,7 +999,11 @@ a component displaying a filename to `'middle'` or `'left'`, so that if
 the filename has to be shortened you'll still be able to see its extension,
 like in the following example (where it's set to `'left'`):
 
+<!-- panvimdoc-ignore-start -->
+
 ![buffer-truncation](https://user-images.githubusercontent.com/38540736/226447798-6aee2e0f-f957-42ab-96dd-3618e78ba4ba.png)
+
+<!-- panvimdoc-ignore-end -->
 
 #### What about [`history`](https://github.com/willothy/nvim-cokeline/wiki/History)?
 
@@ -887,46 +1015,60 @@ You can access the history using `require("cokeline.history")`, or through the g
 The `History` object provides these methods:
 
 ```lua
+History = {}
+
 ---Adds a Buffer object to the history
-function History:push(bufnr: int)
+---@type bufnr integer
+function History:push(bufnr)
 end
 
 ---Removes and returns the oldest Buffer object in the history
-function History:pop(): Buffer | nil
+---@return Buffer?
+function History:pop()
 end
 
 ---Returns a list of Buffer objects in the history,
 ---ordered from oldest to newest
-function History:list(): Buffer[]
+---@return Buffer[]
+function History:list()
 end
 
 ---Returns an iterator of Buffer objects in the history,
 ---ordered from oldest to newest
-function History:iter(): fun(): Buffer | nil
+---@return fun(): Buffer?
+function History:iter()
 end
 
 ---Get a Buffer object by history index
-function History:get(idx: int): Buffer | nil
+---@param idx integer
+---@return Buffer?
+function History:get(idx)
 end
 
 ---Get a Buffer object representing the last-accessed buffer (before the current one)
-function History:last(): Buffer | nil
+---@return Buffer?
+function History:last()
 end
 
 ---Returns true if the history is empty
-function History:is_empty(): boolean
+---@return boolean
+function History:is_empty()
 end
 
 ---Returns the maximum number of buffers that can be stored in the history
-function History:capacity(): int
+---@return integer
+function History:capacity()
 end
 
 ---Returns true if the history contains the given buffer
-function History:contains(bufnr: int): bool
+---@param bufnr integer
+---@return boolean
+function History:contains(bufnr)
 end
 
 ---Returns the number of buffers in the history
-function History:len(): int
+---@return integer
+function History:len()
 end
 ```
 
@@ -938,14 +1080,12 @@ You can use the `mappings` module to create mappings from Lua:
 vim.keymap.set("n", "<leader>bp", function()
     require('cokeline.mappings').pick("focus")
 end, { desc = "Pick a buffer to focus" })
-
--- etc....
 ```
 
 Alternatively, we expose the following `<Plug>` mappings which can be used as the right hand
 side of other mappings:
 
-```lua
+```
 -- Focus the previous/next buffer
 <Plug>(cokeline-focus-prev)
 <Plug>(cokeline-focus-next)
@@ -972,13 +1112,24 @@ A possible configuration could be:
 ```lua
 local map = vim.api.nvim_set_keymap
 
-map('n', '<S-Tab>',   '<Plug>(cokeline-focus-prev)',  { silent = true })
-map('n', '<Tab>',     '<Plug>(cokeline-focus-next)',  { silent = true })
-map('n', '<Leader>p', '<Plug>(cokeline-switch-prev)', { silent = true })
-map('n', '<Leader>n', '<Plug>(cokeline-switch-next)', { silent = true })
+map("n", "<S-Tab>", "<Plug>(cokeline-focus-prev)", { silent = true })
+map("n", "<Tab>", "<Plug>(cokeline-focus-next)", { silent = true })
+map("n", "<Leader>p", "<Plug>(cokeline-switch-prev)", { silent = true })
+map("n", "<Leader>n", "<Plug>(cokeline-switch-next)", { silent = true })
 
-for i = 1,9 do
-  map('n', ('<F%s>'):format(i),      ('<Plug>(cokeline-focus-%s)'):format(i),  { silent = true })
-  map('n', ('<Leader>%s'):format(i), ('<Plug>(cokeline-switch-%s)'):format(i), { silent = true })
+for i = 1, 9 do
+  map(
+    "n",
+    ("<F%s>"):format(i),
+    ("<Plug>(cokeline-focus-%s)"):format(i),
+    { silent = true }
+  )
+  map(
+    "n",
+    ("<Leader>%s"):format(i),
+    ("<Plug>(cokeline-switch-%s)"):format(i),
+    { silent = true }
+  )
 end
+
 ```
