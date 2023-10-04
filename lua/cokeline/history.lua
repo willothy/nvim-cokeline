@@ -68,7 +68,7 @@ function History:iter()
   return function()
     local buf = self.data[read]
     if buf then
-      read = (read % self.cap) + 1
+      read = read + 1
       return buffers.get_buffer(buf)
     end
   end
