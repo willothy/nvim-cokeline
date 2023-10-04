@@ -20,7 +20,6 @@ might look like.
 ## :book: Table of Contents
 
 - [Features](#sparkles-features)
-- [Plans](#mountain-plans-and-ideas)
 - [Requirements](#electric_plug-requirements)
 - [Installation](#package-installation)
 - [Configuration](#wrench-configuration)
@@ -454,10 +453,6 @@ require("cokeline.history"):last():focus()
 
 If you are a user of [`resession.nvim`](https://github.com/stevearc/resession.nvim), cokeline's history will be restored along with
 the rest of your sessions.
-
-## :mountain: Plans and Ideas
-
-If you have an idea or feature request, don't hesitate to open an issue!
 
 ## :electric_plug: Requirements
 
