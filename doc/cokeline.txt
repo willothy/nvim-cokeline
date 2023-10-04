@@ -4,7 +4,6 @@
 Table of Contents                                 *cokeline-table-of-contents*
 
   - Features                                               |cokeline-features|
-  - Plans and Ideas                                 |cokeline-plans-and-ideas|
   - Requirements                                       |cokeline-requirements|
   - Installation                                       |cokeline-installation|
   - Configuration                                     |cokeline-configuration|
@@ -98,11 +97,6 @@ BUFFER HISTORY TRACKING ~
 If you are a user of `resession.nvim`
 <https://github.com/stevearc/resession.nvim>, cokeline’s history will be
 restored along with the rest of your sessions.
-
-
-PLANS AND IDEAS                                     *cokeline-plans-and-ideas*
-
-If you have an idea or feature request, don’t hesitate to open an issue!
 
 
 REQUIREMENTS                                           *cokeline-requirements*
