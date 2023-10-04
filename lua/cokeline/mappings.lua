@@ -64,6 +64,17 @@ local by_step = function(goal, step)
     target_buf = state.valid_buffers[target_idx]
   elseif goal == "focus" and config.history.enabled then
     target_buf = require("cokeline.history"):last()
+    if step < -1 then
+      -- The result of history:last() is the index -1,
+      -- so we need to step back one more.
+      step = step + 1
+    end
+    if target_buf and step ~= 0 then
+      local step_buf = state.valid_buffers[target_buf._valid_index + step]
+      if step_buf then
+        target_buf = step_buf
+      end
+    end
   else
     return
   end
