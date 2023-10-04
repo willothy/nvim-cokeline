@@ -488,28 +488,6 @@ require("lazy").setup({
 })
 ```
 
-#### With packer.nvim
-
-```lua
-vim.opt.termguicolors = true
-
-require('packer').startup(function()
-  -- ...
-  use({
-    'willothy/nvim-cokeline',
-    requires = {
-      "nvim-lua/plenary.nvim",        -- Required for v0.4.0+
-      "kyazdani42/nvim-web-devicons", -- If you want devicons
-      "stevearc/resession.nvim"       -- Optional, for persistent history
-    },
-    config = function()
-      require("cokeline").setup()
-    end
-  })
-  -- ...
-end)
-```
-
 ### Vimscript
 
 If your config is still written in Vimscript and you use
