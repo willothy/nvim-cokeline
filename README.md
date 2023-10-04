@@ -452,6 +452,9 @@ Each component has access to an is_hovered property, and can be given custom `on
 require("cokeline.history"):last():focus()
 ```
 
+If you are a user of [`resession.nvim`](https://github.com/stevearc/resession.nvim), cokeline's history will be restored along with
+the rest of your sessions.
+
 ## :mountain: Plans and Ideas
 
 If you have an idea or feature request, don't hesitate to open an issue!
@@ -478,6 +481,7 @@ require("lazy").setup({
   dependencies = {
     "nvim-lua/plenary.nvim",        -- Required for v0.4.0+
     "kyazdani42/nvim-web-devicons", -- If you want devicons
+    "stevearc/resession.nvim"       -- Optional, for persistent history
   },
   config = true
 }
@@ -496,6 +500,7 @@ require('packer').startup(function()
     requires = {
       "nvim-lua/plenary.nvim",        -- Required for v0.4.0+
       "kyazdani42/nvim-web-devicons", -- If you want devicons
+      "stevearc/resession.nvim"       -- Optional, for persistent history
     },
     config = function()
       require("cokeline").setup()
