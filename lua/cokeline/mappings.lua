@@ -43,7 +43,7 @@ local by_index = function(goal, index)
   end
 end
 
----@param goal  '"switch"' | '"focus"' |'"close"' | fun(buf: Buffer)
+---@param goal  '"switch"' | '"focus"' |'"close"' | fun(buf: Buffer, did_fallback: boolean)
 ---@param step  -1 | 1
 local by_step = function(goal, step)
   local config = lazy("cokeline.config")
@@ -53,6 +53,7 @@ local by_step = function(goal, step)
 
   local target_buf
   local target_idx
+  local did_fallback = false
   if focused_buffer then
     target_idx = focused_buffer._valid_index + step
     if target_idx < 1 or target_idx > #state.valid_buffers then
@@ -63,6 +64,7 @@ local by_step = function(goal, step)
     end
     target_buf = state.valid_buffers[target_idx]
   elseif goal == "focus" and config.history.enabled then
+    did_fallback = true
     target_buf = require("cokeline.history"):last()
     if step < -1 then
       -- The result of history:last() is the index -1,
@@ -84,10 +86,10 @@ local by_step = function(goal, step)
       buffers.move_buffer(focused_buffer, target_idx)
     elseif goal == "focus" then
       target_buf:focus()
-    elseif goal == "close" then
+    elseif goal == "close" and not did_fallback then
       target_buf:delete()
     elseif type(goal) == "function" then
-      goal(target_buf)
+      goal(target_buf, did_fallback)
     end
   end
 end
