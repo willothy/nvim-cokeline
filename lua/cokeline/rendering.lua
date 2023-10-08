@@ -29,15 +29,15 @@ local find_current_buffer = function(buffers, previous_buffer_index)
   return focused_buffer or buffers[previous_buffer_index] or buffers[#buffers]
 end
 
----@param c1  Component<Buffer>
----@param c2  Component<Buffer>
+---@param c1  Component
+---@param c2  Component
 ---@return boolean
 local by_decreasing_priority = function(c1, c2)
   return c1.truncation.priority < c2.truncation.priority
 end
 
----@param c1  Component<Buffer>
----@param c2  Component<Buffer>
+---@param c1  Component
+---@param c2  Component
 ---@return boolean
 local by_increasing_index = function(c1, c2)
   return c1.index < c2.index
@@ -46,8 +46,8 @@ end
 -- Takes in either a single buffer or a list of buffers, and it returns a list
 -- of all the rendered components together with their total combined width.
 ---@param context Buffer|Buffer[]|TabPage|TabPage[]
----@param complist Component<Buffer|TabPage>[]
----@return Component<Buffer|TabPage>, number
+---@param complist Component[]
+---@return Component, number
 local function to_components(context, complist)
   local hovered = _G.cokeline.__hovered
   -- A simple heuristic to check if we're dealing with single buffer or a list
@@ -130,6 +130,8 @@ local prepare = function(visible_buffers)
 
   local current_components, current_width
   if current_buffer then
+    current_index = current_buffer.index
+
     current_components, current_width =
       to_components(current_buffer, state.components)
     if current_width >= available_width then
