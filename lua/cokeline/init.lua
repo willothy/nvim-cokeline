@@ -25,10 +25,7 @@ end
 ---@return string
 _G.cokeline.tabline = function()
   local visible_buffers = require("cokeline.buffers").get_visible()
-  if
-    #visible_buffers < config.show_if_buffers_are_at_least
-    or #visible_buffers == 0
-  then
+  if #visible_buffers < config.show_if_buffers_are_at_least then
     opt.showtabline = 0
     return ""
   end
