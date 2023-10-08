@@ -2,42 +2,45 @@ local lazy = require("cokeline.lazy")
 local buffers = lazy("cokeline.buffers")
 
 ---@class Cokeline.History
----@field len integer
----@field cap integer
----@field data bufnr[]
-local History = {}
+---@field _len integer
+---@field _cap integer
+---@field _data bufnr[]
+local History = {
+  _len = 0,
+  _cap = 4,
+  _data = {},
+  _read = 1,
+  _write = 1,
+}
 
 ---Creates a new History object
 ---@return Cokeline.History
 function History.setup(cap)
-  History.cap = cap
-  History.len = 0
-  History.read = 1
-  History.write = 1
-  History.data = {}
+  History._cap = cap
+  return History
 end
 
 ---Adds a Buffer object to the history
 ---@param bufnr bufnr
 function History:push(bufnr)
-  self.data[self.write] = bufnr
-  self.write = (self.write % self.cap) + 1
-  if self.len < self.cap then
-    self.len = self.len + 1
+  self._data[self._write] = bufnr
+  self._write = (self._write % self._cap) + 1
+  if self._len < self._cap then
+    self._len = self._len + 1
   end
 end
 
 ---Removes and returns the oldest Buffer object in the history
 ---@return Buffer|nil
 function History:pop()
-  if self.len == 0 then
+  if self._len == 0 then
     return nil
   end
-  local bufnr = self.data[self.read]
-  self.data[self.read] = nil
-  self.read = (self.read % self.cap) + 1
+  local bufnr = self._data[self._read]
+  self._data[self._read] = nil
+  self._read = (self._read % self._cap) + 1
   if bufnr then
-    self.len = self.len - 1
+    self._len = self._len - 1
   end
   if bufnr then
     return buffers.get_buffer(bufnr)
@@ -49,24 +52,24 @@ end
 ---@return Buffer[]
 function History:list()
   local list = {}
-  local read = self.read
-  for _ = 1, self.len do
-    local buf = self.data[read]
+  local read = self._read
+  for _ = 1, self._len do
+    local buf = self._data[read]
     if buf then
       table.insert(list, buffers.get_buffer(buf))
     end
-    read = (read % self.cap) + 1
+    read = (read % self._cap) + 1
   end
   return list
 end
 
 ---Returns an iterator of Buffer objects in the history,
 ---ordered from oldest to newest
----@return fun():Buffer
+---@return fun():Buffer?
 function History:iter()
-  local read = self.read
+  local read = self._read
   return function()
-    local buf = self.data[read]
+    local buf = self._data[read]
     if buf then
       read = read + 1
       return buffers.get_buffer(buf)
@@ -78,7 +81,7 @@ end
 ---@param idx integer
 ---@return Buffer|nil
 function History:get(idx)
-  local buf = self.data[(self.read % self.cap) + idx + 1]
+  local buf = self._data[(self._read % self._cap) + idx + 1]
   if buf then
     return buffers.get_buffer(buf)
   end
@@ -87,7 +90,7 @@ end
 ---Get a Buffer object representing the last-accessed buffer (before the current one)
 ---@return Buffer|nil
 function History:last()
-  local buf = self.data[self.write == 1 and self.len or (self.write - 1)]
+  local buf = self._data[self._write == 1 and self._len or (self._write - 1)]
   if buf then
     return buffers.get_buffer(buf)
   end
@@ -96,26 +99,26 @@ end
 ---Returns true if the history is empty
 ---@return boolean
 function History:is_empty()
-  return self.read == self.write
+  return self._read == self._write
 end
 
 ---Returns the maximum number of buffers that can be stored in the history
 ---@return integer
 function History:capacity()
-  return self.cap
+  return self._cap
 end
 
 ---Returns true if the history contains the given buffer
 ---@param bufnr bufnr
 ---@return boolean
 function History:contains(bufnr)
-  return vim.tbl_contains(self.data, bufnr)
+  return vim.tbl_contains(self._data, bufnr)
 end
 
 ---Returns the number of buffers in the history
 ---@return integer
 function History:len()
-  return self.len
+  return self._len
 end
 
 return History

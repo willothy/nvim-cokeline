@@ -127,45 +127,56 @@ local prepare = function(visible_buffers)
   end
 
   local current_buffer = find_current_buffer(visible_buffers, current_index)
-  current_index = current_buffer.index
 
-  local current_components, current_width =
-    to_components(current_buffer, state.components)
-  if current_width >= available_width then
-    sort(current_components, by_decreasing_priority)
-    components.shorten(current_components, available_width)
-    sort(current_components, by_increasing_index)
-    if current_buffer.index > 1 then
-      components.shorten(current_components, available_width, "left")
-    end
-    if current_buffer.index < #visible_buffers then
-      components.shorten(current_components, available_width, "right")
-    end
+  local current_components, current_width
+  if current_buffer then
+    current_components, current_width =
+      to_components(current_buffer, state.components)
+    if current_width >= available_width then
+      sort(current_components, by_decreasing_priority)
+      components.shorten(current_components, available_width)
+      sort(current_components, by_increasing_index)
+      if current_buffer.index > 1 then
+        components.shorten(current_components, available_width, "left")
+      end
+      if current_buffer.index < #visible_buffers then
+        components.shorten(current_components, available_width, "right")
+      end
 
-    return {
-      sidebar_left = sidebar_components_l,
-      sidebar_right = sidebar_components_r,
-      buffers = current_components,
-      rhs = rhs_components,
-      tabs = tab_components,
-      gap = math.max(
-        0,
-        available_width
-          - (
-            components.width(current_components)
-            + components.width(rhs_components)
-          )
-      ),
-    }
+      return {
+        sidebar_left = sidebar_components_l,
+        sidebar_right = sidebar_components_r,
+        buffers = current_components,
+        rhs = rhs_components,
+        tabs = tab_components,
+        gap = math.max(
+          0,
+          available_width
+            - (
+              components.width(current_components)
+              + components.width(rhs_components)
+            )
+        ),
+      }
+    end
+  else
+    current_components, current_width = {}, 0
   end
 
-  local left_components, left_width = to_components({
-    unpack(visible_buffers, 1, current_buffer.index - 1),
-  }, state.components)
+  local left_components, left_width
+  local right_components, right_width
+  if #visible_buffers > 0 then
+    left_components, left_width = to_components({
+      unpack(visible_buffers, 1, current_buffer.index - 1),
+    }, state.components)
 
-  local right_components, right_width = to_components({
-    unpack(visible_buffers, current_buffer.index + 1, #visible_buffers),
-  }, state.components)
+    right_components, right_width = to_components({
+      unpack(visible_buffers, current_buffer.index + 1, #visible_buffers),
+    }, state.components)
+  else
+    left_components, left_width = {}, 0
+    right_components, right_width = {}, 0
+  end
 
   local rhs_width = components.width(rhs_components)
     + components.width(sidebar_components_r)
