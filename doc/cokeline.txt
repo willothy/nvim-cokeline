@@ -81,6 +81,8 @@ Each component has access to an is_hovered property, and can be given custom
 `on_mouse_enter` and `on_mouse_leave` handlers, allowing for implementations of
 close buttons, diagnostic previews, and more complex funcionality.
 
+Note: requires |'mousemoveevent'|
+
 
 BUFFER RE-ORDERING (INCLUDING MOUSE-DRAG REORDERING) ~
 
