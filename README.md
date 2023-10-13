@@ -421,6 +421,8 @@ Left click on a buffer to focus it, and right click to delete it. Alternatively,
 
 Each component has access to an is_hovered property, and can be given custom `on_mouse_enter` and `on_mouse_leave` handlers, allowing for implementations of close buttons, diagnostic previews, and more complex funcionality.
 
+Note: requires `:h 'mousemoveevent'`
+
 <!-- panvimdoc-ignore-start -->
 
 ![hover-events](https://github.com/willothy/nvim-cokeline/assets/38540736/fb92475f-d775-44fe-9c95-a76c1cbaf560)
