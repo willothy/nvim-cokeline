@@ -117,6 +117,10 @@ local get_components = function(side)
   local id = #state.components + #state.rhs + 1
   local hover = lazy("cokeline.hover").hovered()
   buffer.buf_hovered = hover ~= nil and hover.bufnr == buffer.number
+  if not state.sidebar or not next(state.sidebar) then
+    -- Fix(170): Return early as we have no sidebar components to handle
+    return sidebar_components
+  end
   for _, c in ipairs(state.sidebar) do
     c.sidebar = side
     buffer.is_hovered = hover ~= nil
