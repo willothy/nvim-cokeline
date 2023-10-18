@@ -181,7 +181,7 @@ require('cokeline').setup({
     },
     {
       text = '󰖭',
-      on_click = function(buffer)
+      on_click = function(_, _, _, _, buffer)
         buffer:delete()
       end
     },
@@ -293,7 +293,7 @@ require('cokeline').setup({
     },
     {
       text = '',
-      on_click = function(buffer)
+      on_click = function(_, _, _, _, buffer)
         buffer:delete()
       end,
     },
@@ -378,7 +378,7 @@ require('cokeline').setup({
     },
     {
       text = '',
-      on_click = function(buffer)
+      on_click = function(_, _, _, _, buffer)
         buffer:delete()
       end,
     },
@@ -866,7 +866,7 @@ require('cokeline').setup({
     },
     {
       text = '󰅖',
-      on_click = function(buffer)
+      on_click = function(_, _, _, _, buffer)
         buffer:delete()
       end
     },
