@@ -44,12 +44,10 @@ local defaults = {
 
   default_hl = {
     fg = function(buffer)
-      return buffer.is_focused and hlgroups.get_hl_attr("ColorColumn", "bg")
-        or hlgroups.get_hl_attr("Normal", "fg")
+      return buffer.is_focused and "TabLineSel" or "TabLine"
     end,
     bg = function(buffer)
-      return buffer.is_focused and hlgroups.get_hl_attr("Normal", "fg")
-        or hlgroups.get_hl_attr("ColorColumn", "bg")
+      return buffer.is_focused and "TabLineSel" or "TabLine"
     end,
   },
 
