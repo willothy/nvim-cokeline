@@ -61,6 +61,17 @@ local setup = function()
   local autocmd, augroup =
     vim.api.nvim_create_autocmd, vim.api.nvim_create_augroup
 
+  -- Invalidate the cache on colorscheme change
+  autocmd("ColorScheme", {
+    pattern = "*",
+    -- NOTE: For some reason, the autocmd does not consistently trigger without this
+    nested = true,
+    group = augroup("cokeline_color_cache", { clear = true }),
+    callback = function()
+      require("cokeline.hlgroups")._cache_clear()
+    end,
+  })
+
   autocmd({ "VimEnter", "BufAdd" }, {
     group = augroup("cokeline_toggle", { clear = true }),
     callback = function()

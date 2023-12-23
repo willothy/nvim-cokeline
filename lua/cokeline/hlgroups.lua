@@ -7,16 +7,11 @@ local cache = {
   groups = {},
 }
 
--- Invalidate the cache on colorscheme change
-vim.api.nvim_create_autocmd("Colorscheme", {
-  group = vim.api.nvim_create_augroup(
-    "cokeline_color_cache",
-    { clear = true }
-  ),
-  callback = function()
-    cache.groups = {}
-  end,
-})
+---Clears the hlgroup cache.
+---@private
+function M._cache_clear()
+  cache.groups = {}
+end
 
 ---@param rgb integer
 ---@return string hex
