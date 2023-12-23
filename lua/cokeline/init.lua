@@ -14,9 +14,9 @@ local setup = function(opts)
     history.setup(config.history.size)
   end
 
-  require("cokeline.augroups").setup()
   require("cokeline.mappings").setup()
   require("cokeline.hover").setup()
+  require("cokeline.augroups").setup()
 
   opt.showtabline = 2
   opt.tabline = "%!v:lua.cokeline.tabline()"

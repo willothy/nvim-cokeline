@@ -61,32 +61,31 @@ local setup = function()
   local autocmd, augroup =
     vim.api.nvim_create_autocmd, vim.api.nvim_create_augroup
 
+  local group = augroup("cokeline_autocmds", { clear = true })
+
   -- Invalidate the cache on colorscheme change
   autocmd("ColorScheme", {
-    pattern = "*",
-    -- NOTE: For some reason, the autocmd does not consistently trigger without this
-    nested = true,
-    group = augroup("cokeline_color_cache", { clear = true }),
+    group = group,
     callback = function()
       require("cokeline.hlgroups")._cache_clear()
     end,
   })
 
   autocmd({ "VimEnter", "BufAdd" }, {
-    group = augroup("cokeline_toggle", { clear = true }),
+    group = group,
     callback = function()
       require("cokeline.augroups").toggle()
     end,
   })
   autocmd({ "BufDelete", "BufWipeout" }, {
-    group = augroup("cokeline_release_taken_letter", { clear = true }),
+    group = group,
     callback = function(args)
       require("cokeline.buffers").release_taken_letter(args.buf)
     end,
   })
   if config.history.enabled then
     autocmd("BufLeave", {
-      group = augroup("cokeline_buf_history", { clear = true }),
+      group = group,
       callback = function(args)
         if vim.api.nvim_buf_is_valid(args.buf) then
           require("cokeline.history"):push(args.buf)
@@ -96,13 +95,13 @@ local setup = function()
   end
   if config.tabs then
     autocmd({ "TabNew", "TabClosed" }, {
-      group = augroup("cokeline_fetch_tabs", { clear = true }),
+      group = group,
       callback = function()
         tabs.fetch_tabs()
       end,
     })
     autocmd("WinEnter", {
-      group = augroup("cokeline_update_tab_focus", { clear = true }),
+      group = group,
       callback = function()
         local win = vim.api.nvim_get_current_win()
         local tab = vim.api.nvim_win_get_tabpage(win)
@@ -120,7 +119,7 @@ local setup = function()
       end,
     })
     autocmd("BufEnter", {
-      group = augroup("cokeline_update_tab_win_buf", { clear = true }),
+      group = group,
       callback = function(args)
         local win = vim.api.nvim_get_current_win()
         local tab = vim.api.nvim_win_get_tabpage(win)
