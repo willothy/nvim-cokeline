@@ -22,8 +22,6 @@ local current_valid_index
 ---@type string?
 local valid_pick_letters
 
-local first_valid = 1
-
 local taken_pick_letters = {}
 local taken_pick_indices = {}
 local buf_order = {}
@@ -106,6 +104,8 @@ end
 ---@param bufnr  bufnr
 ---@return string
 local get_pick_letter = function(filename, bufnr)
+  local first_valid = 1
+
   -- Initialize the valid letters string, if not already initialized
   if not valid_pick_letters then
     valid_pick_letters = config.pick.letters
