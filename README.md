@@ -313,7 +313,7 @@ require('cokeline').setup({
 ### Sidebars
 
 You can add a left sidebar to integrate nicely with file explorer plugins like
-[nvim-tree.lua](https://github.com/kyazdani42/nvim-tree.lua),
+[nvim-tree.lua](https://github.com/nvim-tree/nvim-tree.lua),
 [CHADTree](https://github.com/ms-jpq/chadtree) or
 [NERDTree](https://github.com/preservim/nerdtree).
 
@@ -460,7 +460,7 @@ the rest of your sessions.
 
 The two main requirements are Neovim 0.5+ and the `termguicolors` option to be
 set. If you want to display devicons in your bufferline you'll also need the
-[kyazdani42/nvim-web-devicons](https://github.com/kyazdani42/nvim-web-devicons)
+[nvim-tree/nvim-web-devicons](https://github.com/nvim-tree/nvim-web-devicons)
 plugin and a patched font (see [Nerd Fonts](https://www.nerdfonts.com/)).
 
 As of v0.4.0, [nvim-lua/plenary.nvim](https://github.com/nvim-lua/plenary.nvim) is required as well.
@@ -477,7 +477,7 @@ require("lazy").setup({
   "willothy/nvim-cokeline",
   dependencies = {
     "nvim-lua/plenary.nvim",        -- Required for v0.4.0+
-    "kyazdani42/nvim-web-devicons", -- If you want devicons
+    "nvim-tree/nvim-web-devicons", -- If you want devicons
     "stevearc/resession.nvim"       -- Optional, for persistent history
   },
   config = true
@@ -494,7 +494,7 @@ If your config is still written in Vimscript and you use
 call plug#begin('~/.config/nvim/plugged')
   " ...
   Plug 'nvim-lua/plenary.nvim'        " Required for v0.4.0+
-  Plug 'kyazdani42/nvim-web-devicons' " If you want devicons
+  Plug 'nvim-tree/nvim-web-devicons' " If you want devicons
   Plug 'willothy/nvim-cokeline'
   " ...
 call plug#end()
@@ -761,7 +761,7 @@ Buffer = {
   ---@type string
   pick_letter = 'char',
 
-  -- This needs the `kyazdani42/nvim-web-devicons` plugin to be installed.
+  -- This needs the `nvim-tree/nvim-web-devicons` plugin to be installed.
   devicon = {
     -- An icon representing the buffer's filetype.
     ---@type string
