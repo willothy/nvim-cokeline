@@ -93,7 +93,8 @@ function M.fetch_tabs()
   table.sort(tabnrs, function(a, b)
     return a < b
   end)
-  for t, tabnr in ipairs(tabnrs) do
+  for _, tabnr in ipairs(tabnrs) do
+    local t = vim.api.nvim_tabpage_get_number(tabnr)
     if state.tab_lookup[tabnr] ~= nil then
       tabs[t] = state.tab_lookup[tabnr]
       tabs[t].is_active = tabnr == active_tab
