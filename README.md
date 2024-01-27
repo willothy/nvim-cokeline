@@ -651,7 +651,7 @@ require('cokeline').setup({
 
   -- A list of components to be rendered for each buffer. Check out the section
   -- below explaining what this value can be set to.
-  -- default: see `/lua/cokeline/defaults.lua`
+  -- default: see `/lua/cokeline/config.lua`
   ---@type Component[]
   components = {},
 
