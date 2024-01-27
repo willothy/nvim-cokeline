@@ -1,4 +1,4 @@
-*cokeline.txt*           For NVIM >=0.7           Last change: 2024 January 07
+*cokeline.txt*           For NVIM >=0.7           Last change: 2024 January 27
 
 ==============================================================================
 Table of Contents                                 *cokeline-table-of-contents*
@@ -302,7 +302,7 @@ The valid keys are:
     
       -- A list of components to be rendered for each buffer. Check out the section
       -- below explaining what this value can be set to.
-      -- default: see `/lua/cokeline/defaults.lua`
+      -- default: see `/lua/cokeline/config.lua`
       ---@type Component[]
       components = {},
     
