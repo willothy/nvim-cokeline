@@ -153,8 +153,6 @@ local get_pick_letter = function(filename, bufnr)
     local letter = vim.fn.strcharpart(valid_pick_letters, first_valid - 1, 1)
     taken_pick_letters[bufnr] = letter
     taken_pick_indices[first_valid] = true
-    first_valid = first_valid + 1
-    ---@cast letter string
     return letter
   end
 
