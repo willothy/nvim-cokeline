@@ -221,6 +221,10 @@ local function on_drag(pos)
     end
     M.clear_hovered()
   end
+  if pos.screenrow ~= 1 then
+    M.clear_dragging()
+    return
+  end
   if pos.dragging == "l" then
     local current, bufs = M.get_current(pos.screencol)
     if current == nil or bufs == nil or current.kind ~= "buffer" then
