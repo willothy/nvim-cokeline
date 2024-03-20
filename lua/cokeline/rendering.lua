@@ -49,7 +49,7 @@ end
 ---@param complist Component[]
 ---@return Component, number
 local function to_components(context, complist)
-  local hovered = _G.cokeline.__hovered
+  local hovered = require("cokeline.hover").hovered()
   -- A simple heuristic to check if we're dealing with single buffer or a list
   -- of them is to just check if one of they keys is defined.
   if context.number then
