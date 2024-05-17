@@ -9,13 +9,7 @@ local hlgroups = lazy("cokeline.hlgroups")
 local insert = table.insert
 
 local echo = vim.api.nvim_echo
-local islist = function()
-  if vim.fn.has("nvim-0.11") == 1 then
-    return vim.islist
-  else
-    return vim.tbl_islist
-  end
-end
+local islist = vim.islist or vim.tbl_islist
 
 local defaults = {
   show_if_buffers_are_at_least = 1,
