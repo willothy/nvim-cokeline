@@ -9,7 +9,13 @@ local hlgroups = lazy("cokeline.hlgroups")
 local insert = table.insert
 
 local echo = vim.api.nvim_echo
-local islist = vim.tbl_islist
+local islist = function()
+  if vim.fn.has("nvim-0.11") == 1 then
+    return vim.islist
+  else
+    return vim.tbl_islist
+  end
+end
 
 local defaults = {
   show_if_buffers_are_at_least = 1,
@@ -121,9 +127,9 @@ local defaults = {
 ---@param msg  string
 local echoerr = function(msg)
   echo({
-    { "[nvim-cokeline]: ", "ErrorMsg" },
+    { "[nvim-cokeline]: ",     "ErrorMsg" },
     { 'Configuration option "' },
-    { msg, "WarningMsg" },
+    { msg,                     "WarningMsg" },
     { '" does not exist!' },
   }, true, {})
 end
