@@ -94,35 +94,47 @@ local by_step = function(goal, step)
   end
 end
 
----@param goal  '"focus"' | '"close"' | fun(buf: Buffer)
+---@param goal  '"focus"' | '"close"' | '"close-multiple"' | fun(buf: Buffer)
 local pick = function(goal)
+  local close_multiple = false
+  if goal == "close-multiple" then
+    goal = "close"
+    close_multiple = true
+  end
+
   is_picking[goal] = true
   cmd("redrawtabline")
 
-  local valid_char, char = pcall(fn.getchar)
-  is_picking[goal] = false
-  -- bail out on keyboard interrupt
-  if not valid_char then
-    char = 0
-  end
+  repeat
+    local valid_char, char = pcall(fn.getchar)
+    if not close_multiple then
+      is_picking[goal] = false
+    end
 
-  local letter = fn.nr2char(char)
-  local target_buffer = filter(function(buffer)
-    return buffer.pick_letter == letter
-  end, state.visible_buffers)[1]
+    -- bail out on keyboard interrupt
+    if not valid_char then
+      char = 0
+    end
 
-  if not target_buffer or (goal == "focus" and target_buffer.is_focused) then
-    cmd("redrawtabline")
-    return
-  end
+    local letter = fn.nr2char(char)
+    local target_buffer = filter(function(buffer)
+      return buffer.pick_letter == letter
+    end, state.visible_buffers)[1]
 
-  if goal == "focus" then
-    target_buffer:focus()
-  elseif goal == "close" then
-    target_buffer:delete()
-  elseif type(goal) == "function" then
-    goal(target_buffer)
-  end
+    if not target_buffer or (goal == "focus" and target_buffer.is_focused) then
+      is_picking[goal] = false
+      cmd("redrawtabline")
+      return
+    end
+
+    if goal == "focus" then
+      target_buffer:focus()
+    elseif goal == "close" then
+      target_buffer:delete()
+    elseif type(goal) == "function" then
+      goal(target_buffer)
+    end
+  until not is_picking[goal]
 end
 
 local setup = function()
@@ -150,6 +162,11 @@ local setup = function()
     keymap.set("n", "<Plug>(cokeline-pick-close)", function()
       pick("close")
     end)
+
+    keymap.set("n", "<Plug>(cokeline-pick-close-multiple)", function()
+      pick("close-multiple")
+    end)
+
     for i = 1, 20 do
       keymap.set("n", ("<Plug>(cokeline-switch-%s)"):format(i), function()
         by_index("switch", i)
@@ -194,6 +211,12 @@ local setup = function()
       "n",
       "<Plug>(cokeline-pick-close)",
       '<Cmd>lua require"cokeline/mappings".pick("close")<CR>',
+      {}
+    )
+    set_keymap(
+      "n",
+      "<Plug>(cokeline-pick-close-multiple)",
+      '<Cmd>lua require"cokeline/mappings".pick("close-multiple")<CR>',
       {}
     )
     for i = 1, 20 do
