@@ -202,6 +202,8 @@ end
 ---@param direction  '"left"' | '"right"' | nil
 ---@return Component<Cx>[]
 local shorten_components = function(components, to_width, direction)
+  if #components == 0 then return components end
+
   local current_width = width_of_components(components)
 
   -- `extra` is the width of the extra characters that are appended when a
