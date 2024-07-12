@@ -1,4 +1,4 @@
-*cokeline.txt*             For NVIM >=0.7             Last change: 2024 May 18
+*cokeline.txt*             For NVIM >=0.7            Last change: 2024 July 12
 
 ==============================================================================
 Table of Contents                                 *cokeline-table-of-contents*
