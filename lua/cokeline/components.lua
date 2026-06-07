@@ -6,7 +6,7 @@ local rep = string.rep
 local insert = table.insert
 local remove = table.remove
 
-local iter = require("plenary.iterators").iter
+local iter = vim.iter
 local fn = vim.fn
 
 ---@generic Cx

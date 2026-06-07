@@ -463,8 +463,6 @@ set. If you want to display devicons in your bufferline you'll also need the
 [nvim-tree/nvim-web-devicons](https://github.com/nvim-tree/nvim-web-devicons)
 plugin and a patched font (see [Nerd Fonts](https://www.nerdfonts.com/)).
 
-As of v0.4.0, [nvim-lua/plenary.nvim](https://github.com/nvim-lua/plenary.nvim) is required as well.
-
 ## :package: Installation
 
 ### Lua
@@ -476,7 +474,6 @@ require("lazy").setup({
   {
   "willothy/nvim-cokeline",
   dependencies = {
-    "nvim-lua/plenary.nvim",        -- Required for v0.4.0+
     "nvim-tree/nvim-web-devicons", -- If you want devicons
     "stevearc/resession.nvim"       -- Optional, for persistent history
   },
@@ -493,7 +490,6 @@ If your config is still written in Vimscript and you use
 ```vim
 call plug#begin('~/.config/nvim/plugged')
   " ...
-  Plug 'nvim-lua/plenary.nvim'        " Required for v0.4.0+
   Plug 'nvim-tree/nvim-web-devicons' " If you want devicons
   Plug 'willothy/nvim-cokeline'
   " ...

@@ -6,7 +6,7 @@ local sidebar = lazy("cokeline.sidebar")
 local rhs = lazy("cokeline.rhs")
 local tabs = lazy("cokeline.tabs")
 local RenderContext = lazy("cokeline.context")
-local iter = require("plenary.iterators").iter
+local iter = vim.iter
 
 local insert = table.insert
 local sort = table.sort

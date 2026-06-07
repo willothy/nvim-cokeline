@@ -14,7 +14,7 @@ local fn = vim.fn
 local split = vim.split
 
 local util = lazy("cokeline.utils")
-local iter = require("plenary.iterators").iter
+local iter = vim.iter
 
 ---@type bufnr
 local current_valid_index
@@ -72,7 +72,7 @@ local compute_unique_prefixes = function(buffers)
       )
       return buffer
     end)
-    :tolist()
+    :totable()
 
   for i = 1, #paths do
     for j = i + 1, #paths do
@@ -425,13 +425,13 @@ function M.get_valid_buffers()
         end
         return buffer
       end)
-      :tolist()
+      :totable()
   else
     buffers = buffers
       :map(function(_, buf)
         return buf
       end)
-      :tolist()
+      :totable()
   end
   if not current_valid_index then
     current_valid_index = 0
@@ -487,7 +487,7 @@ function M.get_visible()
     end)
   end
 
-  state.visible_buffers = bufs:tolist()
+  state.visible_buffers = bufs:totable()
 
   if #state.visible_buffers > 0 then
     state.visible_buffers[1].is_first = true
