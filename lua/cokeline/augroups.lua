@@ -11,7 +11,7 @@ local opt = vim.opt
 
 local toggle = function()
   local listed_buffers = fn.getbufinfo({ buflisted = 1 })
-  opt.showtabline = #listed_buffers > 0 and 2 or 0
+  opt.showtabline = #listed_buffers >= config.show_if_buffers_are_at_least and 2 or 0
 end
 
 local bufnr_to_close
